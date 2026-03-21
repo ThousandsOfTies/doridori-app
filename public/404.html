@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>DoriDori</title>
+  <script>
+    // GitHub Pages SPA fallback for subdirectories
+    (function() {
+      const path = window.location.pathname;
+
+      // Check if this is the discuss version
+      if (path.includes('/discuss')) {
+        // Redirect to discuss/index.html
+        window.location.replace('/HomeTeacher/discuss/index.html');
+      } else {
+        // Redirect to main version
+        window.location.replace('/HomeTeacher/');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <p>Loading DoriDori...</p>
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SNS選択 - DoriDori</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      color: white;
+    }
+    body.warning-flash {
+      animation: flashScreen 1s infinite;
+    }
+    @keyframes flashScreen {
+      0%, 100% {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      50% {
+        background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+      }
+    }
+    .container {
+      text-align: center;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 90%;
+    }
+    .icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+    .icon.warning-pulse {
+      animation: pulseWarning 0.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    @keyframes pulseWarning {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+    }
+    h1 {
+      font-size: 36px;
+      margin: 0 0 16px 0;
+    }
+    .sns-name {
+      font-size: 48px;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #ffd700;
+    }
+    p {
+      font-size: 18px;
+      line-height: 1.6;
+      margin: 16px 0;
+      opacity: 0.9;
+    }
+    .instruction {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 30px 0;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+    }
+    .small {
+      font-size: 14px;
+      margin-top: 20px;
+      opacity: 0.7;
+    }
+
+    /* SNS選択画面 */
+    #snsSelection {
+      display: block;
+    }
+    .sns-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .sns-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 20px;
+      width: 120px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #2c3e50;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .sns-button:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      background: rgba(255, 255, 255, 1);
+    }
+    .sns-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sns-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+    .sns-button-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* カウントダウン画面 */
+    #countdownView {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- SNS選択画面 -->
+    <div id="snsSelection">
+      <div class="icon">📱</div>
+      <h1>SNSを選択</h1>
+      <p id="timeLimit">制限時間: --分</p>
+      <div class="sns-grid" id="snsGrid"></div>
+    </div>
+
+    <!-- カウントダウン画面 -->
+    <div id="countdownView">
+      <div class="icon" id="icon">⏰</div>
+      <h1 id="title">カウントダウン中</h1>
+      <div class="sns-name" id="snsName">SNS</div>
+      <p id="timeLimitText">利用時間を計測しています</p>
+      <div id="countdown" style="font-size: 64px; font-weight: bold; margin: 30px 0; color: #ffd700;">--:--</div>
+      <div class="instruction" id="instruction" style="display: none;">
+        📱 SNSタブを閉じて<br>
+        🔄 このアプリを再起動してください
+      </div>
+      <p class="small" id="warningMessage" style="display: none;">通知とバイブレーションで警告します</p>
+    </div>
+  </div>
+
+  <script>
+    // IndexedDB関連関数
+    const DB_NAME = 'TutoTutoDB';
+    const DB_VERSION = 9;
+    const SNS_USAGE_HISTORY_STORE_NAME = 'snsUsageHistory';
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(new Error('IndexedDBを開けませんでした'));
+        request.onsuccess = () => resolve(request.result);
+      });
+    }
+
+    async function saveSNSUsageHistory(record) {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction([SNS_USAGE_HISTORY_STORE_NAME], 'readwrite');
+        const objectStore = transaction.objectStore(SNS_USAGE_HISTORY_STORE_NAME);
+
+        const historyRecord = {
+          id: `sns_usage_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+          ...record
+        };
+
+        const request = objectStore.add(historyRecord);
+
+        transaction.oncomplete = () => {
+          console.log('✅ SNS利用履歴を保存:', historyRecord);
+          resolve();
+        };
+
+        request.onerror = () => {
+          console.error('❌ SNS利用履歴の保存に失敗:', request.error);
+          reject(new Error('SNS利用履歴の保存に失敗しました'));
+        };
+      });
+    }
+
+    // URLパラメータから情報を取得
+    const params = new URLSearchParams(window.location.search);
+    const timeLimitMinutes = parseInt(params.get('time') || '30');
+    const timeLimit = timeLimitMinutes; // 後で使う用
+    const snsLinksJson = params.get('snsLinks');
+    const returnUrl = params.get('returnUrl'); // 戻り先URL
+
+    console.log('📱 URLパラメータ:', { timeLimitMinutes, snsLinksJson, returnUrl });
+
+    document.getElementById('timeLimit').textContent = `制限時間: ${timeLimitMinutes}分`;
+
+    // SNSリンクをパース
+    let snsLinks = [];
+    if (snsLinksJson) {
+      try {
+        snsLinks = JSON.parse(decodeURIComponent(snsLinksJson));
+        console.log('✅ SNSリンクのパース成功:', snsLinks);
+      } catch (error) {
+        console.error('❌ SNSリンクのパースに失敗:', error);
+        console.error('生のJSONデータ:', snsLinksJson);
+      }
+    } else {
+      console.warn('⚠️ snsLinksJsonが空です');
+    }
+
+    // SNS選択画面を構築
+    const snsGrid = document.getElementById('snsGrid');
+    console.log('🎨 SNS選択画面を構築中:', { snsLinksCount: snsLinks.length, snsGrid });
+
+    snsLinks.forEach((link, index) => {
+      console.log(`  📌 SNS ${index + 1}:`, link);
+      const button = document.createElement('button');
+      button.className = 'sns-button';
+
+      // SVGがある場合はSVGアイコンを使用、なければ絵文字にフォールバック
+      const iconHtml = link.svg
+        ? `<div class="sns-icon" style="color: ${link.color}; fill: ${link.color};">${link.svg}</div>`
+        : `<div class="sns-icon">${link.icon || '🌐'}</div>`;
+
+      button.innerHTML = `
+        ${iconHtml}
+        <div class="sns-button-name">${link.name}</div>
+      `;
+
+      button.addEventListener('click', () => {
+        startCountdownForSNS(link);
+      });
+
+      snsGrid.appendChild(button);
+    });
+
+    console.log('✅ SNSボタン生成完了:', snsGrid.children.length);
+
+    // SNSを選択したらカウントダウン開始
+    function startCountdownForSNS(snsLink) {
+      const startTime = Date.now();
+
+      // SNS利用履歴を保存
+      saveSNSUsageHistory({
+        snsId: snsLink.id,
+        snsName: snsLink.name,
+        snsUrl: snsLink.url,
+        timeLimitMinutes: timeLimit,
+        timestamp: startTime
+      }).catch(err => {
+        console.error('SNS利用履歴の保存に失敗:', err);
+      });
+
+      // SNSを別タブで開く
+      const snsWindow = window.open(snsLink.url, '_blank');
+
+      if (!snsWindow) {
+        alert(`ポップアップがブロックされました。\nブラウザの設定でポップアップを許可してください。`);
+        return;
+      }
+
+      // SNS選択画面を非表示、カウントダウン画面を表示
+      document.getElementById('snsSelection').style.display = 'none';
+      document.getElementById('countdownView').style.display = 'block';
+
+      // タイトルを変更
+      document.title = `${snsLink.name} - カウントダウン`;
+      document.getElementById('snsName').textContent = snsLink.name;
+      document.getElementById('timeLimitText').textContent = `制限時間: ${timeLimitMinutes}分`;
+
+      // カウントダウンタイマー開始
+      startCountdown(startTime);
+    }
+
+    // カウントダウンタイマー
+    let countdownTimerId = null;  // タイマーIDを保存
+
+    function startCountdown(startTime) {
+      const countdownElement = document.getElementById('countdown');
+      const titleElement = document.getElementById('title');
+      const instructionElement = document.getElementById('instruction');
+      const warningMessageElement = document.getElementById('warningMessage');
+      const iconElement = document.getElementById('icon');
+
+      // タイトルを点滅させる（時間切れ時）
+      let titleFlashInterval = null;
+
+      const updateCountdown = () => {
+        const now = Date.now();
+        const elapsed = now - startTime;
+        const remaining = (timeLimitMinutes * 60 * 1000) - elapsed;
+
+        if (remaining <= 0) {
+          // 時間切れフラグを立てる
+          isTimeUp = true;
+
+          // 時間切れ
+          countdownElement.textContent = '00:00';
+          countdownElement.style.color = '#ff4444';
+          titleElement.textContent = '閲覧時間終了';
+          instructionElement.style.display = 'block';
+          warningMessageElement.style.display = 'block';
+          document.getElementById('timeLimitText').textContent = `${timeLimitMinutes}分の利用時間が終了しました`;
+
+          // 視覚的な警告
+          document.body.classList.add('warning-flash');
+          iconElement.classList.add('warning-pulse');
+
+          // タブタイトルを点滅
+          titleFlashInterval = setInterval(() => {
+            document.title = document.title.startsWith('⚠️')
+              ? '【警告】時間切れ！'
+              : '⚠️ 時間切れ！';
+          }, 1000);
+
+          // 通知を送信
+          sendNotification();
+
+          // バイブレーションを開始
+          startVibration();
+
+          return;
+        }
+
+        // 残り時間を表示（MM:SS形式）
+        const remainingSeconds = Math.ceil(remaining / 1000);
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        countdownElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+        // 残り30秒以下で赤色に
+        if (remaining <= 30000) {
+          countdownElement.style.color = '#ff4444';
+        }
+
+        // 1秒ごとに更新
+        countdownTimerId = setTimeout(updateCountdown, 1000);
+      };
+
+      // カウントダウン開始
+      updateCountdown();
+    }
+
+    // カウントダウンタイマーを停止
+    function stopCountdown() {
+      if (countdownTimerId) {
+        clearTimeout(countdownTimerId);
+        countdownTimerId = null;
+        console.log('⏸️ カウントダウンタイマーを停止');
+      }
+    }
+
+    // 通知・バイブレーションのインターバルID（停止用）
+    let notificationIntervalId = null;
+    let vibrationIntervalId = null;
+
+    // 通知を送信
+    function sendNotification() {
+      const snsName = document.getElementById('snsName').textContent;
+
+      if (!('Notification' in window)) {
+        console.log('このブラウザは通知をサポートしていません');
+        return;
+      }
+
+      if (Notification.permission === 'granted') {
+        const notification = new Notification(`⏰ ${snsName} の時間切れ！`, {
+          body: `${timeLimitMinutes}分の利用時間が終了しました。\nSNSタブを閉じて、アプリに戻ってください。`,
+          icon: '/pwa-192x192.png',
+          badge: '/pwa-192x192.png',
+          vibrate: [200, 100, 200, 100, 200],
+          requireInteraction: true,
+          tag: 'time-limit',
+          renotify: true
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+
+        // 5秒ごとに通知を再送（バックグラウンドでも通知）
+        notificationIntervalId = setInterval(() => {
+          if (Notification.permission === 'granted') {
+            new Notification(`⚠️ まだ ${snsName} を見ていますか？`, {
+              body: '時間切れです。SNSタブを閉じてください。',
+              icon: '/pwa-192x192.png',
+              vibrate: [300, 100, 300],
+              tag: 'time-limit',
+              renotify: true
+            });
+          }
+        }, 5000);
+      }
+    }
+
+    // バイブレーションを開始
+    function startVibration() {
+      if (!('vibrate' in navigator)) {
+        console.log('このデバイスはバイブレーションをサポートしていません');
+        return;
+      }
+
+      const vibratePattern = [200, 100, 200, 100, 200];
+
+      function vibrate() {
+        // バックグラウンドの場合はバイブレーションしない
+        if (document.hidden) {
+          return;
+        }
+        navigator.vibrate(vibratePattern);
+      }
+
+      vibrate();
+      vibrationIntervalId = setInterval(vibrate, 3000);
+    }
+
+    // 通知・バイブレーションを停止
+    function stopWarnings() {
+      if (notificationIntervalId) {
+        clearInterval(notificationIntervalId);
+        notificationIntervalId = null;
+      }
+      if (vibrationIntervalId) {
+        clearInterval(vibrationIntervalId);
+        vibrationIntervalId = null;
+      }
+      console.log('⏸️ 警告を停止（バックグラウンド）');
+    }
+
+    // 時間切れ状態かどうかを追跡
+    let isTimeUp = false;
+
+    // ページの表示状態が変わったとき（フォアグラウンド⇔バックグラウンド）
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        // フォアグラウンドに戻った
+        const countdownView = document.getElementById('countdownView');
+        if (countdownView.style.display === 'block') {
+          console.log('▶️ 警告画面に復帰');
+
+          // SNSタブを閉じた場合は常にドリル画面に戻る（時間切れ前後を問わず）
+          console.log('✅ SNSタブを閉じました。ドリル画面に戻ります。');
+
+          // すべてのタイマーと警告を停止
+          stopCountdown();
+          stopWarnings();
+
+          // ドリル画面に戻る
+          // returnUrlパラメータがあればそれを使用（確実性向上）、なければ従来の方法
+          let baseUrl;
+          if (returnUrl) {
+            baseUrl = returnUrl;
+            console.log('✅ returnUrlパラメータを使用:', baseUrl);
+          } else {
+            // フォールバック: 従来の方法
+            const pathParts = window.location.pathname.split('/');
+            pathParts.pop(); // manage.htmlを削除
+            baseUrl = window.location.origin + pathParts.join('/') + '/';
+            console.log('⚠️ returnUrlパラメータなし、従来の方法を使用:', baseUrl);
+          }
+
+          // iPad対応: 少し待機してからリロード（IndexedDBの準備を待つ）
+          setTimeout(() => {
+            console.log('🏠 ドリル画面に戻ります:', baseUrl);
+            window.location.replace(baseUrl);
+          }, 300);
+        }
+      } else {
+        // バックグラウンドに移動（SNSタブを開いた）
+        console.log('⏸️ バックグラウンドに移動');
+      }
+    });
+
+    console.log('📱 SNS選択画面を表示:', { timeLimitMinutes, snsLinksCount: snsLinks.length });
+  </script>
+</body>
+</html>

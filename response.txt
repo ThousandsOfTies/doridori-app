@@ -1,0 +1,2486 @@
+{
+    "success": true,
+    "data": {
+        "pageType": "answer",
+        "pageNumber": 78,
+        "answers": [
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "105度",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "1(2)",
+                "correctAnswer": "10度",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "1(3)",
+                "correctAnswer": "x=107度, y=47度",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "1(4)",
+                "correctAnswer": "100度",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "1080",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "360",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "2(3)",
+                "correctAnswer": "140",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "540度",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "3(2)",
+                "correctAnswer": "正二十角形",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "80cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "95cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(3)",
+                "correctAnswer": "96cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(4)",
+                "correctAnswer": "90cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(5)",
+                "correctAnswer": "24.5cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(6)",
+                "correctAnswer": "576cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "3 3/4",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "5(2)",
+                "correctAnswer": "3",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "5(3)",
+                "correctAnswer": "8",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "5(4)",
+                "correctAnswer": "15",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "5(5)",
+                "correctAnswer": "12.5",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "16.5cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "6(2)",
+                "correctAnswer": "5cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "15.7cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "18.84cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "6.28cm",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "9(1)",
+                "correctAnswer": "25.12cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "9(2)",
+                "correctAnswer": "56cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "9(3)",
+                "correctAnswer": "4.56cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "9(4)",
+                "correctAnswer": "1.72cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "9(5)",
+                "correctAnswer": "14.25cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "3 : 2",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "1(2)",
+                "correctAnswer": "8",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "1(3)",
+                "correctAnswer": "5 cm",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "13cm",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "6 cm",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "3 : 2",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "3(2)",
+                "correctAnswer": "3 : 2",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "12",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "6",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "4(3)",
+                "correctAnswer": "22.5",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "4(4)",
+                "correctAnswer": "12",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            }
+        ],
+        "pdfPage": 40
+    },
+    "pageType": "answer",
+    "result": {
+        "pageType": "answer",
+        "pageNumber": 78,
+        "answers": [
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "105度",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "1(2)",
+                "correctAnswer": "10度",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "1(3)",
+                "correctAnswer": "x=107度, y=47度",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "1(4)",
+                "correctAnswer": "100度",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "1080",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "360",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "2(3)",
+                "correctAnswer": "140",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "540度",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "3(2)",
+                "correctAnswer": "正二十角形",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "80cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "95cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(3)",
+                "correctAnswer": "96cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(4)",
+                "correctAnswer": "90cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(5)",
+                "correctAnswer": "24.5cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "4(6)",
+                "correctAnswer": "576cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "3 3/4",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "5(2)",
+                "correctAnswer": "3",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "5(3)",
+                "correctAnswer": "8",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "5(4)",
+                "correctAnswer": "15",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "5(5)",
+                "correctAnswer": "12.5",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "16.5cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "6(2)",
+                "correctAnswer": "5cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "15.7cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "18.84cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "6.28cm",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "9(1)",
+                "correctAnswer": "25.12cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "9(2)",
+                "correctAnswer": "56cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "9(3)",
+                "correctAnswer": "4.56cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "9(4)",
+                "correctAnswer": "1.72cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "9(5)",
+                "correctAnswer": "14.25cm²",
+                "problemPage": 6,
+                "sectionName": "平面図形Ⅰ レベルA（問題は6ページ）"
+            },
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "3 : 2",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "1(2)",
+                "correctAnswer": "8",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "1(3)",
+                "correctAnswer": "5 cm",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "13cm",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "6 cm",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "3 : 2",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "3(2)",
+                "correctAnswer": "3 : 2",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "12",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "6",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "4(3)",
+                "correctAnswer": "22.5",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            },
+            {
+                "problemNumber": "4(4)",
+                "correctAnswer": "12",
+                "problemPage": 14,
+                "sectionName": "平面図形Ⅱ レベルA（問題は14ページ）"
+            }
+        ],
+        "pdfPage": 40
+    },
+    "responseTime": 37.99
+}
+
+{
+    "success": true,
+    "data": {
+        "pageType": "answer",
+        "pageNumber": 80,
+        "answers": [
+            {
+                "problemNumber": "4(3)",
+                "correctAnswer": "22.5(cm)",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルA"
+            },
+            {
+                "problemNumber": "4(4)",
+                "correctAnswer": "12(cm)",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルA"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "25:9",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルA"
+            },
+            {
+                "problemNumber": "5(2)",
+                "correctAnswer": "1:4",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルA"
+            },
+            {
+                "problemNumber": "5(3)",
+                "correctAnswer": "4:5",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルA"
+            },
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "頂点6, 辺10, 面6",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "1(2)",
+                "correctAnswer": "①サ ②A, B, D, F ③図",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "600cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "1152cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "2(3)",
+                "correctAnswer": "2009.6cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "2(4)",
+                "correctAnswer": "896cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "2(5)",
+                "correctAnswer": "100.48cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "84cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "54cm²",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "118cm²",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "体積 62.8cm³, 表面積 87.92cm²",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "565.2m³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "12",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "4700",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "7(3)",
+                "correctAnswer": "8.5",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "7(4)",
+                "correctAnswer": "20",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "250cm²",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "1500cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "8(3)",
+                "correctAnswer": "24 4/5 cm",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "105度",
+                "problemPage": 29,
+                "sectionName": "平面図形Ⅰ レベルB 〈問題は29ページ〉"
+            },
+            {
+                "problemNumber": "1(2)",
+                "correctAnswer": "70度",
+                "problemPage": 29,
+                "sectionName": "平面図形Ⅰ レベルB 〈問題は29ページ〉"
+            },
+            {
+                "problemNumber": "1(3)",
+                "correctAnswer": "34度",
+                "problemPage": 29,
+                "sectionName": "平面図形Ⅰ レベルB 〈問題は29ページ〉"
+            }
+        ],
+        "pdfPage": 41
+    },
+    "pageType": "answer",
+    "result": {
+        "pageType": "answer",
+        "pageNumber": 80,
+        "answers": [
+            {
+                "problemNumber": "4(3)",
+                "correctAnswer": "22.5(cm)",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルA"
+            },
+            {
+                "problemNumber": "4(4)",
+                "correctAnswer": "12(cm)",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルA"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "25:9",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルA"
+            },
+            {
+                "problemNumber": "5(2)",
+                "correctAnswer": "1:4",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルA"
+            },
+            {
+                "problemNumber": "5(3)",
+                "correctAnswer": "4:5",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルA"
+            },
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "頂点6, 辺10, 面6",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "1(2)",
+                "correctAnswer": "①サ ②A, B, D, F ③図",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "600cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "1152cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "2(3)",
+                "correctAnswer": "2009.6cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "2(4)",
+                "correctAnswer": "896cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "2(5)",
+                "correctAnswer": "100.48cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "84cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "54cm²",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "118cm²",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "体積 62.8cm³, 表面積 87.92cm²",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "565.2m³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "12",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "4700",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "7(3)",
+                "correctAnswer": "8.5",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "7(4)",
+                "correctAnswer": "20",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "250cm²",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "1500cm³",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "8(3)",
+                "correctAnswer": "24 4/5 cm",
+                "problemPage": 21,
+                "sectionName": "立体図形 レベルA 〈問題は21ページ〉"
+            },
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "105度",
+                "problemPage": 29,
+                "sectionName": "平面図形Ⅰ レベルB 〈問題は29ページ〉"
+            },
+            {
+                "problemNumber": "1(2)",
+                "correctAnswer": "70度",
+                "problemPage": 29,
+                "sectionName": "平面図形Ⅰ レベルB 〈問題は29ページ〉"
+            },
+            {
+                "problemNumber": "1(3)",
+                "correctAnswer": "34度",
+                "problemPage": 29,
+                "sectionName": "平面図形Ⅰ レベルB 〈問題は29ページ〉"
+            }
+        ],
+        "pdfPage": 41
+    },
+    "responseTime": 62.44
+}
+
+{
+    "success": true,
+    "data": {
+        "pageType": "answer",
+        "pageNumber": 82,
+        "answers": [
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "150度",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "105度",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "20度",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "30cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "216cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "54cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "56.52cm",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "6(2)",
+                "correctAnswer": "28.56cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "2",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "3",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "2.28cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "9.12cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "8(3)",
+                "correctAnswer": "9.12cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "8(4)",
+                "correctAnswer": "18.24cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "9(1)",
+                "correctAnswer": "31.4cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "9(2)",
+                "correctAnswer": "0.42cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "9(3)",
+                "correctAnswer": "54cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            }
+        ],
+        "pdfPage": 42
+    },
+    "pageType": "answer",
+    "result": {
+        "pageType": "answer",
+        "pageNumber": 82,
+        "answers": [
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "150度",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "105度",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "20度",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "30cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "216cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "54cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "56.52cm",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "6(2)",
+                "correctAnswer": "28.56cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "2",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "3",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "2.28cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "9.12cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "8(3)",
+                "correctAnswer": "9.12cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "8(4)",
+                "correctAnswer": "18.24cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "9(1)",
+                "correctAnswer": "31.4cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "9(2)",
+                "correctAnswer": "0.42cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "9(3)",
+                "correctAnswer": "54cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            }
+        ],
+        "pdfPage": 42
+    },
+    "responseTime": 32.71
+}
+
+{
+    "success": true,
+    "data": {
+        "pageType": "answer",
+        "pageNumber": 84,
+        "answers": [
+            {
+                "problemNumber": "10(1)",
+                "correctAnswer": "イ",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "10(2)",
+                "correctAnswer": "50.24cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "10(3)",
+                "correctAnswer": "102.5cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "11(1)",
+                "correctAnswer": "242.24cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "11(2)",
+                "correctAnswer": "15.44cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "12(1)",
+                "correctAnswer": "B",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "12(2)",
+                "correctAnswer": "25.12cm",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "13(1)",
+                "correctAnswer": "33.98cm",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "14cm",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "1/2 倍",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "17.1cm²",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "6 : 4 : 5",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "5",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "9 : 7",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "2 : 1",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "6(2)",
+                "correctAnswer": "9 : 16",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "6(3)",
+                "correctAnswer": "4 : 5",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "96%",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "36%",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            }
+        ],
+        "pdfPage": 43
+    },
+    "pageType": "answer",
+    "result": {
+        "pageType": "answer",
+        "pageNumber": 84,
+        "answers": [
+            {
+                "problemNumber": "10(1)",
+                "correctAnswer": "イ",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "10(2)",
+                "correctAnswer": "50.24cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "10(3)",
+                "correctAnswer": "102.5cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "11(1)",
+                "correctAnswer": "242.24cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "11(2)",
+                "correctAnswer": "15.44cm²",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "12(1)",
+                "correctAnswer": "B",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "12(2)",
+                "correctAnswer": "25.12cm",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "13(1)",
+                "correctAnswer": "33.98cm",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅰ レベルB"
+            },
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "14cm",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "1/2 倍",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "17.1cm²",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "6 : 4 : 5",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "5",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "9 : 7",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "2 : 1",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "6(2)",
+                "correctAnswer": "9 : 16",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "6(3)",
+                "correctAnswer": "4 : 5",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "96%",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "36%",
+                "problemPage": 40,
+                "sectionName": "平面図形Ⅱ レベルB（問題は40ページ）"
+            }
+        ],
+        "pdfPage": 43
+    },
+    "responseTime": 33.21
+}
+
+{
+    "success": true,
+    "data": {
+        "pageType": "answer",
+        "pageNumber": 86,
+        "answers": [
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "8cm",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルB"
+            },
+            {
+                "problemNumber": "5(2)",
+                "correctAnswer": "6 1/4 倍",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルB"
+            },
+            {
+                "problemNumber": "1",
+                "correctAnswer": "右図",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "5",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "284cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "3",
+                "correctAnswer": "体積 3000cm³, 表面積 1500cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "4",
+                "correctAnswer": "28cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "5(1)①",
+                "correctAnswer": "9.42cm",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "5(1)②",
+                "correctAnswer": "42.39cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "5(2)",
+                "correctAnswer": "197.82cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "12.56cm",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "6(2)",
+                "correctAnswer": "216度",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "6(3)",
+                "correctAnswer": "266.9cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "1017.36cm³",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "1271.7cm³",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "700000",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "0.4",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "8(3)",
+                "correctAnswer": "3200000",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "9(1)",
+                "correctAnswer": "20cm",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "9(2)",
+                "correctAnswer": "60cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            }
+        ],
+        "pdfPage": 44
+    },
+    "pageType": "answer",
+    "result": {
+        "pageType": "answer",
+        "pageNumber": 86,
+        "answers": [
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "8cm",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルB"
+            },
+            {
+                "problemNumber": "5(2)",
+                "correctAnswer": "6 1/4 倍",
+                "problemPage": null,
+                "sectionName": "平面図形Ⅱ レベルB"
+            },
+            {
+                "problemNumber": "1",
+                "correctAnswer": "右図",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "5",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "284cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "3",
+                "correctAnswer": "体積 3000cm³, 表面積 1500cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "4",
+                "correctAnswer": "28cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "5(1)①",
+                "correctAnswer": "9.42cm",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "5(1)②",
+                "correctAnswer": "42.39cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "5(2)",
+                "correctAnswer": "197.82cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "12.56cm",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "6(2)",
+                "correctAnswer": "216度",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "6(3)",
+                "correctAnswer": "266.9cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "1017.36cm³",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "1271.7cm³",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "700000",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "0.4",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "8(3)",
+                "correctAnswer": "3200000",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "9(1)",
+                "correctAnswer": "20cm",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            },
+            {
+                "problemNumber": "9(2)",
+                "correctAnswer": "60cm²",
+                "problemPage": 46,
+                "sectionName": "立体図形 レベルB (問題は46ページ)"
+            }
+        ],
+        "pdfPage": 44
+    },
+    "responseTime": 55
+}
+
+{
+    "success": true,
+    "data": {
+        "pageType": "answer",
+        "pageNumber": 88,
+        "answers": [
+            {
+                "problemNumber": "10",
+                "correctAnswer": "3cm",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "11",
+                "correctAnswer": "4500cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "12(1)",
+                "correctAnswer": "3750cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "12(2)",
+                "correctAnswer": "15分12秒後",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "13(1)",
+                "correctAnswer": "5cm",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "13(2)",
+                "correctAnswer": "200cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "1",
+                "correctAnswer": "27度",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "三角形CAE",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "60度",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "117cm²",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "3(2)",
+                "correctAnswer": "3.6cm²",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "8cm",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "140cm²",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "5",
+                "correctAnswer": "87.92m²",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "6",
+                "correctAnswer": "160度",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "108度",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "7cm",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            }
+        ],
+        "pdfPage": 45
+    },
+    "pageType": "answer",
+    "result": {
+        "pageType": "answer",
+        "pageNumber": 88,
+        "answers": [
+            {
+                "problemNumber": "10",
+                "correctAnswer": "3cm",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "11",
+                "correctAnswer": "4500cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "12(1)",
+                "correctAnswer": "3750cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "12(2)",
+                "correctAnswer": "15分12秒後",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "13(1)",
+                "correctAnswer": "5cm",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "13(2)",
+                "correctAnswer": "200cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルB"
+            },
+            {
+                "problemNumber": "1",
+                "correctAnswer": "27度",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "三角形CAE",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "2(2)",
+                "correctAnswer": "60度",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "117cm²",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "3(2)",
+                "correctAnswer": "3.6cm²",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "8cm",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "140cm²",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "5",
+                "correctAnswer": "87.92m²",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "6",
+                "correctAnswer": "160度",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "108度",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "7cm",
+                "problemPage": 57,
+                "sectionName": "平面図形 レベルC 〈問題は57ページ〉"
+            }
+        ],
+        "pdfPage": 45
+    },
+    "responseTime": 38.75
+}
+
+{
+    "success": true,
+    "data": {
+        "pageType": "answer",
+        "pageNumber": 90,
+        "answers": [
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "25.12cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "6cm",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "9(1)",
+                "correctAnswer": "41.12cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "10(1)",
+                "correctAnswer": "30度",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "10(2)",
+                "correctAnswer": "42.39cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "11(1)",
+                "correctAnswer": "62.8cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "11(2)",
+                "correctAnswer": "141.3cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "12(1)",
+                "correctAnswer": "六",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "12(2)",
+                "correctAnswer": "2",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "13(1)",
+                "correctAnswer": "188.4cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "14(1)",
+                "correctAnswer": "5:7",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "15(1)",
+                "correctAnswer": "175cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "16(1)",
+                "correctAnswer": "5/8",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            }
+        ],
+        "pdfPage": 46
+    },
+    "pageType": "answer",
+    "result": {
+        "pageType": "answer",
+        "pageNumber": 90,
+        "answers": [
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "25.12cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "6cm",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "9(1)",
+                "correctAnswer": "41.12cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "10(1)",
+                "correctAnswer": "30度",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "10(2)",
+                "correctAnswer": "42.39cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "11(1)",
+                "correctAnswer": "62.8cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "11(2)",
+                "correctAnswer": "141.3cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "12(1)",
+                "correctAnswer": "六",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "12(2)",
+                "correctAnswer": "2",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "13(1)",
+                "correctAnswer": "188.4cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "14(1)",
+                "correctAnswer": "5:7",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "15(1)",
+                "correctAnswer": "175cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "16(1)",
+                "correctAnswer": "5/8",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            }
+        ],
+        "pdfPage": 46
+    },
+    "responseTime": 28.51
+}
+
+{
+    "success": true,
+    "data": {
+        "pageType": "answer",
+        "pageNumber": 92,
+        "answers": [
+            {
+                "problemNumber": "17(1)",
+                "correctAnswer": "7.5cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "17(2)",
+                "correctAnswer": "45cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "18(1)",
+                "correctAnswer": "10cm",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "18(2)",
+                "correctAnswer": "60cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "19(1)",
+                "correctAnswer": "8 : 5",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "128cm²",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "体積 1650cm³, 表面積 1010cm²",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "10",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "3(2)",
+                "correctAnswer": "15cm",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "3(3)",
+                "correctAnswer": "1469.52cm³",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "6",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "96cm³",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "頂点D, 頂点H",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "5(2)",
+                "correctAnswer": "エ",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "5(3)",
+                "correctAnswer": "45.6cm²",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            }
+        ],
+        "pdfPage": 47
+    },
+    "pageType": "answer",
+    "result": {
+        "pageType": "answer",
+        "pageNumber": 92,
+        "answers": [
+            {
+                "problemNumber": "17(1)",
+                "correctAnswer": "7.5cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "17(2)",
+                "correctAnswer": "45cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "18(1)",
+                "correctAnswer": "10cm",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "18(2)",
+                "correctAnswer": "60cm²",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "19(1)",
+                "correctAnswer": "8 : 5",
+                "problemPage": null,
+                "sectionName": "平面図形 レベルC"
+            },
+            {
+                "problemNumber": "1(1)",
+                "correctAnswer": "128cm²",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "2(1)",
+                "correctAnswer": "体積 1650cm³, 表面積 1010cm²",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "3(1)",
+                "correctAnswer": "10",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "3(2)",
+                "correctAnswer": "15cm",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "3(3)",
+                "correctAnswer": "1469.52cm³",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "4(1)",
+                "correctAnswer": "6",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "4(2)",
+                "correctAnswer": "96cm³",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "5(1)",
+                "correctAnswer": "頂点D, 頂点H",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "5(2)",
+                "correctAnswer": "エ",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            },
+            {
+                "problemNumber": "5(3)",
+                "correctAnswer": "45.6cm²",
+                "problemPage": 68,
+                "sectionName": "立体図形 レベルC (問題は68ページ)"
+            }
+        ],
+        "pdfPage": 47
+    },
+    "responseTime": 28.9
+}
+
+{
+    "success": true,
+    "data": {
+        "pageType": "answer",
+        "pageNumber": 94,
+        "answers": [
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "カ",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "6(2)",
+                "correctAnswer": "エ",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "96cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "768cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "1分36秒",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "4 : 1",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "9(1)",
+                "correctAnswer": "8cm",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            }
+        ],
+        "pdfPage": 48
+    },
+    "pageType": "answer",
+    "result": {
+        "pageType": "answer",
+        "pageNumber": 94,
+        "answers": [
+            {
+                "problemNumber": "6(1)",
+                "correctAnswer": "カ",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "6(2)",
+                "correctAnswer": "エ",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "7(1)",
+                "correctAnswer": "96cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "7(2)",
+                "correctAnswer": "768cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "8(1)",
+                "correctAnswer": "1分36秒",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "8(2)",
+                "correctAnswer": "4 : 1",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "9(1)",
+                "correctAnswer": "8cm",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            }
+        ],
+        "pdfPage": 48
+    },
+    "responseTime": 30.55
+}
+
+{
+    "success": true,
+    "data": {
+        "pageType": "answer",
+        "pageNumber": 96,
+        "answers": [
+            {
+                "problemNumber": "10",
+                "correctAnswer": "360cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "11(1)",
+                "correctAnswer": "378cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "11(2)",
+                "correctAnswer": "378cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "11(3)",
+                "correctAnswer": "342cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "12",
+                "correctAnswer": "222cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "13(1)",
+                "correctAnswer": "288cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "13(2)",
+                "correctAnswer": "8cm",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "14(1)",
+                "correctAnswer": "1440cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "14(2)",
+                "correctAnswer": "6と2/3cm",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "15",
+                "correctAnswer": "7300.5cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "16",
+                "correctAnswer": "486cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "17",
+                "correctAnswer": "592cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "18(1)",
+                "correctAnswer": "20分後",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "18(2)",
+                "correctAnswer": "25分後",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            }
+        ],
+        "pdfPage": 49
+    },
+    "pageType": "answer",
+    "result": {
+        "pageType": "answer",
+        "pageNumber": 96,
+        "answers": [
+            {
+                "problemNumber": "10",
+                "correctAnswer": "360cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "11(1)",
+                "correctAnswer": "378cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "11(2)",
+                "correctAnswer": "378cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "11(3)",
+                "correctAnswer": "342cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "12",
+                "correctAnswer": "222cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "13(1)",
+                "correctAnswer": "288cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "13(2)",
+                "correctAnswer": "8cm",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "14(1)",
+                "correctAnswer": "1440cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "14(2)",
+                "correctAnswer": "6と2/3cm",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "15",
+                "correctAnswer": "7300.5cm³",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "16",
+                "correctAnswer": "486cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "17",
+                "correctAnswer": "592cm²",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "18(1)",
+                "correctAnswer": "20分後",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            },
+            {
+                "problemNumber": "18(2)",
+                "correctAnswer": "25分後",
+                "problemPage": null,
+                "sectionName": "立体図形 レベルC"
+            }
+        ],
+        "pdfPage": 49
+    },
+    "responseTime": 30.5
+}
+
+{
+    "error": "ページ分析に失敗しました",
+    "details": "AIレスポンスの解析エラー",
+    "rawResponse": "解析しようとしましたが、この画像には問題番号や解答が一切記載されていません。\n\n画像に写っているのは「MEMO」という見出しと罫線のみの、白紙のメモ用紙です。\n\nそのため、ご指定のJSON形式で出力することはできません。"
+}
+

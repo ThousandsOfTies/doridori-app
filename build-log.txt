@@ -1,0 +1,47 @@
+
+> tutotuto@0.2.7 build
+> vite build --mode kids
+
+逃 Building TutoTuto (mode: kids)
+[36mvite v5.4.21 [32mbuilding for kids...[36m[39m
+transforming...
+[32m笨・[39m 780 modules transformed.
+Generated an empty chunk: "fabric-vendor".
+rendering chunks...
+[plugin:vite:reporter] [plugin vite:reporter] 
+(!) C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/src/services/api.ts is dynamically imported by C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/src/components/study/StudyPanel.tsx but also statically imported by C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/src/components/admin/AdminPanel.tsx, C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/src/components/study/StudyPanel.tsx, C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/src/hooks/admin/usePDFRecords.ts, C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/src/hooks/study/useGrading.ts, dynamic import will not move module into another chunk.
+
+computing gzip size...
+[36m[vite-plugin-static-copy][39m [32mCopied 4 items.[39m
+[2mdist/[22m[32mindex.html                                       [39m[1m[2m    0.96 kB[22m[1m[22m[2m 笏・gzip:     0.46 kB[22m
+[2mdist/[22m[35massets/index-1771620797549.css                   [39m[1m[2m   28.65 kB[22m[1m[22m[2m 笏・gzip:     6.34 kB[22m
+[2mdist/[22m[36massets/fabric-vendor-1771620797549.js            [39m[1m[2m    0.00 kB[22m[1m[22m[2m 笏・gzip:     0.02 kB[22m
+[2mdist/[22m[36massets/workbox-window.prod.es5-1771620797549.js  [39m[1m[2m    5.67 kB[22m[1m[22m[2m 笏・gzip:     2.29 kB[22m
+[2mdist/[22m[36massets/browser-ponyfill-1771620797549.js         [39m[1m[2m    9.98 kB[22m[1m[22m[2m 笏・gzip:     3.43 kB[22m
+[2mdist/[22m[36massets/purify.es-1771620797549.js                [39m[1m[2m   22.77 kB[22m[1m[22m[2m 笏・gzip:     8.62 kB[22m
+[2mdist/[22m[36massets/react-vendor-1771620797549.js             [39m[1m[2m  139.62 kB[22m[1m[22m[2m 笏・gzip:    44.81 kB[22m
+[2mdist/[22m[36massets/index.es-1771620797549.js                 [39m[1m[2m  148.71 kB[22m[1m[22m[2m 笏・gzip:    49.70 kB[22m
+[2mdist/[22m[36massets/html2canvas.esm-1771620797549.js          [39m[1m[2m  198.70 kB[22m[1m[22m[2m 笏・gzip:    46.38 kB[22m
+[2mdist/[22m[36massets/pdfjs-vendor-1771620797549.js             [39m[1m[2m  361.96 kB[22m[1m[22m[2m 笏・gzip:   103.69 kB[22m
+[2mdist/[22m[36massets/index-1771620797549.js                    [39m[1m[33m7,745.61 kB[39m[22m[2m 笏・gzip: 2,883.75 kB[22m
+
+(!) Some chunks are larger than 1000 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[32m笨・built in 23.95s[39m
+error during build:
+Error: 
+  Configure "workbox.maximumFileSizeToCacheInBytes" to change the limit: the default value is 2 MiB.
+  Check https://vite-pwa-org.netlify.app/guide/faq.html#missing-assets-from-sw-precache-manifest for more information.
+  Assets exceeding the limit:
+  - opencv.js is 10.9 MB, and won't be precached.
+
+    at logWorkboxResult (file:///C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/node_modules/vite-plugin-pwa/dist/chunk-G4TAN34B.js:44:13)
+    at generateServiceWorker (file:///C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/node_modules/vite-plugin-pwa/dist/index.js:209:3)
+    at async _generateSW (file:///C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/node_modules/vite-plugin-pwa/dist/index.js:234:5)
+    at async Object.handler (file:///C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/node_modules/vite-plugin-pwa/dist/index.js:427:13)
+    at async PluginDriver.hookParallel (file:///C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/node_modules/rollup/dist/es/shared/node-entry.js:22452:17)
+    at async Object.close (file:///C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/node_modules/rollup/dist/es/shared/node-entry.js:23471:13)
+    at async build (file:///C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:65732:17)
+    at async CAC.<anonymous> (file:///C:/VibeCode/HomeTeacherDev/repos/home-teacher-core/node_modules/vite/dist/node/cli.js:829:5)

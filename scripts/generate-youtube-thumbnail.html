@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube サムネイル生成</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        canvas {
+            border: 2px solid #333;
+            margin: 20px 0;
+            background: white;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #357ae8;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌐 Web公開 YouTube サムネイル生成</h1>
+
+    <canvas id="thumbnail" width="1280" height="720"></canvas>
+
+    <div class="controls">
+        <button onclick="generateThumbnail()">🎨 サムネイル生成</button>
+        <button onclick="downloadImage()">💾 ダウンロード</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('thumbnail');
+        const ctx = canvas.getContext('2d');
+
+        function generateThumbnail() {
+            // 背景グラデーション
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#1a237e');  // 深い青
+            gradient.addColorStop(0.5, '#283593'); // 中間の青
+            gradient.addColorStop(1, '#3949ab');   // 明るい青
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 地球儀を描画
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 200;
+
+            // 地球の影
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 30;
+            ctx.shadowOffsetX = 15;
+            ctx.shadowOffsetY = 15;
+
+            // 地球本体
+            const earthGradient = ctx.createRadialGradient(
+                centerX - radius * 0.3, centerY - radius * 0.3, radius * 0.1,
+                centerX, centerY, radius
+            );
+            earthGradient.addColorStop(0, '#64b5f6');  // 明るい青
+            earthGradient.addColorStop(0.5, '#42a5f5'); // 中間の青
+            earthGradient.addColorStop(1, '#1976d2');   // 深い青
+
+            ctx.fillStyle = earthGradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 影をリセット
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+
+            // 緯度線
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            for (let i = -2; i <= 2; i++) {
+                ctx.beginPath();
+                const y = centerY + (i * radius / 3);
+                const width = Math.sqrt(radius * radius - (i * radius / 3) * (i * radius / 3)) * 2;
+                ctx.ellipse(centerX, y, width / 2, radius / 8, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // 経度線
+            for (let i = 0; i < 6; i++) {
+                ctx.beginPath();
+                const angle = (i * Math.PI) / 6;
+                ctx.ellipse(centerX, centerY, radius * Math.cos(angle), radius, Math.PI / 2 - angle, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // ネットワークノード（衛星的な点）
+            const nodes = [
+                { x: centerX - 300, y: centerY - 150 },
+                { x: centerX + 300, y: centerY - 100 },
+                { x: centerX - 250, y: centerY + 180 },
+                { x: centerX + 280, y: centerY + 150 },
+                { x: centerX - 150, y: centerY - 250 },
+                { x: centerX + 200, y: centerY - 220 },
+            ];
+
+            // 接続線
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 2;
+            nodes.forEach(node => {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(node.x, node.y);
+                ctx.stroke();
+            });
+
+            // ノード（小さな円）
+            nodes.forEach(node => {
+                // グロー効果
+                const nodeGradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, 20);
+                nodeGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+                nodeGradient.addColorStop(0.5, 'rgba(100, 181, 246, 0.8)');
+                nodeGradient.addColorStop(1, 'rgba(100, 181, 246, 0)');
+
+                ctx.fillStyle = nodeGradient;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+                ctx.fill();
+
+                // ノード本体
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // クラウドアイコン（上部）
+            drawCloud(centerX, 120, 0.8);
+
+            // チェックマーク（公開済みの印）
+            ctx.strokeStyle = '#4caf50';
+            ctx.lineWidth = 15;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            const checkX = centerX + radius + 50;
+            const checkY = centerY;
+
+            ctx.beginPath();
+            ctx.moveTo(checkX - 30, checkY);
+            ctx.lineTo(checkX - 10, checkY + 25);
+            ctx.lineTo(checkX + 30, checkY - 30);
+            ctx.stroke();
+
+            // テキスト「WEB公開」
+            ctx.font = 'bold 80px "Arial", sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // テキストの影
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = 3;
+
+            ctx.fillText('WEB公開', centerX, canvas.height - 100);
+
+            // 影をリセット
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        }
+
+        function drawCloud(x, y, scale) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scale, scale);
+
+            // クラウドの影
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.beginPath();
+            ctx.arc(-40, 0, 30, 0, Math.PI * 2);
+            ctx.arc(-10, -10, 40, 0, Math.PI * 2);
+            ctx.arc(30, -5, 35, 0, Math.PI * 2);
+            ctx.arc(50, 10, 25, 0, Math.PI * 2);
+            ctx.fill();
+
+            // クラウド本体
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(-45, 5, 30, 0, Math.PI * 2);
+            ctx.arc(-15, -5, 40, 0, Math.PI * 2);
+            ctx.arc(25, 0, 35, 0, Math.PI * 2);
+            ctx.arc(45, 15, 25, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'web-public-thumbnail.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // ページ読み込み時に自動生成
+        window.onload = generateThumbnail;
+    </script>
+</body>
+</html>

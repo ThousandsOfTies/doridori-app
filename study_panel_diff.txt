@@ -1,0 +1,12 @@
+diff --git a/src/components/study/StudyPanel.tsx b/src/components/study/StudyPanel.tsx
+index e24ac94..8ded243 100644
+--- a/src/components/study/StudyPanel.tsx
++++ b/src/components/study/StudyPanel.tsx
+@@ -10,6 +10,7 @@ import { DrawingPath } from '@thousands-of-ties/drawing-common'
+ import PDFCanvas from './components/PDFCanvas'
+ import { PDFPane, PDFPaneHandle } from './PDFPane'
+ import { StudyToolbar } from './StudyToolbar'
++import { PDFDocument } from 'pdf-lib'
+ import { usePDFRenderer } from '../../hooks/pdf/usePDFRenderer'
+ import './StudyPanel.css'
+ import { useGrading } from '../../hooks/study/useGrading'

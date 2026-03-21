@@ -1,0 +1,184 @@
+{
+    "howToUse": {
+        "title": "📖 使い方ガイド",
+        "step1": {
+            "title": "1️⃣ 教材PDFを登録する",
+            "catalog": "おすすめ無料教材サイトからダウンロード",
+            "local": "ローカルファイルから直接登録"
+        },
+        "step2": {
+            "title": "2️⃣SNSアクセス許可を設定する",
+            "line1": "⚙️ Adminタブ → ❤️ Links & Notification",
+            "line2": "SNS利用時間制限を設定（5分〜60分）",
+            "line3": "採点後、設定した時間だけSNSリンクが有効になります"
+        },
+        "step3": {
+            "title": "3️⃣ PDFで学習する",
+            "line1": "登録したPDFをタップして開きます",
+            "line2Pen": "ペンモード",
+            "line2Write": "で書き込み、",
+            "line2Eraser": "消しゴムモード",
+            "line2Erase": "で消去",
+            "line3": "指やApple Pencilで直接書き込みができます",
+            "line4": "ピンチ操作で拡大・縮小、2本指ドラッグで移動"
+        },
+        "step4": {
+            "title": "4️⃣ AIで採点する",
+            "line1": "✅ 採点",
+            "line1Tap": "ボタンをタップ",
+            "line2": "採点したい範囲をドラッグで選択",
+            "line3": "「採点する」ボタンで送信",
+            "line4": "AIが自動で丸付けとフィードバックを行います",
+            "warning": "⚠️ AI採点は100%正確ではありません。保護者の方は必ず確認してください。"
+        },
+        "step5": {
+            "title": "5️⃣ その他の機能",
+            "history": "🕒 History - 採点履歴を確認",
+            "storage": "💾 Storage - データ使用状況を確認",
+            "delete": "🗑️ ゴミ箱アイコン - PDFを削除"
+        },
+        "closeButton": "閉じる"
+    },
+    "about": {
+        "title": "DoriDoriについて"
+    },
+    "snsSettings": {
+        "title": "Enjoy Links Settings",
+        "description": "表示するリンクと時間制限を設定",
+        "timeLimit": "時間制限",
+        "minutes": "分",
+        "notification": "通知",
+        "notificationEnable": "通知を有効にする",
+        "cancel": "キャンセル",
+        "save": "保存",
+        "timeLocked": "🔒 60分固定",
+        "upgradeToPremium": "Premium登録で自由に変更",
+        "premiumActive": "✅ プレミアム機能有効",
+        "managePlan": "プランを管理"
+    },
+    "gradingHistory": {
+        "title": "学習タイムライン",
+        "snsCount": "SNS",
+        "times": "回",
+        "correctRate": "正答率",
+        "filterAll": "全て",
+        "filterGrading": "📝 採点",
+        "filterSNS": "📱 SNS",
+        "searchPlaceholder": "問題集名、問題番号、SNS名で検索...",
+        "loading": "読み込み中...",
+        "noResults": "条件に一致する履歴がありません",
+        "noHistory": "まだ履歴がありません",
+        "page": "ページ",
+        "problem": "問",
+        "deleteConfirm": "この履歴を削除しますか？",
+        "deleteError": "履歴の削除に失敗しました",
+        "detailTitle": "詳細情報",
+        "problemInfo": "問題情報",
+        "workbook": "問題集",
+        "problemNumber": "問題番号",
+        "dateTime": "実施日時",
+        "answer": "解答",
+        "correct": "✓ 正解",
+        "incorrect": "✗ 不正解",
+        "yourAnswer": "あなたの解答",
+        "correctAnswer": "正しい解答",
+        "feedback": "フィードバック",
+        "explanation": "解説",
+        "gradingImage": "採点時の画像",
+        "closeButton": "Close",
+        "minutes_short": "分"
+    },
+    "storage": {
+        "title": "Storage Information",
+        "usage": "使用量",
+        "used": "使用中",
+        "protected": "✅ 保護されています",
+        "notProtected": "⚠️ 保護されていません",
+        "protectedMessage": "データは自動削除から保護されています。",
+        "notProtectedMessageIOS": "ホーム画面に追加すると、7日間の非アクティブ後の自動削除からデータを保護できます。",
+        "notProtectedMessageOther": "アプリをインストールするか、定期的に使用してデータを保護してください。",
+        "deleteAll": "🗑️ すべて削除",
+        "close": "閉じる",
+        "deleteConfirm": "すべてのデータ（PDF、採点履歴、SNSリンク）を削除しますか？この操作は取り消せません。"
+    },
+    "gradingConfirmation": {
+        "title": "📐 この範囲を採点しますか？",
+        "gradeBySelection": "範囲を選択して採点",
+        "previewAlt": "選択範囲のプレビュー",
+        "modelLabel": "AIモデル:",
+        "defaultModel": "デフォルト",
+        "usingDefault": "✨ {{modelName}} を使用",
+        "cancel": "キャンセル",
+        "retry": "キャンセル",
+        "grading": "⏳ 採点中...",
+        "grade": "採点する",
+        "errorTitle": "❌ エラー",
+        "close": "閉じる"
+    },
+    "gradingResult": {
+        "title": "採点結果",
+        "problem": "問題",
+        "yourAnswer": "あなたの解答:",
+        "correctAnswer": "正しい解答:",
+        "feedback": "フィードバック:",
+        "explanation": "解説:",
+        "gradingSource": "採点ソース:",
+        "sourceDb": "📚 登録済み解答から判定",
+        "problemPage": "問題ページ",
+        "registeredAnswer": "登録正解",
+        "sourceAi": "🤖 AIの推論による判定",
+        "overallComment": "全体コメント",
+        "viewSns": "📱 SNSを見る",
+        "close": "閉じる"
+    },
+    "drillCatalog": {
+        "title": "📚 おすすめ無料教材サイト",
+        "description": "以下のサイトからPDFをダウンロードして、<br />ホーム画面の「<strong>+ Add PDF</strong>」ボタンで登録してください。",
+        "openSite": "サイトを開く",
+        "tipsTitle": "💡 使い方のヒント：",
+        "tipsContent": "「ふたば問題集」は新学習指導要領に対応した全単元カバーのプリントが揃っています。<br />PDFをダウンロードしたら、コンビニで両面印刷すれば市販ドリルのように使えます！",
+        "disclaimer": "※ 各サイトの教材は、それぞれのサイトの利用規約に従ってご利用ください。<br />HomeTeacherは教材の配布元ではなく、リンクを紹介しているのみです。"
+    },
+    "textMode": {
+        "placeholder": "テキストを入力..."
+    },
+    "imageImport": {
+        "title": "画像取込（デジタルバインダー）",
+        "dropZone": "画像をここにドロップ、またはクリックして選択",
+        "supportedFormats": "JPG, PNG, HEIC対応",
+        "dragToReorder": "ドラッグ＆ドロップでページ順を変更できます",
+        "page": "ページ",
+        "rotate": "回転",
+        "delete": "削除",
+        "addMore": "画像を追加",
+        "imagesSelected": "枚の画像が選択されています",
+        "convertAndImport": "PDFに変換して取り込む",
+        "processing": "処理中...",
+        "processingError": "画像の処理に失敗しました",
+        "noImagesError": "画像が選択されていません",
+        "conversionError": "PDFへの変換に失敗しました"
+    },
+    "common": {
+        "cancel": "キャンセル"
+    },
+    "parentSettings": {
+        "title": "保護者様向け設定画面",
+        "loginPrompt": "Googleアカウントでサインインしてください",
+        "signIn": "Googleアカウントでログイン",
+        "account": "アカウント",
+        "currentPlan": "現在のプラン",
+        "premium": "Premium",
+        "free": "Free（無料）",
+        "premiumTitle": "Premiumプランでできること",
+        "snsTimeFeature": "SNSご褒美時間の自由設定",
+        "snsTimeDesc": "無料プランは60分固定ですが、1分〜120分の間で柔軟に設定できます。",
+        "startPremium": "Premiumをはじめる",
+        "stripeNote": "※Stripeによる安全な決済システムを利用しています",
+        "premiumActive": "Premium機能 有効",
+        "premiumActiveDesc": "ありがとうございます！すべてのPremium機能をご利用いただけます。",
+        "snsHint": "SNSの制限時間変更は、元の「管理パネル」画面のスライダーから行えます。",
+        "managePlan": "プランを管理（キャンセル・支払い方法の変更）",
+        "logout": "ログアウト",
+        "processing": "処理中..."
+    }
+}

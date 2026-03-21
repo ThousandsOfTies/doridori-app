@@ -1,0 +1,626 @@
+.pdf-viewer-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.log-panel {
+  width: 350px;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #333;
+  overflow: hidden;
+}
+
+.log-header {
+  padding: 0.75rem 1rem;
+  background-color: #252526;
+  border-bottom: 1px solid #333;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #cccccc;
+}
+
+.log-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.log-item {
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid #2d2d2d;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.log-item:hover {
+  background-color: #2a2a2a;
+}
+
+.pdf-viewer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #e0e0e0;
+  /* テキスト選択を無効化 */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: white;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 100;
+}
+
+.toolbar button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  background-color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar button.active {
+  background-color: #E8F5E9;
+  /* Light Green 50 */
+  color: #2E7D32;
+  /* Dark Green 800 for text, keeping icons natural if they are svg */
+  border-color: #4CAF50;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
+}
+
+/* Ensure icons that shouldn't change color (like pen with specific color) override this or inherit? 
+   Actually, if I set color to #2E7D32, it might tint SVGs that use currentColor. 
+   The user said "don't invert color". 
+   If I just remove 'color: white', it falls back to button default (usually black/gray).
+   Let's set color to inherit or a neutral dark so it doesn't force white.
+   But for "active" state, usually some feedback is good. 
+   User said: "選択時のボタンアイコンや文字の色反転しなくてもいい程度にお願いします"
+   "反転しない" = Don't invert (don't turn white).
+   So let's use a dark color or keep it natural. 
+   Let's try color: inherit or standard text color suitable for light background. 
+*/
+.toolbar button.active {
+  background-color: #C8E6C9;
+  /* Light Green 200 - more visible */
+  color: inherit;
+  /* Keep original color (e.g. for pen) */
+  border-color: #66BB6A;
+  /* Medium green border */
+  transform: scale(1.05);
+  box-shadow: 0 2px 6px rgba(102, 187, 106, 0.3);
+}
+
+
+.toolbar button.cancel-btn {
+  background-color: #f44336;
+  color: white;
+  border-color: #f44336;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.page-info {
+  padding: 0 1rem;
+  font-weight: 500;
+}
+
+.zoom-info {
+  padding: 0 0.5rem;
+  font-weight: 600;
+  color: #2196F3;
+  min-width: 50px;
+  text-align: center;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: #ddd;
+  margin: 0 0.5rem;
+}
+
+.status-message {
+  background-color: #4CAF50;
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-left: auto;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.status-message.selection {
+  background-color: #2196F3;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-message.grading {
+  background-color: #FF9800;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.canvas-container {
+  flex: 1;
+  overflow: hidden;
+  /* Use custom pan, disable native scrollbars */
+  position: relative;
+  /* Remove flex centering to rely on JS panOffset */
+  /* display: flex; */
+  /* align-items: center; */
+  padding: 0;
+  /* Remove padding to simplify coord calc */
+  min-height: 0;
+  min-width: 0;
+  /* Force flex container to ignore content size and respect parent */
+  height: 0;
+  width: 100%;
+}
+
+.canvas-wrapper {
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-layer {
+  position: relative;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.pdf-canvas {
+  display: block;
+  background-color: white;
+  max-width: none;
+  /* Prevent global resets from shrinking the canvas */
+  max-height: none;
+}
+
+.drawing-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  pointer-events: auto;
+  /* Apple Pencil対応: ブラウザのデフォルトタッチ動作を無効化 */
+  touch-action: none;
+  /* iOS Safari: スクロールバウンス効果を無効化 */
+  -webkit-overflow-scrolling: auto;
+}
+
+.drawing-canvas.drawing-mode {
+  cursor: crosshair !important;
+}
+
+.drawing-canvas:not(.drawing-mode) {
+  pointer-events: none;
+}
+
+.selection-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 2px solid #f44336;
+  border-radius: 8px;
+  padding: 2rem;
+  max-width: 600px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+}
+
+.error-message h3 {
+  color: #f44336;
+  margin-bottom: 1rem;
+}
+
+.error-message p {
+  color: #333;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.error-message details {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.error-message summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #666;
+}
+
+.error-message pre {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.error-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10020;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.error-popup-content {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.error-popup-content h3 {
+  margin: 0 0 1rem 0;
+  color: #f44336;
+  font-size: 1.5rem;
+}
+
+.error-popup-content p {
+  margin: 0 0 1.5rem 0;
+  color: #333;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.error-popup-content .close-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+/* 選択範囲確認ポップアップ */
+.selection-confirm-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10010;
+  /* Above pager bar (10005) */
+  animation: fadeIn 0.2s ease-out;
+}
+
+.selection-confirm-content {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+.selection-confirm-content h3 {
+  margin: 0 0 1.5rem 0;
+  color: #2196F3;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.preview-image-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  overflow: auto;
+  max-height: calc(90vh - 200px);
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f5f5f5;
+  padding: 1rem;
+}
+
+.preview-image {
+  max-width: 90%;
+  max-height: 70vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: block;
+  margin: 0 auto;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.confirm-buttons button {
+  flex: 1;
+  max-width: 200px;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px;
+}
+
+.confirm-buttons button svg {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px;
+  flex-shrink: 0;
+}
+
+.cancel-button {
+  background: white;
+  color: #7f8c8d;
+  border: 1px solid #7f8c8d !important;
+}
+
+.cancel-button:hover {
+  background: #f5f5f5;
+}
+
+.confirm-button {
+  background: white;
+  color: #2196F3;
+  border: 1px solid #2196F3 !important;
+}
+
+.confirm-button:hover {
+  background: #E3F2FD;
+}
+
+/* ツール設定ポップアップ */
+.tool-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 200px;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.popup-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.popup-row:last-child {
+  margin-bottom: 0;
+}
+
+.popup-row label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 50px;
+}
+
+.popup-row span {
+  font-size: 0.85rem;
+  color: #666;
+  min-width: 35px;
+  text-align: right;
+}
+
+/* ページナビゲーション用スクロールバー */
+.page-scrollbar-container {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 10005;
+  /* Above selection overlay (9999) */
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 12px 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(4px);
+}
+
+.page-nav-button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: #2196F3;
+  color: white;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(33, 150, 243, 0.3);
+  user-select: none;
+  z-index: 10;
+}
+
+.page-nav-button:hover:not(:disabled) {
+  background: #1976D2;
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(33, 150, 243, 0.4);
+}
+
+.page-nav-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.page-nav-button:disabled {
+  background: #BDBDBD;
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.page-slider-wrapper {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+.page-slider {
+  appearance: slider-vertical;
+  width: 20px;
+  height: 100%;
+  outline: none;
+  cursor: pointer;
+  /* 標準の縦スライダーは下が最小値なので、180度回転させて上を最小値（1ページ目）にする */
+  transform: rotate(180deg);
+  accent-color: #2196F3;
+}
+
+.page-indicator {
+  font-size: 11px;
+  font-weight: 600;
+  color: #2196F3;
+  text-align: center;
+  min-width: 32px;
+  padding: 2px 4px;
+  background: #E3F2FD;
+  border-radius: 8px;
+  user-select: none;
+}
