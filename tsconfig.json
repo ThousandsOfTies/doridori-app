@@ -24,6 +24,9 @@
       ],
       "@thousands-of-ties/drawing-common/*": [
         "../drawing-common/src/*"
+      ],
+      "@home-teacher/common/*": [
+        "../home-teacher-common/src/*"
       ]
     },
     /* Linting */

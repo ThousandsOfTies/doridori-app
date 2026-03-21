@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
-import AdminPanel from './components/admin/AdminPanel'
+import AdminPanel from '@home-teacher/common/components/admin/AdminPanel'
 import StudyPanel from './components/study/StudyPanel'
-import PDFEditorPanel from './components/admin/PDFEditorPanel'
-import { PDFFileRecord, getPDFRecord, getAppSettings, saveAppSettings } from './utils/indexedDB'
-import { useAppInitializer } from './hooks/useAppInitializer'
+import PDFEditorPanel from '@home-teacher/common/components/admin/PDFEditorPanel'
+import { PDFFileRecord, getPDFRecord, getAppSettings, saveAppSettings } from '@home-teacher/common/utils/indexedDB'
+import { useAppInitializer } from '@home-teacher/common/hooks/useAppInitializer'
 
 type AppView = 'admin' | 'viewer' | 'editor'
 

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import { GradingResponseResult } from '../../services/api'
-import { SNSLinkRecord } from '../../utils/indexedDB'
-import { getSNSIcon } from '../../constants/sns'
+import { GradingResponseResult } from '@home-teacher/common/services/api'
+import { SNSLinkRecord } from '@home-teacher/common/utils/indexedDB'
+import { getSNSIcon } from '@home-teacher/common/constants/sns'
 import './GradingResult.css'
 
 interface GradingResultProps {

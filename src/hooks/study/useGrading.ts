@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { GradingResponseResult, gradeWork } from '../../services/api';
-import { saveGradingHistory, generateGradingHistoryId } from '../../utils/indexedDB';
+import { GradingResponseResult, gradeWork } from '@home-teacher/common/services/api';
+import { saveGradingHistory, generateGradingHistoryId } from '@home-teacher/common/utils/indexedDB';
 
 export const useGrading = (
     pdfId: string,

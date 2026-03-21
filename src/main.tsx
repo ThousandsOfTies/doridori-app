@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import './i18n' // i18nの初期化
+import '@home-teacher/common/i18n/index' // i18nの初期化
 import { APP_NAME, APP_DESCRIPTION, THEME_COLOR } from './config/features'
 
 // アプリ名とテーマカラーを動的に設定
@@ -30,7 +30,7 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('未処理のPromise拒否:', event.reason)
 })
 
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider } from '@home-teacher/common/contexts/AuthContext'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
