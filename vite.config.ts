@@ -94,7 +94,7 @@ export default defineConfig(({ mode }) => {
       })
     ],
     server: {
-      port: 3001,
+      port: 3000,
       fs: {
         // PDFsフォルダへのアクセスを許可
         allow: ['..']
