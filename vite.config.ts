@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   const isDiscuss = mode === 'discuss'
   const basePath = env.VITE_APP_BASE || (process.env.NODE_ENV === 'production'
-    ? (isDiscuss ? '/HomeTeacher/discuss/' : '/HomeTeacher/')
+    ? (isDiscuss ? '/DoriDori/discuss/' : '/DoriDori/')
     : '/')
   const appName = env.VITE_APP_NAME || 'DoriDori'
   const themeColor = env.VITE_THEME_COLOR || '#3498db'
@@ -24,7 +24,8 @@ export default defineConfig(({ mode }) => {
     base: basePath,
     resolve: {
       alias: {
-        '@thousands-of-ties/drawing-common': path.resolve(__dirname, '../drawing-common/src')
+        '@thousands-of-ties/drawing-common': path.resolve(__dirname, '../drawing-common/src'),
+        '@home-teacher/common': path.resolve(__dirname, '../home-teacher-common/src')
       }
     },
     plugins: [
