@@ -117,7 +117,7 @@ function validateAndOverrideGrading(student: string, correct: string): boolean {
 }
 
 const app = express()
-const port = process.env.PORT || 3003
+const port = process.env.PORT || 3004
 
 // Increase payload size limit for base64 images, but skip for Stripe webhooks
 app.use((req, res, next) => {
