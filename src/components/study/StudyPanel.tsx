@@ -719,7 +719,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       // APIに送信（簡素化：切り抜き画像のみ）
       addStatusMessage('🎯 AI採点中...')
       const startTime = Date.now()
-      const { gradeWork } = await import('../../services/api')
+      const { gradeWork } = await import('@home-teacher/common/services/api')
       const response = await gradeWork(
         croppedImageData,
         selectedModel !== 'default' ? selectedModel : undefined,
