@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import '@home-teacher/common/i18n/index' // i18nの初期化
+import { i18nReady } from '@home-teacher/common/i18n/index' // i18nの初期化
 import { APP_NAME, APP_DESCRIPTION, THEME_COLOR } from './config/features'
 
 // アプリ名とテーマカラーを動的に設定
@@ -32,10 +32,12 @@ window.addEventListener('unhandledrejection', (event) => {
 
 import { AuthProvider } from '@home-teacher/common/contexts/AuthContext'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  </React.StrictMode>,
-)
+i18nReady.then(() => {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </React.StrictMode>,
+  )
+})
