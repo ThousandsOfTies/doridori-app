@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICON_SVG } from '../../constants/icons';
+import { FiHome, FiRotateCcw, FiTrash2, FiCheckCircle, FiLoader, FiType, FiEdit2 } from 'react-icons/fi';
+import { BiEraser, BiSelection } from 'react-icons/bi';
 
 export type TextDirection = 'horizontal' | 'vertical-rl' | 'vertical-lr';
 
@@ -147,99 +149,52 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
             {/* 戻るボタン */}
             {onBack && (
                 <>
-                    <button onClick={onBack} title="ホームに戻る">
-                        🏠
+                    <button onClick={onBack} title="ホームに戻る" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        <FiHome size={20} />
                     </button>
 
-                    <div className="divider"></div>
+                    {/* パンくず (ホームの横へ移動) */}
+                    {breadcrumbs && breadcrumbs.length > 0 && (
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '2px',
+                            flexWrap: 'nowrap', overflowX: 'auto', minWidth: 0,
+                            scrollbarWidth: 'none', msOverflowStyle: 'none',
+                            marginLeft: '8px'
+                        }}>
+                            {breadcrumbs.map((crumb, i) => (
+                                <React.Fragment key={i}>
+                                    {i > 0 && <span style={{ color: '#bbb', fontSize: '13px', flexShrink: 0 }}>›</span>}
+                                    <span
+                                        onClick={crumb.isCurrent ? undefined : crumb.onClick}
+                                        style={{
+                                            fontSize: '13px',
+                                            color: crumb.isCurrent ? '#333' : '#2c7be5',
+                                            fontWeight: crumb.isCurrent ? 600 : 400,
+                                            cursor: crumb.isCurrent ? 'default' : 'pointer',
+                                            padding: '3px 6px',
+                                            borderRadius: '10px',
+                                            whiteSpace: 'nowrap',
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        {crumb.label}
+                                    </span>
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    )}
 
-                    {/* Split View Toggle */}
-                    <button
-                        onClick={toggleSplitView}
-                        title={isSplitView ? 'シングルビューに戻す' : '2画面表示 (Split View)'}
-                        className={isSplitView ? 'active' : ''}
-                    >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="2" y="4" width="9" height="16" rx="1" stroke="currentColor" strokeWidth="1" fill={isSplitView ? "white" : "none"} />
-                            <rect x="13" y="4" width="9" height="16" rx="1" stroke="currentColor" strokeWidth="1" fill={isSplitView ? "white" : "none"} />
-                        </svg>
-                    </button>
 
-                    {/* Tab Switcher Button */}
-                    <button
-                        className={`tab-switcher-btn ${!isSplitView ? 'active' : ''}`}
-                        onClick={toggleActiveTab}
-                        title={isSplitView ? "シングルビューへ切替" : "A/B 切替"}
-                        style={{
-                            padding: '12px 8px',
-                            minWidth: 'auto',
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}
-                    >
-                        {/* A Indicator */}
-                        <span
-                            style={{
-                                fontWeight: activeTab === 'A' ? 'bold' : 'normal',
-                                textDecoration: activeTab === 'A' ? 'underline' : 'none',
-                                color: activeTab === 'A' ? '#4CAF50' : 'inherit',
-                                fontSize: '0.85rem'
-                            }}
-                        >
-                            A
-                        </span>
 
-                        <span style={{ margin: '0 2px', color: '#ccc', fontSize: '0.85rem' }}>/</span>
 
-                        {/* B Indicator */}
-                        <span
-                            style={{
-                                fontWeight: activeTab === 'B' ? 'bold' : 'normal',
-                                textDecoration: activeTab === 'B' ? 'underline' : 'none',
-                                color: activeTab === 'B' ? '#4CAF50' : 'inherit',
-                                fontSize: '0.85rem'
-                            }}
-                        >
-                            B
-                        </span>
-                    </button>
-
-                    <div className="divider"></div>
                 </>
             )}
 
-            {/* パンくず */}
-            {breadcrumbs && breadcrumbs.length > 0 && (
-                <div style={{
-                    display: 'flex', alignItems: 'center', gap: '2px',
-                    flexWrap: 'nowrap', overflowX: 'auto', minWidth: 0, flex: 1,
-                    scrollbarWidth: 'thin'
-                }}>
-                    {breadcrumbs.map((crumb, i) => (
-                        <React.Fragment key={i}>
-                            {i > 0 && <span style={{ color: '#bbb', fontSize: '13px', flexShrink: 0 }}>›</span>}
-                            <span
-                                onClick={crumb.isCurrent ? undefined : crumb.onClick}
-                                style={{
-                                    fontSize: '13px',
-                                    color: crumb.isCurrent ? '#333' : '#2c7be5',
-                                    fontWeight: crumb.isCurrent ? 600 : 400,
-                                    cursor: crumb.isCurrent ? 'default' : 'pointer',
-                                    padding: '3px 6px',
-                                    borderRadius: '10px',
-                                    whiteSpace: 'nowrap',
-                                    flexShrink: 0,
-                                }}
-                            >
-                                {crumb.label}
-                            </span>
-                        </React.Fragment>
-                    ))}
-                </div>
-            )}
+
 
             {/* 右寄せコンテナ */}
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+
                 <>
                     <div className="divider"></div>
 
@@ -250,7 +205,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                             className={isDrawingMode ? 'active' : ''}
                             title={isDrawingMode ? 'ペンモード ON（クリックで設定）' : 'ペンモード OFF'}
                         >
-                            {ICON_SVG.pen(isDrawingMode, penColor)}
+                            <FiEdit2 size={20} color={isDrawingMode ? penColor : 'currentColor'} />
                         </button>
 
                         {/* ペン設定ポップアップ */}
@@ -288,7 +243,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                             className={isEraserMode ? 'active' : ''}
                             title={isEraserMode ? '消しゴムモード ON（クリックで設定）' : '消しゴムモード OFF'}
                         >
-                            {ICON_SVG.eraser(isEraserMode)}
+                            <BiEraser size={20} className="icon-scale-13" />
                         </button>
 
                         {/* 消しゴム設定ポップアップ */}
@@ -316,9 +271,8 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                             onClick={handleTextClick}
                             className={isTextMode ? 'active' : ''}
                             title={isTextMode ? 'テキストモード ON（クリックで設定）' : 'テキストモード OFF'}
-                            style={{ fontFamily: 'Times New Roman, serif', fontSize: '1.4rem' }}
                         >
-                            T
+                            <FiType size={20} />
                         </button>
 
                         {/* テキスト設定ポップアップ */}
@@ -361,26 +315,70 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         )}
                     </div>
 
+                    {!onGrade && (
+                        <>
+                            <div className="divider" style={{ margin: '0 4px' }}></div>
+
+                            {/* Split View Toggle (Moved to Tool Group) */}
+                            <button
+                                onClick={toggleSplitView}
+                                title={isSplitView ? 'シングルビューに戻す' : '2画面表示 (Split View)'}
+                                className={isSplitView ? 'active' : ''}
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="2" y="4" width="9" height="16" rx="1" stroke="currentColor" strokeWidth="1" fill={isSplitView ? "white" : "none"} />
+                                    <rect x="13" y="4" width="9" height="16" rx="1" stroke="currentColor" strokeWidth="1" fill={isSplitView ? "white" : "none"} />
+                                </svg>
+                            </button>
+
+                            {/* Tab Switcher Button (Widened) */}
+                            <button
+                                className={`tab-switcher-btn ${!isSplitView ? 'active' : ''}`}
+                                onClick={toggleActiveTab}
+                                title={isSplitView ? "シングルビューへ切替" : "A/B 切替"}
+                                style={{
+                                    minWidth: '45px',
+                                }}
+                            >
+                                {/* A Indicator */}
+                                <span
+                                    style={{
+                                        fontWeight: activeTab === 'A' ? 'bold' : 'normal',
+                                        textDecoration: activeTab === 'A' ? 'underline' : 'none',
+                                        color: activeTab === 'A' ? '#4CAF50' : 'inherit',
+                                        fontSize: '0.85rem'
+                                    }}
+                                >
+                                    A
+                                </span>
+
+                                <span style={{ margin: '0 4px', color: '#ccc', fontSize: '0.85rem' }}>/</span>
+
+
+                                {/* B Indicator */}
+                                <span
+                                    style={{
+                                        fontWeight: activeTab === 'B' ? 'bold' : 'normal',
+                                        textDecoration: activeTab === 'B' ? 'underline' : 'none',
+                                        color: activeTab === 'B' ? '#4CAF50' : 'inherit',
+                                        fontSize: '0.85rem'
+                                    }}
+                                >
+                                    B
+                                </span>
+                            </button>
+                        </>
+                    )}
+
                     {/* Context-specific buttons */}
                     {onGrade ? (
                         /* Answer panel mode */
                         <>
                             <div className="divider"></div>
-                            <button
-                                onClick={onUndoAnswer}
-                                disabled={!canUndoAnswer}
-                                title="元に戻す"
-                            >
-                                ↩️
-                            </button>
-                            <button onClick={onClearAnswer} title="クリア">
-                                🗑️
-                            </button>
                             {setSelectedModel && availableModels && (
                                 <select
                                     value={selectedModel}
                                     onChange={(e) => setSelectedModel(e.target.value)}
-                                    style={{ fontSize: '12px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #ccc' }}
                                 >
                                     <option value="default">{defaultModelName}</option>
                                     {availableModels.map(m => (
@@ -391,20 +389,15 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                             <button
                                 onClick={onGrade}
                                 disabled={isGrading}
+                                className="btn-submit"
                                 title="採点する"
                                 style={{
-                                    padding: '5px 16px',
-                                    fontSize: '18px',
-                                    background: '#4CAF50',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '6px',
                                     cursor: isGrading ? 'wait' : 'pointer',
                                     opacity: isGrading ? 0.6 : 1,
-                                    transition: 'opacity 0.15s',
+                                    transition: 'all 0.15s',
                                 }}
                             >
-                                {isGrading ? '⏳' : '✅'}
+                                {isGrading ? <FiLoader size={20} className="animate-spin" /> : <FiCheckCircle size={20} />}
                             </button>
                         </>
                     ) : (
@@ -417,7 +410,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                 disabled={isGrading}
                                 title={isSelectionMode ? t('gradingConfirmation.cancel') : t('gradingConfirmation.gradeBySelection')}
                             >
-                                {isGrading ? '⏳' : ICON_SVG.selection(isSelectionMode)}
+                                {isGrading ? <FiLoader size={20} className="animate-spin" /> : <BiSelection size={20} className="icon-scale-13" />}
                             </button>
                         </>
                     )}

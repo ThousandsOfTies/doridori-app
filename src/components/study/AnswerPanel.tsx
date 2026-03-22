@@ -42,6 +42,15 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   const [canUndo, setCanUndo] = useState(false)
   const [eraserCursorPos, setEraserCursorPos] = useState<{ x: number; y: number; diameter: number } | null>(null)
 
+  // Zoom & Pan state
+  const [zoom, setZoom] = useState(1.0)
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
+  const [isPanning, setIsPanning] = useState(false)
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false)
+  const panStartRef = useRef<{ x: number; y: number } | null>(null)
+  const gestureRef = useRef<{ startZoom: number; startPan: { x: number; y: number }; startDist: number; startCenter: { x: number; y: number } } | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
   // Build background canvas: question image + writing space
   // Portrait → image top, writing space below (×2 height ≈ A4→A3)
   // Landscape → image left, writing space right (same width, ≈ A4→A3)
@@ -98,9 +107,26 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   useEffect(() => {
     if (!questionImage) return
     const img = new Image()
-    img.onload = () => initCanvas(img)
+    img.onload = () => {
+      initCanvas(img)
+      // Reset zoom/pan on new image
+      setZoom(1.0)
+      setPanOffset({ x: 0, y: 0 })
+    }
     img.src = questionImage
   }, [questionImage])
+
+  // Ctrl Key detection
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Control') setIsCtrlPressed(true) }
+    const handleKeyUp = (e: KeyboardEvent) => { if (e.key === 'Control') setIsCtrlPressed(false) }
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [])
 
   const saveSnapshot = () => {
     const drawCanvas = drawCanvasRef.current
@@ -212,11 +238,78 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     }
   }
 
-  const cursor = isEraserMode ? 'none' : ICON_SVG.penCursor(penColor)
+  const cursor = isPanning ? 'grabbing' : (isCtrlPressed ? 'grab' : (isEraserMode ? 'none' : ICON_SVG.penCursor(penColor)))
+
+  // Zoom/Pan Helpers
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const handleWheelNative = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        const delta = -e.deltaY
+        const scaleFactor = 1.1
+        const newZoom = delta > 0 ? zoom * scaleFactor : zoom / scaleFactor
+        const clampedZoom = Math.min(Math.max(newZoom, 0.2), 5.0)
+
+        // Zoom toward mouse pointer
+        const rect = container.getBoundingClientRect()
+        const mouseX = e.clientX - rect.left
+        const mouseY = e.clientY - rect.top
+
+        const contentX = (mouseX - panOffset.x) / zoom
+        const contentY = (mouseY - panOffset.y) / zoom
+
+        setPanOffset({
+          x: mouseX - contentX * clampedZoom,
+          y: mouseY - contentY * clampedZoom
+        })
+        setZoom(clampedZoom)
+      } else {
+        // Normal scroll translates to pan
+        setPanOffset(prev => ({ ...prev, y: prev.y - e.deltaY }))
+      }
+    }
+
+    container.addEventListener('wheel', handleWheelNative, { passive: false })
+    return () => container.removeEventListener('wheel', handleWheelNative)
+  }, [zoom, panOffset])
+
+  const startPanning = (clientX: number, clientY: number) => {
+    setIsPanning(true)
+    panStartRef.current = { x: clientX - panOffset.x, y: clientY - panOffset.y }
+  }
+
+  const doPanning = (clientX: number, clientY: number) => {
+    if (!isPanning || !panStartRef.current) return
+    setPanOffset({
+      x: clientX - panStartRef.current.x,
+      y: clientY - panStartRef.current.y
+    })
+  }
+
+  const stopPanning = () => {
+    setIsPanning(false)
+    panStartRef.current = null
+  }
 
   return (
-    <div className="answer-panel-content">
-      <div className="answer-canvas-stack">
+    <div
+      className="answer-panel-content"
+      ref={containerRef}
+      style={{ overflow: 'hidden', touchAction: 'none' }}
+    >
+      <div
+        className="answer-canvas-stack"
+        style={{
+          transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
+          transformOrigin: '0 0',
+          transition: isPanning ? 'none' : 'transform 0.1s ease-out'
+        }}
+      >
         {/* Background layer: question image + writing area */}
         <canvas ref={bgCanvasRef} className="answer-bg-canvas" />
         {/* Drawing layer: transparent overlay for strokes */}
@@ -224,21 +317,53 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
           ref={drawCanvasRef}
           className="answer-draw-canvas"
           style={{ cursor }}
-          onMouseDown={(e) => startDraw(e.clientX, e.clientY)}
+          onMouseDown={(e) => {
+            if (isCtrlPressed || e.button === 1) {
+              startPanning(e.clientX, e.clientY)
+            } else {
+              startDraw(e.clientX, e.clientY)
+            }
+          }}
           onMouseMove={(e) => {
-            if (isEraserMode) setEraserCursorPos(getEraserCursorPos(e.clientX, e.clientY))
-            if (e.buttons === 1) drawTo(e.clientX, e.clientY)
+            if (isPanning) {
+              doPanning(e.clientX, e.clientY)
+            } else {
+              if (isEraserMode) setEraserCursorPos(getEraserCursorPos(e.clientX, e.clientY))
+              if (e.buttons === 1) drawTo(e.clientX, e.clientY)
+            }
           }}
-          onMouseUp={stopDraw}
-          onMouseLeave={() => { stopDraw(); setEraserCursorPos(null) }}
-          onTouchStart={(e) => { e.preventDefault(); const t = e.touches[0]; startDraw(t.clientX, t.clientY) }}
+          onMouseUp={() => { stopDraw(); stopPanning() }}
+          onMouseLeave={() => { stopDraw(); stopPanning(); setEraserCursorPos(null) }}
+          onTouchStart={(e) => {
+            if (e.touches.length === 2) {
+              const t1 = e.touches[0]; const t2 = e.touches[1]
+              const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY)
+              const center = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 }
+              gestureRef.current = { startZoom: zoom, startPan: panOffset, startDist: dist, startCenter: center }
+            } else if (e.touches.length === 1) {
+              const t = e.touches[0]; startDraw(t.clientX, t.clientY)
+            }
+          }}
           onTouchMove={(e) => {
-            e.preventDefault()
-            const t = e.touches[0]
-            if (isEraserMode) setEraserCursorPos(getEraserCursorPos(t.clientX, t.clientY))
-            drawTo(t.clientX, t.clientY)
+            if (e.touches.length === 2 && gestureRef.current) {
+              const t1 = e.touches[0]; const t2 = e.touches[1]
+              const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY)
+              const center = { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 }
+              const { startZoom, startPan, startDist, startCenter } = gestureRef.current
+              const scale = dist / startDist
+              const newZoom = Math.min(Math.max(startZoom * scale, 0.2), 5.0)
+              const rect = containerRef.current!.getBoundingClientRect()
+              const contentX = (startCenter.x - rect.left - startPan.x) / startZoom
+              const contentY = (startCenter.y - rect.top - startPan.y) / startZoom
+              setZoom(newZoom)
+              setPanOffset({ x: center.x - rect.left - contentX * newZoom, y: center.y - rect.top - contentY * newZoom })
+            } else if (e.touches.length === 1) {
+              const t = e.touches[0]
+              if (isEraserMode) setEraserCursorPos(getEraserCursorPos(t.clientX, t.clientY))
+              drawTo(t.clientX, t.clientY)
+            }
           }}
-          onTouchEnd={() => { stopDraw(); setEraserCursorPos(null) }}
+          onTouchEnd={() => { stopDraw(); stopPanning(); setEraserCursorPos(null); gestureRef.current = null }}
         />
         {/* Eraser circle cursor */}
         {isEraserMode && eraserCursorPos && (
@@ -247,8 +372,8 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
               position: 'absolute',
               left: `${eraserCursorPos.x}px`,
               top: `${eraserCursorPos.y}px`,
-              width: `${eraserCursorPos.diameter}px`,
-              height: `${eraserCursorPos.diameter}px`,
+              width: `${eraserSize}px`,
+              height: `${eraserSize}px`,
               borderRadius: '50%',
               backgroundColor: 'rgba(255, 100, 100, 0.2)',
               border: '2px solid rgba(255, 100, 100, 0.6)',

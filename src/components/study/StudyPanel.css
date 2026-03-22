@@ -61,7 +61,9 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 1rem;
+  padding: 0 1rem;
+  height: 54px;
+  box-sizing: border-box;
   background-color: white;
   border-bottom: 1px solid #ddd;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -69,18 +71,25 @@
   z-index: 100;
 }
 
-.toolbar button {
-  padding: 0.5rem 0.75rem;
+.toolbar button, .toolbar select {
+  height: 34px;
+  padding: 0 0.6rem;
   border: 1px solid #ccc;
   background-color: white;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 0.9rem;
   transition: all 0.2s;
-  min-width: 40px;
+  min-width: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+}
+
+.toolbar button svg {
+  width: 18px;
+  height: 18px;
 }
 
 .toolbar button:disabled {
@@ -111,15 +120,28 @@
 */
 .toolbar button.active {
   background-color: #C8E6C9;
-  /* Light Green 200 - more visible */
   color: inherit;
-  /* Keep original color (e.g. for pen) */
   border-color: #66BB6A;
-  /* Medium green border */
   transform: scale(1.05);
   box-shadow: 0 2px 6px rgba(102, 187, 106, 0.3);
 }
 
+/* 提出ボタン (背景なし・緑枠・緑アイコン) */
+.toolbar button.btn-submit {
+  background: #f8f9fa;
+  color: #4CAF50;
+  border: 1px solid #4CAF50;
+  font-weight: 600;
+}
+
+.toolbar button.btn-submit:hover:not(:disabled) {
+  background: #e8f5e9;
+}
+
+/* アイコン自体の調整用 */
+.icon-scale-13 {
+  transform: scale(1.2);
+}
 
 .toolbar button.cancel-btn {
   background-color: #f44336;
