@@ -26,7 +26,8 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@thousands-of-ties/drawing-common': path.resolve(__dirname, '../drawing-common/src'),
         '@home-teacher/common': path.resolve(__dirname, '../home-teacher-common/src')
-      }
+      },
+      dedupe: ['i18next', 'react-i18next', 'react', 'react-dom']
     },
     plugins: [
       react(),
@@ -54,12 +55,14 @@ export default defineConfig(({ mode }) => {
         ]
       }),
       VitePWA({
-        registerType: 'prompt',
+        registerType: 'autoUpdate',
         includeAssets: ['logo.png', 'app.png'],
 
         manifest: false,
         workbox: {
           cleanupOutdatedCaches: true,
+          skipWaiting: true,
+          clientsClaim: true,
           globIgnores: ['**/opencv*.js'],
           globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2}'],
           maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // 15MB 念のため増やす
