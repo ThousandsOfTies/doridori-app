@@ -46,10 +46,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const answerPanelRef = useRef<AnswerPanelHandle>(null)
   const gradingPanelRef = useRef<HTMLDivElement>(null)
-  const isGradingSelectingRef = useRef(false)
-  const gradingSelectionStartRef = useRef<{ x: number; y: number } | null>(null)
-  const [gradingSelectionRect, setGradingSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
-  const [isGradingSelectionMode, setIsGradingSelectionMode] = useState(false)
+  const isGradingCapturingRef = useRef(false)
+  const gradingCaptureStartRef = useRef<{ x: number; y: number } | null>(null)
+  const [gradingCaptureRect, setGradingCaptureRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
+  const [isGradingCaptureMode, setIsGradingCaptureMode] = useState(false)
 
   // --- Consolidated State & Logic ---
 
@@ -491,25 +491,25 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   }
 
   // 採点結果パネル用の範囲選択ハンドラ
-  const handleGradingSelectionStart = (e: React.MouseEvent) => {
+  const handleGradingCaptureStart = (e: React.MouseEvent) => {
     if (e.button !== 0) return
     const rect = gradingPanelRef.current?.getBoundingClientRect()
     if (!rect) return
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-    isGradingSelectingRef.current = true
-    gradingSelectionStartRef.current = { x, y }
-    setGradingSelectionRect({ x, y, width: 0, height: 0 })
+    isGradingCapturingRef.current = true
+    gradingCaptureStartRef.current = { x, y }
+    setGradingCaptureRect({ x, y, width: 0, height: 0 })
   }
 
-  const handleGradingSelectionMove = (e: React.MouseEvent) => {
-    if (!isGradingSelectingRef.current || !gradingSelectionStartRef.current || !gradingPanelRef.current) return
+  const handleGradingCaptureMove = (e: React.MouseEvent) => {
+    if (!isGradingCapturingRef.current || !gradingCaptureStartRef.current || !gradingPanelRef.current) return
     const rect = gradingPanelRef.current.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
-    const sx = gradingSelectionStartRef.current.x
-    const sy = gradingSelectionStartRef.current.y
-    setGradingSelectionRect({
+    const sx = gradingCaptureStartRef.current.x
+    const sy = gradingCaptureStartRef.current.y
+    setGradingCaptureRect({
       x: Math.min(sx, x),
       y: Math.min(sy, y),
       width: Math.abs(x - sx),
@@ -517,12 +517,12 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     })
   }
 
-  const handleGradingSelectionEnd = async () => {
-    if (!isGradingSelectingRef.current || !gradingSelectionRect || !gradingPanelRef.current) return
-    isGradingSelectingRef.current = false
+  const handleGradingCaptureEnd = async () => {
+    if (!isGradingCapturingRef.current || !gradingCaptureRect || !gradingPanelRef.current) return
+    isGradingCapturingRef.current = false
 
-    if (gradingSelectionRect.width < 10 || gradingSelectionRect.height < 10) {
-      setGradingSelectionRect(null)
+    if (gradingCaptureRect.width < 10 || gradingCaptureRect.height < 10) {
+      setGradingCaptureRect(null)
       return
     }
 
@@ -534,7 +534,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       const scrollTop = scrollEl?.scrollTop ?? 0
 
       // オーバーレイ（枠線）を非表示にしてからキャプチャ
-      const overlay = panel.querySelector('.grading-selection-overlay') as HTMLElement | null
+      const overlay = panel.querySelector('.grading-capture-overlay') as HTMLElement | null
       if (overlay) overlay.style.display = 'none'
 
       const fullCanvas = await html2canvas(panel, {
@@ -550,13 +550,13 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
       const dpr = window.devicePixelRatio || 2
       const cropCanvas = document.createElement('canvas')
-      cropCanvas.width = gradingSelectionRect.width * dpr
-      cropCanvas.height = gradingSelectionRect.height * dpr
+      cropCanvas.width = gradingCaptureRect.width * dpr
+      cropCanvas.height = gradingCaptureRect.height * dpr
       const ctx = cropCanvas.getContext('2d')!
       ctx.drawImage(
         fullCanvas,
-        gradingSelectionRect.x * dpr,
-        gradingSelectionRect.y * dpr,
+        gradingCaptureRect.x * dpr,
+        gradingCaptureRect.y * dpr,
         cropCanvas.width,
         cropCanvas.height,
         0, 0,
@@ -566,19 +566,19 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
       const capturedImage = cropCanvas.toDataURL('image/png')
       pushPanel({ type: 'answer', questionImage: capturedImage, source: 'grading' })
-      setIsGradingSelectionMode(false)
-      setGradingSelectionRect(null)
+      setIsGradingCaptureMode(false)
+      setGradingCaptureRect(null)
     } catch (error) {
       console.error('Grading capture error:', error)
       addStatusMessage('❌ キャプチャに失敗しました')
-      setGradingSelectionRect(null)
+      setGradingCaptureRect(null)
     }
   }
 
-  const cancelGradingSelection = () => {
-    setIsGradingSelectionMode(false)
-    setGradingSelectionRect(null)
-    isGradingSelectingRef.current = false
+  const cancelGradingCapture = () => {
+    setIsGradingCaptureMode(false)
+    setGradingCaptureRect(null)
+    isGradingCapturingRef.current = false
   }
 
   const captureSelectionArea = async (rect: { x: number, y: number, width: number, height: number }) => {
@@ -853,8 +853,8 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     const currentPanel = panelStack[activePanelIndex]
     if (currentPanel?.type === 'grading') {
       // 採点結果パネル上での範囲選択（html2canvasでキャプチャ）
-      setIsGradingSelectionMode(true)
-      setGradingSelectionRect(null)
+      setIsGradingCaptureMode(true)
+      setGradingCaptureRect(null)
       addStatusMessage('📐 キャプチャする範囲を選択してください')
       return
     }
@@ -1404,10 +1404,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
               setActiveTab(prev => prev === 'A' ? 'B' : 'A')
             }
           }}
-          isSelectionMode={isSelectionMode || isGradingSelectionMode}
+          isSelectionMode={isSelectionMode || isGradingCaptureMode}
           isGrading={isGrading}
           startGrading={startGrading}
-          cancelSelection={isGradingSelectionMode ? cancelGradingSelection : handleCancelSelection}
+          cancelSelection={isGradingCaptureMode ? cancelGradingCapture : handleCancelSelection}
           isTextMode={isTextMode}
           toggleTextMode={toggleTextMode}
           textFontSize={textFontSize}
@@ -1474,27 +1474,27 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
                     responseTime={panel.responseTime}
                     pdfId={pdfId}
                   />
-                  {isGradingSelectionMode && i === activePanelIndex && (
+                  {isGradingCaptureMode && i === activePanelIndex && (
                     <div
-                      className="grading-selection-overlay"
+                      className="grading-capture-overlay"
                       style={{
                         position: 'absolute',
                         top: 0, left: 0, width: '100%', height: '100%',
                         zIndex: 9999,
                         cursor: 'crosshair',
                       }}
-                      onMouseDown={handleGradingSelectionStart}
-                      onMouseMove={handleGradingSelectionMove}
-                      onMouseUp={handleGradingSelectionEnd}
-                      onMouseLeave={() => { if (isGradingSelectingRef.current) handleGradingSelectionEnd() }}
+                      onMouseDown={handleGradingCaptureStart}
+                      onMouseMove={handleGradingCaptureMove}
+                      onMouseUp={handleGradingCaptureEnd}
+                      onMouseLeave={() => { if (isGradingCapturingRef.current) handleGradingCaptureEnd() }}
                     >
-                      {gradingSelectionRect && (
+                      {gradingCaptureRect && (
                         <div style={{
                           position: 'absolute',
-                          left: gradingSelectionRect.x,
-                          top: gradingSelectionRect.y,
-                          width: gradingSelectionRect.width,
-                          height: gradingSelectionRect.height,
+                          left: gradingCaptureRect.x,
+                          top: gradingCaptureRect.y,
+                          width: gradingCaptureRect.width,
+                          height: gradingCaptureRect.height,
                           backgroundColor: 'rgba(52, 152, 219, 0.2)',
                           border: '2px solid #3498db',
                           pointerEvents: 'none'
