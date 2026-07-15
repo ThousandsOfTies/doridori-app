@@ -15,45 +15,6 @@ function App() {
   // Initialization Hook
   const { isInitialized, initialView, initialPDF, settingsVersion } = useAppInitializer()
 
-  // Manual Version Check Logic
-  const [manualUpdate, setManualUpdate] = useState(false)
-  const currentHash = (import.meta as any).env.VITE_APP_COMMIT_HASH || 'unknown'
-
-  useEffect(() => {
-    const checkVersion = async () => {
-      try {
-        console.log(`🔍 Checking version (current: ${currentHash})...`)
-        // キャッシュを避けるためにタイムスタンプを付与
-        const response = await fetch(`./VERSIONS?v=${Date.now()}`, { cache: 'no-store' })
-        if (!response.ok) throw new Error('Failed to fetch VERSIONS')
-        
-        const text = await response.text()
-        const match = text.match(/doridori-app=([a-f0-9]+)/)
-        
-        if (match && match[1]) {
-          const latestHash = match[1].substring(0, 7) // 7文字で比較 (short hash)
-          console.log(`📡 Latest hash: ${latestHash}, Local hash: ${currentHash}`)
-          
-          if (latestHash !== currentHash && currentHash !== 'unknown') {
-            console.log('✨ New version detected via VERSIONS file!')
-            setManualUpdate(true)
-          }
-        }
-      } catch (err) {
-        console.warn('⚠️ Version check failed:', err)
-      }
-    }
-
-    // 初回実行
-    if (isInitialized) {
-      checkVersion()
-      
-      // 30分ごとにチェック
-      const interval = setInterval(checkVersion, 30 * 60 * 1000)
-      return () => clearInterval(interval)
-    }
-  }, [isInitialized, currentHash])
-
   // Sync initial state from hook
   useEffect(() => {
     if (isInitialized) {
@@ -67,7 +28,7 @@ function App() {
 
   // PWA update handling
   const {
-    needRefresh: [needRefresh, setNeedRefresh],
+    needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
@@ -132,7 +93,7 @@ function App() {
           key={`admin-${settingsVersion}`}
           onSelectPDF={handleSelectPDF}
           onEditPDF={handleEditPDF}
-          hasUpdate={needRefresh || manualUpdate}
+          hasUpdate={needRefresh}
           onUpdate={handleUpdate}
         />
       ) : currentView === 'viewer' && selectedPDF ? (
