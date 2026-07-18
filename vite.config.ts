@@ -27,7 +27,8 @@ export default defineConfig(({ mode }) => {
   return {
     base: basePath,
     define: {
-      'import.meta.env.VITE_APP_COMMIT_HASH': JSON.stringify(commitHash)
+      'import.meta.env.VITE_APP_COMMIT_HASH': JSON.stringify(commitHash),
+      'import.meta.env.VITE_INDEXED_DB_NAME': JSON.stringify('DoriDoriDB')
     },
     resolve: {
       alias: {
