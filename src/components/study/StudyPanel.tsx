@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { GradingResponseResult, getAvailableModels, ModelInfo } from '@home-teacher/common/services/api'
 import GradingResult from './GradingResult'
 import AnswerPanel, { AnswerPanelHandle } from './AnswerPanel'
-import { savePDFRecord, getPDFRecord, updatePDFRecord, getAllSNSLinks, SNSLinkRecord, PDFFileRecord, saveGradingHistory, generateGradingHistoryId, saveDrawing, saveTextAnnotation } from '@home-teacher/common/utils/indexedDB'
+import { deleteAllDrawings, getAllDrawings, getPDFRecord, updatePDFRecord, getAllSNSLinks, SNSLinkRecord, PDFFileRecord, saveGradingHistory, generateGradingHistoryId, saveDrawing, saveTextAnnotation } from '@home-teacher/common/utils/indexedDB'
 import { ICON_SVG } from '../../constants/icons'
 import { DrawingPath } from '@thousands-of-ties/drawing-common'
 import { PDFPane, PDFPaneHandle } from '@home-teacher/common/components/study/PDFPane'
@@ -35,6 +35,7 @@ interface StudyPanelProps {
 
 type PDFRenderMode = 'legacy' | 'adaptive'
 const PDF_RENDER_MODE_STORAGE_KEY = 'doridori.pdfRenderMode'
+const SPLIT_RATIO_STORAGE_KEY = 'doridori.splitRatio'
 
 const resolvePDFRenderMode = (): PDFRenderMode => {
   const requestedMode = new URLSearchParams(window.location.search).get('pdfRenderMode')
@@ -83,8 +84,9 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
   // Split Ratio
   const [splitRatio, setSplitRatio] = useState(() => {
-    const saved = localStorage.getItem('splitRatio')
-    return saved ? parseFloat(saved) : 0.5
+    const saved = localStorage.getItem(SPLIT_RATIO_STORAGE_KEY)
+    const parsed = saved === null ? NaN : Number(saved)
+    return Number.isFinite(parsed) ? Math.max(0.2, Math.min(0.8, parsed)) : 0.5
   })
   const [isResizing, setIsResizing] = useState(false)
   const splitContainerRef = useRef<HTMLDivElement>(null)
@@ -199,11 +201,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   useEffect(() => {
     const loadDrawings = async () => {
       try {
-        const record = await getPDFRecord(pdfId)
-        if (!record?.drawings) return
+        const drawings = await getAllDrawings(pdfId)
 
         const newMap = new Map<number, DrawingPath[]>()
-        for (const [pageStr, pathsJson] of Object.entries(record.drawings)) {
+        for (const [pageStr, pathsJson] of Object.entries(drawings)) {
           const page = parseInt(pageStr, 10)
           const paths = JSON.parse(pathsJson) as DrawingPath[]
           if (paths.length > 0) {
@@ -847,14 +848,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     }
 
     setDrawingPaths(new Map())
-    // IndexedDBからも削除
+    // IndexedDBのページ別筆跡ストアからも削除
     try {
-      const record = await getPDFRecord(pdfId)
-      if (record) {
-        record.drawings = {}
-        await savePDFRecord(record)
-        addStatusMessage('🗑️ すべてのペン跡を削除しました')
-      }
+      await deleteAllDrawings(pdfId)
+      addStatusMessage('🗑️ すべてのペン跡を削除しました')
     } catch (error) {
       console.error('ペン跡の削除に失敗:', error)
       addStatusMessage('❌ ペン跡の削除に失敗しました')
@@ -1078,7 +1075,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       const rect = splitContainerRef.current.getBoundingClientRect()
       const finalRatio = (clientX - rect.left) / rect.width
       const clampedRatio = Math.max(0.2, Math.min(0.8, finalRatio))
-      localStorage.setItem('splitRatio', clampedRatio.toString())
+      localStorage.setItem(SPLIT_RATIO_STORAGE_KEY, clampedRatio.toString())
       setIsResizing(false)
     }
 
