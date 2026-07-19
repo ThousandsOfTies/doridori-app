@@ -33,6 +33,18 @@ interface StudyPanelProps {
   onBack?: () => void
 }
 
+type PDFRenderMode = 'legacy' | 'adaptive'
+const PDF_RENDER_MODE_STORAGE_KEY = 'doridori.pdfRenderMode'
+
+const resolvePDFRenderMode = (): PDFRenderMode => {
+  const requestedMode = new URLSearchParams(window.location.search).get('pdfRenderMode')
+  if (requestedMode === 'legacy' || requestedMode === 'adaptive') {
+    localStorage.setItem(PDF_RENDER_MODE_STORAGE_KEY, requestedMode)
+    return requestedMode
+  }
+  return localStorage.getItem(PDF_RENDER_MODE_STORAGE_KEY) === 'legacy' ? 'legacy' : 'adaptive'
+}
+
 type PanelData =
   | { type: 'pdf' }
   | { type: 'answer'; questionImage: string; source?: 'grading' }
@@ -66,6 +78,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
   // Layout State
   const [isSplitView, setIsSplitView] = useState(false)
+  const [pdfRenderMode] = useState<PDFRenderMode>(resolvePDFRenderMode)
   const [activeTab, setActiveTab] = useState<'A' | 'B'>('A')
 
   // Split Ratio
@@ -1240,6 +1253,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             drawingPaths={drawingPathsA}
             isCtrlPressed={isCtrlPressed}
             splitMode={isSplitView}
+            renderMode={pdfRenderMode}
             onPageChange={handlePageAChange}
             onPathAdd={(path) => handlePathAdd(pageA, path)}
             onPathsChange={(paths) => handlePathsChange(pageA, paths)}
@@ -1286,6 +1300,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             drawingPaths={drawingPaths.get(pageB) || []}
             isCtrlPressed={isCtrlPressed}
             splitMode={isSplitView}
+            renderMode={pdfRenderMode}
             onPageChange={handlePageBChange}
             onPathAdd={(path) => handlePathAdd(pageB, path)}
             onPathsChange={(paths) => handlePathsChange(pageB, paths)}
