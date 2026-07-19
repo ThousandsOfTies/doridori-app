@@ -254,7 +254,8 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                     <input
                                         type="range"
                                         min="10"
-                                        max="100"
+                                        max="300"
+                                        step="5"
                                         value={eraserSize}
                                         onChange={(e) => setEraserSize(Number(e.target.value))}
                                         style={{ width: '100px' }}

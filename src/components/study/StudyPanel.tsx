@@ -1,18 +1,17 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { GradingResponseResult, getAvailableModels, ModelInfo } from '@home-teacher/common/services/api'
+import { GradingResponseResult, getAvailableModels, gradeWork, ModelInfo } from '@home-teacher/common/services/api'
 import GradingResult from './GradingResult'
 import AnswerPanel, { AnswerPanelHandle } from './AnswerPanel'
-import { deleteAllDrawings, getAllDrawings, getPDFRecord, updatePDFRecord, getAllSNSLinks, SNSLinkRecord, PDFFileRecord, saveGradingHistory, generateGradingHistoryId, saveDrawing, saveTextAnnotation } from '@home-teacher/common/utils/indexedDB'
+import { deleteAllDrawings, flushDrawingSaves, getAllDrawings, getPDFRecord, updatePDFRecord, getAllSNSLinks, SNSLinkRecord, PDFFileRecord, saveGradingHistory, generateGradingHistoryId, saveGradingImage, scheduleDrawingSave, saveTextAnnotation } from '@home-teacher/common/utils/indexedDB'
 import { ICON_SVG } from '../../constants/icons'
 import { DrawingPath } from '@thousands-of-ties/drawing-common'
 import { PDFPane, PDFPaneHandle } from '@home-teacher/common/components/study/PDFPane'
 import { StudyToolbar, BreadcrumbItem } from './StudyToolbar'
 import { usePDFRenderer } from '@home-teacher/common/hooks/pdf/usePDFRenderer'
 import './StudyPanel.css'
-import { useGrading } from '../../hooks/study/useGrading'
-import { compressImage } from '@home-teacher/common/utils/image'
+import { compressImageDataUrl } from '@home-teacher/common/utils/image'
 import { useAuth } from '@home-teacher/common/contexts/AuthContext'
 
 // テキストアノテーションの型定義
@@ -146,7 +145,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   const [selectionRect, setSelectionRect] = useState<{ x: number, y: number, width: number, height: number } | null>(null)
   const isSelectingRef = useRef(false)
   const selectionStartRef = useRef<{ x: number, y: number } | null>(null)
-  // selectionPreview via hook
+  const [isGrading, setIsGrading] = useState(false)
 
   // Tool State
   const [isDrawingMode, setIsDrawingMode] = useState(true)
@@ -193,6 +192,25 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
   // Drawing State
   const [drawingPaths, setDrawingPaths] = useState<Map<number, DrawingPath[]>>(new Map())
+  const pendingDrawingWritesRef = useRef(new Map<number, string>())
+
+  useEffect(() => {
+    pendingDrawingWritesRef.current.forEach((data, page) => scheduleDrawingSave(pdfId, page, data))
+    pendingDrawingWritesRef.current.clear()
+  }, [drawingPaths, pdfId])
+
+  useEffect(() => {
+    const flushPendingDrawings = () => {
+      pendingDrawingWritesRef.current.forEach((data, page) => scheduleDrawingSave(pdfId, page, data))
+      pendingDrawingWritesRef.current.clear()
+      void flushDrawingSaves(pdfId)
+    }
+    window.addEventListener('pagehide', flushPendingDrawings)
+    return () => {
+      window.removeEventListener('pagehide', flushPendingDrawings)
+      flushPendingDrawings()
+    }
+  }, [pdfId])
   const EMPTY_PATHS: DrawingPath[] = useMemo(() => [], [])
   const drawingPathsA = useMemo(() => drawingPaths.get(pageA) ?? EMPTY_PATHS, [drawingPaths, pageA, EMPTY_PATHS])
   const drawingPathsB = useMemo(() => drawingPaths.get(pageB) ?? EMPTY_PATHS, [drawingPaths, pageB, EMPTY_PATHS])
@@ -244,20 +262,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     loadTextAnnotations()
   }, [pdfId])
 
-
-  // Grading Hook
-  const {
-    isGrading,
-    setIsGrading,
-    selectionPreview,
-    setSelectionPreview,
-  } = useGrading(
-    pdfId,
-    (msg) => addStatusMessage(msg),
-    activeTab === 'A' ? pageA : pageB,
-    pdfRecord?.fileName || 'Unknown',
-    pdfRecord?.subjectId  // Pass subject ID for subject-specific grading
-  )
 
   // Panel stack state
   const [panelStack, setPanelStack] = useState<PanelData[]>([{ type: 'pdf' }])
@@ -665,7 +669,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       newMap.set(page, newPaths)
 
       // Save to DB
-      saveDrawing(pdfId, page, JSON.stringify(newPaths))
+      pendingDrawingWritesRef.current.set(page, JSON.stringify(newPaths))
 
       return newMap
     })
@@ -699,7 +703,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       }
       return newMap
     })
-    saveDrawing(pdfId, page, JSON.stringify(newPaths))
+    pendingDrawingWritesRef.current.set(page, JSON.stringify(newPaths))
   }
 
   // 採点確定ハンドラ
@@ -708,7 +712,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     setGradingError(null)
 
     try {
-      const croppedImageData = compositeImage
+      const croppedImageData = await compressImageDataUrl(compositeImage, 2048)
 
       // Validate image size (minimum 50x50)
       const img = new Image()
@@ -733,7 +737,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       // APIに送信（簡素化：切り抜き画像のみ）
       addStatusMessage('🎯 AI採点中...')
       const startTime = Date.now()
-      const { gradeWork } = await import('@home-teacher/common/services/api')
       const response = await gradeWork(
         croppedImageData,
         selectedModel !== 'default' ? selectedModel : undefined,
@@ -767,6 +770,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
       // 採点履歴を保存
       if (response.result.problems?.length) {
+        const imageId = await saveGradingImage(croppedImageData)
         for (const problem of response.result.problems) {
           const historyRecord = {
             id: generateGradingHistoryId(),
@@ -780,7 +784,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             feedback: problem.feedback || '',
             explanation: problem.explanation || '',
             timestamp: Date.now(),
-            imageData: croppedImageData,
+            imageId,
             matchingMetadata: problem.matchingMetadata
           }
           await saveGradingHistory(historyRecord)
@@ -803,7 +807,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
   // プレビューのキャンセル
   const cancelPreview = () => {
-    setSelectionPreview(null)
   }
 
   // 描画モードの切り替え
@@ -837,7 +840,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       newMap.delete(pageA)
       return newMap
     })
-    saveDrawing(pdfId, pageA, JSON.stringify([]))
+    pendingDrawingWritesRef.current.set(pageA, JSON.stringify([]))
     addStatusMessage('描画をクリアしました')
   }
 
@@ -848,6 +851,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     }
 
     setDrawingPaths(new Map())
+    pendingDrawingWritesRef.current.clear()
     // IndexedDBのページ別筆跡ストアからも削除
     try {
       await deleteAllDrawings(pdfId)
@@ -1010,10 +1014,12 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   // ページ変更ハンドラ
   const handlePageAChange = (p: number) => {
     if (p < 1 || p > numPages) return
+    void flushDrawingSaves(pdfId, pageA)
     setPageA(p)
   }
   const handlePageBChange = (p: number) => {
     if (p < 1 || p > numPages) return
+    void flushDrawingSaves(pdfId, pageB)
     setPageB(p)
   }
 
@@ -1040,7 +1046,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   // 矩形選択モードをキャンセル
   const handleCancelSelection = () => {
     setSelectionRect(null)
-    setSelectionPreview(null)
     addStatusMessage('選択をクリアしました。再度範囲を選択してください')
   }
 
@@ -1105,7 +1110,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
         const newPaths = currentPaths.slice(0, -1)
         newMap.set(activePage, newPaths)
         // Save to DB
-        saveDrawing(pdfId, activePage, JSON.stringify(newPaths))
+        pendingDrawingWritesRef.current.set(activePage, JSON.stringify(newPaths))
       }
       return newMap
     })
