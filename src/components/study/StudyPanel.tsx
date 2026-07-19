@@ -1236,6 +1236,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             color={penColor}
             size={penSize}
             eraserSize={eraserSize}
+            scratchEraseEnabled={true}
             drawingPaths={drawingPathsA}
             isCtrlPressed={isCtrlPressed}
             splitMode={isSplitView}
@@ -1281,6 +1282,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             color={penColor}
             size={penSize}
             eraserSize={eraserSize}
+            scratchEraseEnabled={true}
             drawingPaths={drawingPaths.get(pageB) || []}
             isCtrlPressed={isCtrlPressed}
             splitMode={isSplitView}
