@@ -548,6 +548,8 @@ app.post('/api/webhooks/stripe', async (req, res) => {
             await usersRef.doc(docId).update({
               isPremium: true,
               stripeSubscriptionId: subscription.id,
+              cancelAtPeriodEnd: subscription.cancel_at_period_end,
+              currentPeriodEnd: subscription.current_period_end,
             });
           } else if (status === 'canceled' || status === 'unpaid' || status === 'incomplete_expired') {
             console.log(`🔴 Subscription updated to ${status} for customer ${customerId}. Removing premium.`);
@@ -555,6 +557,8 @@ app.post('/api/webhooks/stripe', async (req, res) => {
               isPremium: false,
               snsRewardMinutes: 60,
               stripeSubscriptionId: admin.firestore.FieldValue.delete(),
+              cancelAtPeriodEnd: admin.firestore.FieldValue.delete(),
+              currentPeriodEnd: admin.firestore.FieldValue.delete(),
             });
           }
           console.log(`Subscription status ${status} processed for user ${docId}.`);
@@ -575,6 +579,8 @@ app.post('/api/webhooks/stripe', async (req, res) => {
             isPremium: false,
             snsRewardMinutes: 60,
             stripeSubscriptionId: admin.firestore.FieldValue.delete(),
+            cancelAtPeriodEnd: admin.firestore.FieldValue.delete(),
+            currentPeriodEnd: admin.firestore.FieldValue.delete(),
           });
           console.log(`User ${docId} downgraded successfully.`);
         }
