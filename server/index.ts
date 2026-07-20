@@ -549,7 +549,7 @@ app.post('/api/webhooks/stripe', async (req, res) => {
               isPremium: true,
               stripeSubscriptionId: subscription.id,
               cancelAtPeriodEnd: subscription.cancel_at_period_end,
-              currentPeriodEnd: subscription.current_period_end,
+              currentPeriodEnd: (subscription as any).current_period_end || subscription.items?.data[0]?.current_period_end,
             });
           } else if (status === 'canceled' || status === 'unpaid' || status === 'incomplete_expired') {
             console.log(`🔴 Subscription updated to ${status} for customer ${customerId}. Removing premium.`);
