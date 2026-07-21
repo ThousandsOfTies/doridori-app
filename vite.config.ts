@@ -64,14 +64,14 @@ export default defineConfig(({ mode }) => {
         ]
       }),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         includeAssets: ['logo.png', 'app.png'],
 
         manifest: false,
         workbox: {
           cleanupOutdatedCaches: true,
-          skipWaiting: true,
-          clientsClaim: true,
+          skipWaiting: false,
+          clientsClaim: false,
           globIgnores: ['**/opencv*.js'],
           globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2}'],
           maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // 15MB 念のため増やす
@@ -132,9 +132,9 @@ export default defineConfig(({ mode }) => {
             'fabric-vendor': ['fabric'],
             'pdfjs-vendor': ['pdfjs-dist']
           },
-          entryFileNames: `assets/[name]-${Date.now()}.js`,
-          chunkFileNames: `assets/[name]-${Date.now()}.js`,
-          assetFileNames: `assets/[name]-${Date.now()}.[ext]`
+          entryFileNames: 'assets/[name]-[hash].js',
+          chunkFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash][extname]'
         }
       }
     }
