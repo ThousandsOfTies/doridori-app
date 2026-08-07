@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICON_SVG } from '../../constants/icons';
 import { FiHome, FiRotateCcw, FiTrash2, FiCheckCircle, FiLoader, FiType, FiEdit2 } from 'react-icons/fi';
 import { BiEraser, BiSelection } from 'react-icons/bi';
 
 export type TextDirection = 'horizontal' | 'vertical-rl' | 'vertical-lr';
+
+const ERASER_SIZE_OPTIONS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100] as const;
 
 export interface BreadcrumbItem {
     label: string;
@@ -109,6 +111,12 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     const [showTextPopup, setShowTextPopup] = useState(false);
     const [showPenPopup, setShowPenPopup] = useState(false);
     const [showEraserPopup, setShowEraserPopup] = useState(false);
+    const [showPenGuidance, setShowPenGuidance] = useState(false);
+    const penGuidanceTimerRef = useRef<number | undefined>();
+
+    useEffect(() => {
+        return () => window.clearTimeout(penGuidanceTimerRef.current);
+    }, []);
 
     // Wrappers to toggle popups and modes
     const handleTextClick = () => {
@@ -130,6 +138,14 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
             setShowPenPopup(false);
             setShowEraserPopup(false);
             setShowTextPopup(false);
+
+            if (!onGrade) {
+                setShowPenGuidance(true);
+                window.clearTimeout(penGuidanceTimerRef.current);
+                penGuidanceTimerRef.current = window.setTimeout(() => {
+                    setShowPenGuidance(false);
+                }, 6500);
+            }
         }
     };
 
@@ -217,7 +233,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                         type="color"
                                         value={penColor}
                                         onChange={(e) => setPenColor(e.target.value)}
-                                        style={{ width: '40px', height: '30px', border: '1px solid #ccc', cursor: 'pointer' }}
+                                        className="color-swatch-input"
                                     />
                                 </div>
                                 <div className="popup-row">
@@ -226,12 +242,19 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                         type="range"
                                         min="1"
                                         max="10"
+                                        step="1"
                                         value={penSize}
                                         onChange={(e) => setPenSize(Number(e.target.value))}
                                         style={{ width: '100px' }}
                                     />
                                     <span>{penSize}px</span>
                                 </div>
+                            </div>
+                        )}
+
+                        {showPenGuidance && (
+                            <div className="pen-guidance" role="status">
+                                {t('pdfGuide.penHint')}
                             </div>
                         )}
                     </div>
@@ -253,12 +276,13 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                     <label>サイズ:</label>
                                     <input
                                         type="range"
-                                        min="10"
-                                        max="300"
-                                        step="5"
-                                        value={eraserSize}
-                                        onChange={(e) => setEraserSize(Number(e.target.value))}
+                                        min="0"
+                                        max={ERASER_SIZE_OPTIONS.length - 1}
+                                        step="1"
+                                        value={Math.max(0, ERASER_SIZE_OPTIONS.indexOf(eraserSize as typeof ERASER_SIZE_OPTIONS[number]))}
+                                        onChange={(e) => setEraserSize(ERASER_SIZE_OPTIONS[Number(e.target.value)])}
                                         style={{ width: '100px' }}
+                                        aria-valuetext={`${eraserSize}px`}
                                     />
                                     <span>{eraserSize}px</span>
                                 </div>
@@ -309,7 +333,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                         type="color"
                                         value={penColor}
                                         onChange={(e) => setPenColor(e.target.value)}
-                                        style={{ width: '40px', height: '30px', border: '1px solid #ccc', cursor: 'pointer' }}
+                                        className="color-swatch-input"
                                     />
                                 </div>
                             </div>
@@ -409,7 +433,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                 onClick={isSelectionMode ? cancelSelection : startGrading}
                                 className={isSelectionMode ? 'active' : ''}
                                 disabled={isGrading}
-                                title={isSelectionMode ? t('gradingConfirmation.cancel') : t('gradingConfirmation.gradeBySelection')}
+                                title={isSelectionMode ? t('gradingConfirmation.cancel') : t('pdfGuide.rangeSelection')}
                             >
                                 {isGrading ? <FiLoader size={20} className="animate-spin" /> : <BiSelection size={20} className="icon-scale-13" />}
                             </button>

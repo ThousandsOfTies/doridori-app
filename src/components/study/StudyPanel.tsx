@@ -32,18 +32,7 @@ interface StudyPanelProps {
   onBack?: () => void
 }
 
-type PDFRenderMode = 'legacy' | 'adaptive'
-const PDF_RENDER_MODE_STORAGE_KEY = 'doridori.pdfRenderMode'
 const SPLIT_RATIO_STORAGE_KEY = 'doridori.splitRatio'
-
-const resolvePDFRenderMode = (): PDFRenderMode => {
-  const requestedMode = new URLSearchParams(window.location.search).get('pdfRenderMode')
-  if (requestedMode === 'legacy' || requestedMode === 'adaptive') {
-    localStorage.setItem(PDF_RENDER_MODE_STORAGE_KEY, requestedMode)
-    return requestedMode
-  }
-  return localStorage.getItem(PDF_RENDER_MODE_STORAGE_KEY) === 'legacy' ? 'legacy' : 'adaptive'
-}
 
 type PanelData =
   | { type: 'pdf' }
@@ -78,7 +67,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
   // Layout State
   const [isSplitView, setIsSplitView] = useState(false)
-  const [pdfRenderMode] = useState<PDFRenderMode>(resolvePDFRenderMode)
   const [activeTab, setActiveTab] = useState<'A' | 'B'>('A')
 
   // Split Ratio
@@ -141,14 +129,14 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   }, [])
 
   // Selection State
-  const [isSelectionMode, setIsSelectionMode] = useState(false)
+  const [isSelectionMode, setIsSelectionMode] = useState(true)
   const [selectionRect, setSelectionRect] = useState<{ x: number, y: number, width: number, height: number } | null>(null)
   const isSelectingRef = useRef(false)
   const selectionStartRef = useRef<{ x: number, y: number } | null>(null)
   const [isGrading, setIsGrading] = useState(false)
 
   // Tool State
-  const [isDrawingMode, setIsDrawingMode] = useState(true)
+  const [isDrawingMode, setIsDrawingMode] = useState(false)
   const [isEraserMode, setIsEraserMode] = useState(false)
   const [isTextMode, setIsTextMode] = useState(false)
   const [penColor, setPenColor] = useState('#FF0000') // Updated to match bottom block default
@@ -1255,7 +1243,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             drawingPaths={drawingPathsA}
             isCtrlPressed={isCtrlPressed}
             splitMode={isSplitView}
-            renderMode={pdfRenderMode}
             onPageChange={handlePageAChange}
             onPathAdd={(path) => handlePathAdd(pageA, path)}
             onPathsChange={(paths) => handlePathsChange(pageA, paths)}
@@ -1302,7 +1289,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             drawingPaths={drawingPaths.get(pageB) || []}
             isCtrlPressed={isCtrlPressed}
             splitMode={isSplitView}
-            renderMode={pdfRenderMode}
             onPageChange={handlePageBChange}
             onPathAdd={(path) => handlePathAdd(pageB, path)}
             onPathsChange={(paths) => handlePathsChange(pageB, paths)}

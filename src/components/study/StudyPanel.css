@@ -562,6 +562,59 @@
   text-align: right;
 }
 
+.color-swatch-input {
+  width: 42px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #a8a8a8;
+  border-radius: 3px;
+  cursor: pointer;
+  overflow: hidden;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.color-swatch-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-swatch-input::-webkit-color-swatch,
+.color-swatch-input::-moz-color-swatch {
+  border: 0;
+  border-radius: 0;
+}
+
+.pen-guidance {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 300;
+  width: min(320px, calc(100vw - 24px));
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #93c5fd;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.2);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.pen-guidance::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  right: 13px;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border-top: 1px solid #93c5fd;
+  border-left: 1px solid #93c5fd;
+  transform: rotate(45deg);
+}
+
 /* ページナビゲーション用スクロールバー */
 .page-scrollbar-container {
   position: absolute;
