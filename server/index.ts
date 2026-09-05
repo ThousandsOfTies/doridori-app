@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenAI, ThinkingLevel } from '@google/genai'
 import { AVAILABLE_MODELS, DEFAULT_MODEL_ID, SUBJECTS, buildGradingPrompt } from '../../home-teacher-common/src/constants/grading.ts'
 
 import path from 'path';
@@ -138,11 +138,16 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 // Google GenAI クライアント初期化
-// gemini-2.5-flash を使用（速度と精度のバランス重視）
-const MODEL_NAME = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+// Shared Flash default; GEMINI_MODEL can override it for deployments.
+const MODEL_NAME = process.env.GEMINI_MODEL || DEFAULT_MODEL_ID
 console.log(`Using Gemini Model: ${MODEL_NAME}`)
 
 // Initialize the Google Gen AI client (@google/genai)
+// Gemini 3 uses thinking levels; 2.5 Pro cannot disable thinking.
+const getThinkingConfig = (model: string) => model.startsWith('gemini-3')
+  ? { thinkingLevel: ThinkingLevel.LOW }
+  : { thinkingBudget: model.startsWith('gemini-2.5-pro') ? 128 : 0 }
+
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
 
 // モデル定義・教科定義は home-teacher-common/src/constants/grading.ts から import
@@ -150,7 +155,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
 app.get('/api/models', (req, res) => {
   res.json({
     models: AVAILABLE_MODELS,
-    default: DEFAULT_MODEL_ID
+    default: MODEL_NAME
   })
 })
 
@@ -264,7 +269,7 @@ JSONのみを出力してください。`
           ]
         }
       ],
-      config: { thinkingConfig: { thinkingBudget: 0 } }
+      config: { thinkingConfig: getThinkingConfig(MODEL_NAME) }
     })
 
     const responseText = result.text
@@ -330,7 +335,7 @@ app.post('/api/grade-work', async (req, res) => {
     console.log(`Grading work (subject: ${subjectId || 'default'})...`)
 
     // Use requested model or default
-    const currentModelName = requestModel || MODEL_NAME
+    const currentModelName = requestModel && requestModel !== 'default' ? requestModel : MODEL_NAME
 
     // 言語設定の確認
     const isJapanese = !language || language.startsWith('ja');
@@ -355,8 +360,7 @@ app.post('/api/grade-work', async (req, res) => {
         }
       ],
       config: {
-        // Disable thinking mode for faster responses (2.5-flash thinks by default)
-        thinkingConfig: { thinkingBudget: 0 }
+        thinkingConfig: getThinkingConfig(currentModelName)
       }
     })
 
