@@ -1,0 +1,19 @@
+{
+  "name": "hometeacher-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild server/index.ts --bundle --platform=node --target=node20 --format=esm --packages=external --outfile=dist/server.mjs"
+  },
+  "dependencies": {
+    "@google/genai": "2.21.0",
+    "cors": "2.8.6",
+    "dotenv": "16.6.1",
+    "express": "4.22.2",
+    "firebase-admin": "13.10.0",
+    "stripe": "20.4.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

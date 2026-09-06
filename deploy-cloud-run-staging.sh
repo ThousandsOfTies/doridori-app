@@ -1,2 +1,4 @@
 #!/bin/bash
-gcloud run deploy hometeacher-api-staging --project hometeacher-api --source . --platform managed --region asia-northeast1 --allow-unauthenticated --min-instances 0 --max-instances 5 --memory 512Mi --cpu 1 --timeout 60s --set-env-vars "NODE_ENV=staging,GEMINI_MODEL=gemini-3.8-flash" --update-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,STRIPE_WEBHOOK_SECRET=STRIPE_WEBHOOK_SECRET:latest,STRIPE_PRICE_ID=STRIPE_PRICE_ID:latest"
+set -euo pipefail
+cd "$(dirname "$0")"
+npm run deploy:server:staging

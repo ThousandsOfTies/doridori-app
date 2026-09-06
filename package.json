@@ -5,6 +5,11 @@
   "description": "AI-powered drill grading app with handwriting support",
   "type": "module",
   "scripts": {
+    "test": "npm run test:grading-source",
+    "test:grading-source": "node --test tests/grading-source.test.cjs",
+    "prepare:server": "node scripts/prepare-cloud-run.mjs",
+    "deploy:server": "npm run prepare:server && gcloud run deploy hometeacher-api --project hometeacher-api --source .cloud-run --platform managed --region asia-northeast1 --allow-unauthenticated --min-instances 0 --max-instances 10 --memory 512Mi --cpu 1 --timeout 60s --update-env-vars NODE_ENV=production,GEMINI_MODEL=gemini-3.8-flash --update-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,STRIPE_WEBHOOK_SECRET=STRIPE_WEBHOOK_SECRET:latest,STRIPE_PRICE_ID=STRIPE_PRICE_ID:latest",
+    "deploy:server:staging": "npm run prepare:server && gcloud run deploy hometeacher-api-staging --project hometeacher-api --source .cloud-run --platform managed --region asia-northeast1 --allow-unauthenticated --min-instances 0 --max-instances 5 --memory 512Mi --cpu 1 --timeout 60s --update-env-vars NODE_ENV=staging,GEMINI_MODEL=gemini-3.8-flash --update-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,STRIPE_WEBHOOK_SECRET=STRIPE_WEBHOOK_SECRET:latest,STRIPE_PRICE_ID=STRIPE_PRICE_ID:latest",
     "dev": "vite --mode kids",
     "dev:server": "tsx watch server/index.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",

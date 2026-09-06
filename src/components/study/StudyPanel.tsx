@@ -37,8 +37,8 @@ const SPLIT_RATIO_STORAGE_KEY = 'doridori.splitRatio'
 
 type PanelData =
   | { type: 'pdf' }
-  | { type: 'answer'; questionImage: string; source?: 'grading' }
-  | { type: 'grading'; result: GradingResponseResult; modelName: string | null; responseTime: number | null }
+  | { type: 'answer'; questionImage: string; sourcePageNumbers: number[]; source?: 'grading' }
+  | { type: 'grading'; result: GradingResponseResult; modelName: string | null; responseTime: number | null; sourcePageNumbers: number[] }
 
 const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   const { t, i18n } = useTranslation()
@@ -483,7 +483,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     try {
       const capturedImage = await captureSelectionArea(selectionRect)
       if (capturedImage) {
-        pushPanel({ type: 'answer', questionImage: capturedImage })
+        pushPanel({ type: 'answer', questionImage: capturedImage.image, sourcePageNumbers: capturedImage.sourcePageNumbers })
         setIsSelectionMode(false)
         setSelectionRect(null)
       } else {
@@ -525,6 +525,8 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   }
 
   const handleGradingCaptureEnd = async () => {
+    const sourcePanel = panelStack[activePanelIndex]
+    if (sourcePanel?.type !== 'grading') return
     if (!isGradingCapturingRef.current || !gradingCaptureRect || !gradingPanelRef.current) return
     isGradingCapturingRef.current = false
 
@@ -572,7 +574,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       )
 
       const capturedImage = cropCanvas.toDataURL('image/png')
-      pushPanel({ type: 'answer', questionImage: capturedImage, source: 'grading' })
+      pushPanel({ type: 'answer', questionImage: capturedImage, sourcePageNumbers: sourcePanel.sourcePageNumbers, source: 'grading' })
       setIsGradingCaptureMode(false)
       setGradingCaptureRect(null)
     } catch (error) {
@@ -597,9 +599,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     tempCanvas.height = rect.height
     const ctx = tempCanvas.getContext('2d')
     if (!ctx) return null
+    const sourcePageNumbers: number[] = []
 
     // ペインからキャプチャするヘルパー
-    const captureFromPane = (paneRef: React.RefObject<PDFPaneHandle>, paneClassName: string) => {
+    const captureFromPane = (paneRef: React.RefObject<PDFPaneHandle>, paneClassName: string, pageNumber: number) => {
       const paneEl = containerRef.current?.querySelector(`.${paneClassName}`)
       const compositeCanvas = paneRef.current?.getCanvas()
       const visibleCanvas = paneEl?.querySelector('.pdf-canvas') as HTMLCanvasElement | null
@@ -615,10 +618,11 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       const selectionScreenW = rect.width
       const selectionScreenH = rect.height
 
-      const intersectX = Math.max(selectionScreenX, canvasRect.left)
-      const intersectY = Math.max(selectionScreenY, canvasRect.top)
-      const intersectW = Math.min(selectionScreenX + selectionScreenW, canvasRect.right) - intersectX
-      const intersectH = Math.min(selectionScreenY + selectionScreenH, canvasRect.bottom) - intersectY
+      // Only include pixels visible inside this pane, including when zoomed.
+      const intersectX = Math.max(selectionScreenX, canvasRect.left, paneRect.left)
+      const intersectY = Math.max(selectionScreenY, canvasRect.top, paneRect.top)
+      const intersectW = Math.min(selectionScreenX + selectionScreenW, canvasRect.right, paneRect.right) - intersectX
+      const intersectH = Math.min(selectionScreenY + selectionScreenH, canvasRect.bottom, paneRect.bottom) - intersectY
 
       if (intersectW <= 0 || intersectH <= 0) return
 
@@ -634,17 +638,18 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       const dy = intersectY - selectionScreenY
 
       ctx.drawImage(compositeCanvas, sx, sy, sw, sh, dx, dy, intersectW, intersectH)
+      if (!sourcePageNumbers.includes(pageNumber)) sourcePageNumbers.push(pageNumber)
     }
 
     if (activeTab === 'A' || isSplitView) {
-      captureFromPane(paneARef, 'pane-a')
+      captureFromPane(paneARef, 'pane-a', pageA)
     }
 
     if (activeTab === 'B' || isSplitView) {
-      captureFromPane(paneBRef, 'pane-b')
+      captureFromPane(paneBRef, 'pane-b', pageB)
     }
 
-    return tempCanvas.toDataURL('image/png')
+    return sourcePageNumbers.length ? { image: tempCanvas.toDataURL('image/png'), sourcePageNumbers } : null
   }
 
 
@@ -696,7 +701,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   }
 
   // 採点確定ハンドラ
-  const confirmAndGrade = async (compositeImage: string) => {
+  const confirmAndGrade = async (compositeImage: string, sourcePageNumbers: number[]) => {
     setIsGrading(true)
     setGradingError(null)
 
@@ -751,6 +756,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
       pushPanel({
         type: 'grading',
+        sourcePageNumbers,
         result: { ...response.result, problems },
         modelName: response.modelName ?? null,
         responseTime: response.responseTime ?? clientResponseTimeSeconds
@@ -765,7 +771,8 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             id: generateGradingHistoryId(),
             pdfId,
             pdfFileName: pdfRecord.fileName,
-            pageNumber: pageA,
+            pageNumber: sourcePageNumbers[0],
+            sourcePageNumbers,
             problemNumber: problem.problemNumber,
             studentAnswer: problem.studentAnswer,
             isCorrect: problem.isCorrect || false,
@@ -790,8 +797,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
   // Grade handler called from toolbar
   const handleGradeFromToolbar = async () => {
+    const sourcePanel = panelStack[activePanelIndex]
+    if (sourcePanel?.type !== 'answer') return
     const compositeImage = await answerPanelRef.current?.getCompositeImage()
-    if (compositeImage) await confirmAndGrade(compositeImage)
+    if (compositeImage) await confirmAndGrade(compositeImage, sourcePanel.sourcePageNumbers)
   }
 
   // プレビューのキャンセル
