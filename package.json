@@ -5,6 +5,7 @@
   "description": "AI-powered drill grading app with handwriting support",
   "type": "module",
   "scripts": {
+    "test:bundle": "node ../home-teacher-common/build/checkDeferredAssets.mjs dist",
     "test": "npm run test:grading-source",
     "test:grading-source": "node --test tests/grading-source.test.cjs",
     "prepare:server": "node scripts/prepare-cloud-run.mjs",
