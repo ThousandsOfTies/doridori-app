@@ -1,56 +1,29 @@
-import sharp from 'sharp';
-import { existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import sharp from 'sharp'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const sizes = [192, 512];
-const modes = ['kids', 'discuss'];
+const iconDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'icons', 'doridori')
+const source = join(iconDir, 'mole-source.png')
 
 async function generateIcons() {
-  for (const mode of modes) {
-    const sourceDir = join(__dirname, '..', 'public', 'icons', mode);
-    const logoPath = join(sourceDir, 'logo.png');
-    const appPath = join(sourceDir, 'app.png');
+  await sharp(source).resize(192, 192).png().toFile(join(iconDir, 'logo.png'))
 
-    console.log(`\n📱 Processing ${mode} mode icons...`);
+  const mole = await sharp(source).resize(370, 370).png().toBuffer()
+  await sharp({ create: { width: 512, height: 512, channels: 4, background: '#f8f6f1' } })
+    .composite([{ input: mole, left: 71, top: 71 }])
+    .png()
+    .toFile(join(iconDir, 'app.png'))
 
-    // Process logo.png (192x192)
-    if (existsSync(logoPath)) {
-      const metadata = await sharp(logoPath).metadata();
-      console.log(`  logo.png: ${metadata.width}x${metadata.height}`);
-
-      if (metadata.width !== 192 || metadata.height !== 192) {
-        console.log(`  ⚠️  Resizing logo.png to 192x192...`);
-        await sharp(logoPath)
-          .resize(192, 192, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
-          .toFile(join(sourceDir, 'logo-new.png'));
-        console.log(`  ✓ Created logo-new.png`);
-      } else {
-        console.log(`  ✓ logo.png is already 192x192`);
-      }
-    }
-
-    // Process app.png (512x512)
-    if (existsSync(appPath)) {
-      const metadata = await sharp(appPath).metadata();
-      console.log(`  app.png: ${metadata.width}x${metadata.height}`);
-
-      if (metadata.width !== 512 || metadata.height !== 512) {
-        console.log(`  ⚠️  Resizing app.png to 512x512...`);
-        await sharp(appPath)
-          .resize(512, 512, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
-          .toFile(join(sourceDir, 'app-new.png'));
-        console.log(`  ✓ Created app-new.png`);
-      } else {
-        console.log(`  ✓ app.png is already 512x512`);
-      }
-    }
-  }
-
-  console.log('\n✅ Icon generation complete!\n');
+  const face = await sharp(source).resize(512, 512).png().toBuffer()
+  await sharp(face)
+    .extract({ left: 90, top: 20, width: 332, height: 332 })
+    .resize(64, 64)
+    .png()
+    .toFile(join(iconDir, 'favicon.png'))
+  console.log('Generated DoriDori mole icons')
 }
 
-generateIcons().catch(console.error);
+generateIcons().catch(error => {
+  console.error(error)
+  process.exitCode = 1
+})

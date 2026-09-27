@@ -4,6 +4,7 @@ import './AnswerPanel.css'
 
 export interface AnswerPanelHandle {
   getCompositeImage: () => Promise<string | null>
+  getDrawingBlob: () => Promise<Blob | null>
   undo: () => void
   clear: () => void
   canUndo: boolean
@@ -11,6 +12,8 @@ export interface AnswerPanelHandle {
 
 interface AnswerPanelProps {
   questionImage: string | null
+  initialDrawing?: Blob | null
+  onDrawingChange?: (drawing: Blob) => void
   penColor: string
   penSize: number
   isEraserMode: boolean
@@ -26,6 +29,8 @@ const MIN_IMAGE_WIDTH = 600  // scale up captured image to at least this width
 
 const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   questionImage,
+  initialDrawing,
+  onDrawingChange,
   penColor,
   penSize,
   isEraserMode,
@@ -39,6 +44,8 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   const isDrawingRef = useRef(false)
   const lastPosRef = useRef<{ x: number; y: number } | null>(null)
   const historyRef = useRef<ImageData[]>([])
+  const drawingVersionRef = useRef(0)
+  const [isReady, setIsReady] = useState(false)
   const [canUndo, setCanUndo] = useState(false)
   const [eraserCursorPos, setEraserCursorPos] = useState<{ x: number; y: number; diameter: number } | null>(null)
 
@@ -103,18 +110,51 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     onCanUndoChange?.(false)
   }
 
-  // Load image and init canvas when questionImage changes
+  // Restore the saved answer over the freshly built question canvas.
   useEffect(() => {
     if (!questionImage) return
+    let cancelled = false
+    setIsReady(false)
     const img = new Image()
-    img.onload = () => {
+    img.onload = async () => {
+      if (cancelled) return
       initCanvas(img)
+      if (initialDrawing && drawCanvasRef.current) {
+        const url = URL.createObjectURL(initialDrawing)
+        try {
+          const saved = new Image()
+          await new Promise<void>((resolve, reject) => {
+            saved.onload = () => resolve()
+            saved.onerror = () => reject(new Error('回答画像を開けませんでした'))
+            saved.src = url
+          })
+          if (cancelled || !drawCanvasRef.current) return
+          const ctx = drawCanvasRef.current.getContext('2d')!
+          ctx.drawImage(saved, 0, 0, drawCanvasRef.current.width, drawCanvasRef.current.height)
+          historyRef.current = [ctx.getImageData(0, 0, drawCanvasRef.current.width, drawCanvasRef.current.height)]
+        } catch (error) {
+          console.error('回答の復元に失敗しました:', error)
+        } finally {
+          URL.revokeObjectURL(url)
+        }
+      }
       // Reset zoom/pan on new image
       setZoom(1.0)
       setPanOffset({ x: 0, y: 0 })
+      setIsReady(true)
     }
+    img.onerror = () => setIsReady(true)
     img.src = questionImage
-  }, [questionImage])
+    return () => { cancelled = true }
+  }, [questionImage, initialDrawing])
+
+  const persistDrawing = () => {
+    if (!onDrawingChange || !drawCanvasRef.current) return
+    const version = ++drawingVersionRef.current
+    drawCanvasRef.current.toBlob(blob => {
+      if (blob && version === drawingVersionRef.current) onDrawingChange(blob)
+    }, 'image/png')
+  }
 
   // Ctrl Key detection
   useEffect(() => {
@@ -149,6 +189,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
       setCanUndo(false)
       onCanUndoChange?.(false)
     }
+    persistDrawing()
   }
 
   const handleClear = () => {
@@ -157,6 +198,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     saveSnapshot()
     const ctx = drawCanvas.getContext('2d')!
     ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height)
+    persistDrawing()
   }
 
   // Composite bg + draw canvases into a single PNG
@@ -174,12 +216,19 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     return out.toDataURL('image/png')
   }
 
+  const getDrawingBlob = (): Promise<Blob | null> => new Promise(resolve => {
+    const canvas = drawCanvasRef.current
+    if (!canvas) { resolve(null); return }
+    canvas.toBlob(resolve, 'image/png')
+  })
+
   useImperativeHandle(ref, () => ({
     getCompositeImage,
+    getDrawingBlob,
     undo: handleUndo,
     clear: handleClear,
     canUndo,
-  }), [canUndo, questionImage])
+  }), [canUndo, questionImage, onDrawingChange])
 
   const getPos = (clientX: number, clientY: number): { x: number; y: number } => {
     const canvas = drawCanvasRef.current!
@@ -221,11 +270,13 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   }
 
   const stopDraw = () => {
+    const wasDrawing = isDrawingRef.current
     if (drawCanvasRef.current) {
       drawCanvasRef.current.getContext('2d')!.globalCompositeOperation = 'source-over'
     }
     isDrawingRef.current = false
     lastPosRef.current = null
+    if (wasDrawing) persistDrawing()
   }
 
   const getEraserCursorPos = (clientX: number, clientY: number) => {
@@ -316,7 +367,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
         <canvas
           ref={drawCanvasRef}
           className="answer-draw-canvas"
-          style={{ cursor }}
+          style={{ cursor, pointerEvents: isReady ? 'auto' : 'none' }}
           onMouseDown={(e) => {
             if (isCtrlPressed || e.button === 1) {
               startPanning(e.clientX, e.clientY)

@@ -96,6 +96,7 @@ function App() {
           hasUpdate={needRefresh}
           onUpdate={handleUpdate}
           studyTabLabel="Study"
+          maxPDFFileSizeMB={512}
         />
       ) : currentView === 'viewer' && selectedPDF ? (
         <StudyPanel

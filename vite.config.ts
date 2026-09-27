@@ -23,13 +23,14 @@ export default defineConfig(({ mode }) => {
 
   console.log(`📦 Building ${appName} (mode: ${mode}, hash: ${commitHash})`)
 
-  // モード別のアイコンディレクトリ
-  const iconSource = isDiscuss ? 'public/icons/discuss' : 'public/icons/kids'
+  // Both modes share DoriDori's animal mascot.
+  const iconSource = 'public/icons/doridori'
 
   return {
     base: basePath,
     define: {
       'import.meta.env.VITE_APP_COMMIT_HASH': JSON.stringify(commitHash),
+      'import.meta.env.VITE_APP_NAME': JSON.stringify(appName),
       'import.meta.env.VITE_INDEXED_DB_NAME': JSON.stringify('DoriDoriDB'),
       'import.meta.env.VITE_APP_ENTITLEMENT_KEY': JSON.stringify('doridori')
     },
@@ -53,8 +54,7 @@ export default defineConfig(({ mode }) => {
           // モード別にアイコンをコピー
           {
             src: `${iconSource}/favicon.png`,
-            dest: '',
-            rename: 'favicon.ico'
+            dest: ''
           },
           {
             src: `${iconSource}/logo.png`,

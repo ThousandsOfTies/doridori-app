@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "test:bundle": "node ../home-teacher-common/build/checkDeferredAssets.mjs dist",
-    "test": "npm run test:grading-source",
+    "test": "npm run test:grading-source && npm run test:pdf-range",
     "test:grading-source": "node --test tests/grading-source.test.cjs",
+    "test:pdf-range": "tsx --test tests/pdf-range.test.ts",
     "prepare:server": "node scripts/prepare-cloud-run.mjs",
     "deploy:server": "npm run prepare:server && gcloud run deploy hometeacher-api --project hometeacher-api --source .cloud-run --platform managed --region asia-northeast1 --allow-unauthenticated --min-instances 0 --max-instances 10 --memory 512Mi --cpu 1 --timeout 60s --update-env-vars NODE_ENV=production,GEMINI_MODEL=gemini-3.8-flash --update-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,STRIPE_WEBHOOK_SECRET=STRIPE_WEBHOOK_SECRET:latest,STRIPE_PRICE_ID=STRIPE_PRICE_ID:latest",
     "deploy:server:staging": "npm run prepare:server && gcloud run deploy hometeacher-api-staging --project hometeacher-api --source .cloud-run --platform managed --region asia-northeast1 --allow-unauthenticated --min-instances 0 --max-instances 5 --memory 512Mi --cpu 1 --timeout 60s --update-env-vars NODE_ENV=staging,GEMINI_MODEL=gemini-3.8-flash --update-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,STRIPE_WEBHOOK_SECRET=STRIPE_WEBHOOK_SECRET:latest,STRIPE_PRICE_ID=STRIPE_PRICE_ID:latest",

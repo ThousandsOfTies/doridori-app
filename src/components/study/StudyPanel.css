@@ -92,6 +92,26 @@
   height: 18px;
 }
 
+.toolbar button.study-trace-delete-button {
+  flex-shrink: 0;
+  gap: 6px;
+  padding: 0 10px;
+  color: #a52a21;
+  border-color: #e8c6c2;
+  background: #fff8f7;
+  font-size: 12px;
+}
+
+.toolbar button.study-trace-delete-button:hover {
+  background: #ffeae7;
+}
+
+@media (max-width: 800px) {
+  .toolbar button.study-trace-delete-button span {
+    display: none;
+  }
+}
+
 .toolbar button:disabled {
   opacity: 0.5;
   cursor: not-allowed;

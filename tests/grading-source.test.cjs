@@ -57,6 +57,11 @@ test('captures A, B, both panes, duplicate pages and empty selections accurately
         const result = await capture(options)(selection);
         assert.deepEqual(Array.from(result.sourcePageNumbers), expected);
     }
+    const zoomed = await capture({ isSplitView: true })(rect(0, 200));
+    assert.equal(zoomed.regions.length, 2);
+    assert.deepEqual(Array.from(zoomed.regions, region => [region.pageNumber, region.x, region.width]), [
+        [1, 0, 0.4], [5, 0, 1],
+    ]);
     assert.equal(await capture({ isSplitView: true })(rect(300, 100)), null);
 });
 
@@ -65,6 +70,8 @@ test('history and grading panels retain captured pages despite later PDF navigat
     const noop = () => {};
     const run = handler('confirmAndGrade', {
         setIsGrading: noop, setGradingError: noop, addStatusMessage: noop,
+        panelStack: [{ type: 'answer', sourcePageNumbers: [5] }], activePanelIndex: 0,
+        crypto: { randomUUID: () => 'test' },
         compressImageDataUrl: async value => value,
         Image: class {
             width = 100; height = 100;
@@ -103,4 +110,58 @@ test('answer export preserves the selected answer source across async panel navi
     resolve('image');
     await pending;
     assert.deepEqual(pages, [5]);
+});
+
+test('a saved PDF mark restores the question, answer drawing, and grading panel in order', async () => {
+    let panels, activeIndex;
+    const run = handler('openStudyTrace', {
+        pdfId: 'book',
+        getPDFStudyTrace: async () => ({
+            id: 'trace', pdfId: 'book', steps: [
+                { id: 'answer', type: 'answer', sourcePageNumbers: [2] },
+                { id: 'grading', type: 'grading', sourcePageNumbers: [2], result: { problems: [] } },
+            ],
+        }),
+        getPDFStudyAsset: async (_traceId, _stepId, kind) => kind === 'question' ? { kind } : { kind },
+        blobToDataUrl: async () => 'data:image/png;base64,question',
+        setPanelStack: value => { panels = value; },
+        setActivePanelIndex: value => { activeIndex = value; },
+        setIsSelectionMode() {}, setIsGradingCaptureMode() {}, setSelectionRect() {},
+        addStatusMessage() {}, console,
+    });
+    await run('trace');
+    assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading']);
+    assert.equal(panels[1].questionImage, 'data:image/png;base64,question');
+    assert.equal(panels[1].initialDrawing.kind, 'drawing');
+    assert.equal(panels[2].traceId, 'trace');
+    assert.equal(activeIndex, 1);
+});
+
+test('grading again from an earlier answer replaces the later saved branch', async () => {
+    const appended = [];
+    const panels = [];
+    const noop = () => {};
+    const run = handler('confirmAndGrade', {
+        setIsGrading: noop, setGradingError: noop, addStatusMessage: noop,
+        panelStack: [{ type: 'answer', traceId: 'trace', stepId: 'answer-original', sourcePageNumbers: [2] }],
+        activePanelIndex: 0,
+        answerPanelRef: { current: { getDrawingBlob: async () => null } },
+        crypto: { randomUUID: () => 'replacement' },
+        compressImageDataUrl: async value => value,
+        Image: class {
+            width = 100; height = 100;
+            set src(_) { queueMicrotask(() => this.onload()); }
+        },
+        selectedModel: 'default', i18n: { language: 'ja' },
+        gradeWork: async () => ({ success: true, result: { problems: [] } }),
+        appendPDFStudyStep: async (...args) => appended.push(args),
+        pushPanel: panel => panels.push(panel),
+        pdfId: 'book', pdfRecord: { fileName: 'book.pdf' }, console,
+    });
+    await run('image', [2]);
+    assert.equal(appended.length, 1);
+    assert.equal(appended[0][0], 'trace');
+    assert.equal(appended[0][1].type, 'grading');
+    assert.equal(appended[0][3], 'answer-original');
+    assert.equal(panels[0].traceId, 'trace');
 });
