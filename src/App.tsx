@@ -5,6 +5,7 @@ import StudyPanel from './components/study/StudyPanel'
 import PDFEditorPanel from '@home-teacher/common/components/admin/PDFEditorLoader'
 import { PDFFileRecord, getPDFRecord, getAppSettings, saveAppSettings } from '@home-teacher/common/utils/indexedDB'
 import { useAppInitializer } from '@home-teacher/common/hooks/useAppInitializer'
+import { removeDeletedBookIndexes } from './book/bookIndex'
 
 type AppView = 'admin' | 'viewer' | 'editor'
 
@@ -24,6 +25,11 @@ function App() {
       }
     }
   }, [isInitialized, initialView, initialPDF])
+
+  useEffect(() => {
+    if (!isInitialized) return
+    removeDeletedBookIndexes().catch(error => console.warn('古い本の索引を整理できませんでした:', error))
+  }, [isInitialized])
 
 
   // PWA update handling

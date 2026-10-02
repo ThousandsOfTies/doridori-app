@@ -15,11 +15,23 @@
 }
 
 .result-inner {
+  position: relative;
   background: white;
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.12);
   padding: 24px;
 }
+
+.grading-study-markers { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+.grading-study-marker { position: absolute; box-sizing: border-box; border: 2px dashed #1976d2; pointer-events: none; }
+.grading-study-marker.completed { border-color: #2e7d32; }
+.grading-study-marker button {
+  position: absolute; right: -15px; top: 50%; transform: translateY(-50%);
+  width: 30px; height: 30px; border-radius: 50%; border: 2px solid white;
+  background: #1976d2; color: white; box-shadow: 0 2px 6px #0005;
+  cursor: pointer; pointer-events: auto; touch-action: manipulation; font-size: 14px;
+}
+.grading-study-marker.completed button { background: #2e7d32; }
 
 /* ===== 問題リスト ===== */
 .problems-list {
@@ -137,3 +149,12 @@
   font-size: 12px;
   color: #666;
 }
+.book-answer { background: #f2f7fd; border-left: 4px solid #2490e8; border-radius: 8px; padding: 20px 24px; color: #203044; }
+.book-answer-heading { font-weight: 700; color: #1676cc; margin-bottom: 12px; }
+.book-answer-body { line-height: 1.85; overflow-wrap: anywhere; }
+.book-answer-body > :first-child { margin-top: 0; }
+.book-answer-body > :last-child { margin-bottom: 0; }
+.book-answer-body .katex-display { overflow-x: auto; overflow-y: hidden; }
+.book-answer-references { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-top: 1px solid #d4e3f3; margin-top: 20px; padding-top: 12px; font-size: 13px; }
+.book-answer-references button { border: 1px solid #b8d9f6; color: #126bb1; background: white; border-radius: 16px; padding: 4px 10px; cursor: pointer; }
+.book-answer-references button:hover { background: #e4f3ff; }

@@ -1,8 +1,10 @@
 import { useTranslation } from 'react-i18next'
+import type { ReactNode } from 'react'
 import { GradingResponseResult } from '@home-teacher/common/services/api'
 import { SNSLinkRecord } from '@home-teacher/common/utils/indexedDB'
 import { getSNSIcon } from '@home-teacher/common/constants/sns'
 import './GradingResult.css'
+import BookAnswer from './BookAnswer'
 
 interface GradingResultProps {
   result: GradingResponseResult | null
@@ -11,10 +13,14 @@ interface GradingResultProps {
   modelName?: string | null
   responseTime?: number | null
   pdfId?: string
+  onOpenReferencePage?: (page: number) => void
+  studyMarkers?: ReactNode
 }
 
-const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName, responseTime, pdfId }: GradingResultProps) => {
+const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName, responseTime, pdfId, onOpenReferencePage, studyMarkers }: GradingResultProps) => {
   const { t } = useTranslation()
+  const isBookQuestion = result?.pageType === 'book-question'
+  const referencePages = (result as (GradingResponseResult & { referencePages?: number[] }) | null)?.referencePages || []
 
   const validProblems = result?.problems?.filter(problem =>
     problem.problemNumber !== null && problem.isCorrect !== null
@@ -42,7 +48,11 @@ const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName
     <div className="grading-result-content">
       <div className="result-content">
         <div className="result-inner">
-          {result && validProblems.length > 0 ? (
+          {studyMarkers}
+          {isBookQuestion ? (
+            <BookAnswer text={result?.overallComment || result?.rawResponse || ''}
+              referencePages={referencePages} onOpenPage={onOpenReferencePage} />
+          ) : result && validProblems.length > 0 ? (
             <div className="problems-list">
               {validProblems.map((problem, index) => (
                 <div key={index} className={`problem-item ${problem.isCorrect ? 'correct' : 'incorrect'}`}>
@@ -116,7 +126,7 @@ const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName
             </div>
           )}
 
-          {snsLinks.length > 0 && (
+          {!isBookQuestion && snsLinks.length > 0 && (
             <div className="sns-links-section">
               <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '12px', textAlign: 'center' }}>Enjoy!</h3>
               <button

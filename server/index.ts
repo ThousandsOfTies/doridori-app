@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { GoogleGenAI, ThinkingLevel } from '@google/genai'
+import { registerBookKnowledgeRoutes } from './bookKnowledgeRoutes.ts'
 import { AVAILABLE_MODELS, DEFAULT_MODEL_ID, SUBJECTS, buildGradingPrompt } from '../../home-teacher-common/src/constants/grading.ts'
 
 import path from 'path';
@@ -149,6 +150,7 @@ const getThinkingConfig = (model: string) => model.startsWith('gemini-3')
   : { thinkingBudget: model.startsWith('gemini-2.5-pro') ? 128 : 0 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' })
+registerBookKnowledgeRoutes(app, ai, MODEL_NAME)
 
 // モデル定義・教科定義は home-teacher-common/src/constants/grading.ts から import
 

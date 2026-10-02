@@ -59,14 +59,15 @@ test('captures A, B, both panes, duplicate pages and empty selections accurately
     }
     const zoomed = await capture({ isSplitView: true })(rect(0, 200));
     assert.equal(zoomed.regions.length, 2);
+    assert.equal((await capture()(rect(0, 100))).pageDisplayWidth, 250);
     assert.deepEqual(Array.from(zoomed.regions, region => [region.pageNumber, region.x, region.width]), [
         [1, 0, 0.4], [5, 0, 1],
     ]);
     assert.equal(await capture({ isSplitView: true })(rect(300, 100)), null);
 });
 
-test('history and grading panels retain captured pages despite later PDF navigation', async () => {
-    const records = [], panels = [];
+test('question panels retain captured pages despite later PDF navigation', async () => {
+    const panels = [], requestedPages = [];
     const noop = () => {};
     const run = handler('confirmAndGrade', {
         setIsGrading: noop, setGradingError: noop, addStatusMessage: noop,
@@ -77,22 +78,25 @@ test('history and grading panels retain captured pages despite later PDF navigat
             width = 100; height = 100;
             set src(_) { queueMicrotask(() => this.onload()); }
         },
-        selectedModel: 'default', i18n: { language: 'ja' },
-        gradeWork: async () => ({
+        selectedModel: 'default',
+        readBookQuestion: async () => 'この箇所の意味は？',
+        bookIndex: { searchBook: async (_, page) => {
+            requestedPages.push(page);
+            return { passages: [{ pageNumber: page, text: '本文' }], indexedPages: 3 };
+        } },
+        askBookQuestion: async () => ({
             success: true,
-            result: { problems: [{ problemNumber: '1', studentAnswer: '5', isCorrect: true }] },
+            result: { pageType: 'book-question', problems: [], overallComment: '説明' },
         }),
-        pushPanel: value => panels.push(value), updateGradingPanel: noop,
+        pushPanel: value => panels.push(value),
         pdfId: 'book', pdfRecord: { fileName: 'book.pdf' }, pageA: 99, pageB: 100,
-        saveGradingImage: async () => 'image', generateGradingHistoryId: () => 'history',
-        saveGradingHistory: async value => records.push(value),
-        teacherMode: 'balanced', isPanesReversed: false, t: key => key, console,
+        includeLaterPages: false, numPages: 100, console,
     });
     await run('image', [5]);
     await run('image', [1, 5]);
-    assert.deepEqual(records.map(record => record.pageNumber), [5, 1]);
-    assert.deepEqual(records.map(record => record.sourcePageNumbers), [[5], [1, 5]]);
+    assert.deepEqual(requestedPages, [5, 1]);
     assert.deepEqual(panels.map(panel => panel.sourcePageNumbers), [[5], [1, 5]]);
+    assert.ok(panels.every(panel => panel.result.pageType === 'book-question'));
 });
 
 test('answer export preserves the selected answer source across async panel navigation', async () => {
@@ -102,7 +106,7 @@ test('answer export preserves the selected answer source across async panel navi
     let pages;
     const run = handler('handleGradeFromToolbar', {
         panelStack: stack, activePanelIndex: 0, teacherMode: 'balanced',
-        answerPanelRef: { current: { getCompositeImage: () => image } },
+        answerPanelRef: { current: { getCompositeImage: () => image, getQuestionText: () => '' } },
         confirmAndGrade: async (_, value) => { pages = value; },
     });
     const pending = run();
@@ -116,9 +120,13 @@ test('a saved PDF mark restores the question, answer drawing, and grading panel 
     let panels, activeIndex;
     const run = handler('openStudyTrace', {
         pdfId: 'book',
+        studyTraces: [],
+        pendingQuestionWritesRef: { current: new Map() },
         getPDFStudyTrace: async () => ({
-            id: 'trace', pdfId: 'book', steps: [
-                { id: 'answer', type: 'answer', sourcePageNumbers: [2] },
+            id: 'trace', pdfId: 'book',
+            regions: [{ pageNumber: 2, x: 0.1, y: 0.2, width: 0.4, height: 0.3 }],
+            steps: [
+                { id: 'answer', type: 'answer', source: 'pdf', layoutMode: 'full-page-focus', sourcePageNumbers: [2] },
                 { id: 'grading', type: 'grading', sourcePageNumbers: [2], result: { problems: [] } },
             ],
         }),
@@ -133,11 +141,170 @@ test('a saved PDF mark restores the question, answer drawing, and grading panel 
     assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading']);
     assert.equal(panels[1].questionImage, 'data:image/png;base64,question');
     assert.equal(panels[1].initialDrawing.kind, 'drawing');
+    assert.equal(panels[1].focusRegion.pageNumber, 2);
+    assert.equal(panels[1].focusRegion.x, 0.1);
     assert.equal(panels[2].traceId, 'trace');
-    assert.equal(activeIndex, 1);
+    assert.equal(activeIndex, 2);
 });
 
-test('grading again from an earlier answer replaces the later saved branch', async () => {
+test('a book question restores the full page focus and earlier typed text', async () => {
+    let panels;
+    const run = handler('openStudyTrace', {
+        pdfId: 'book', studyTraces: [],
+        getPDFStudyTrace: async () => ({
+            id: 'trace', pdfId: 'book',
+            regions: [{ pageNumber: 4, x: 0.2, y: 0.3, width: 0.5, height: 0.2 }],
+            steps: [{ id: 'answer', type: 'answer', source: 'pdf', layoutMode: 'book-text',
+                questionText: '著者はなぜそう考えた？', pageDisplayWidth: 980, sourcePageNumbers: [4] }],
+        }),
+        getPDFStudyAsset: async () => ({}), blobToDataUrl: async () => 'data:image/png;base64,question',
+        setPanelStack: value => { panels = value; }, setActivePanelIndex() {},
+        setIsSelectionMode() {}, setIsGradingCaptureMode() {}, setSelectionRect() {},
+        pendingQuestionWritesRef: { current: new Map() }, addStatusMessage() {}, console,
+    });
+    await run('trace');
+    assert.equal(panels[1].fullPageQuestion, true);
+    assert.equal(panels[1].initialTexts[0].text, '著者はなぜそう考えた？');
+    assert.equal(panels[1].focusRegion.pageNumber, 4);
+    assert.equal(panels[1].pageDisplayWidth, 980);
+});
+
+test('new book-page history restores text annotations on the PDF page', async () => {
+    let panels;
+    const run = handler('openStudyTrace', {
+        pdfId: 'book', studyTraces: [], pendingQuestionWritesRef: { current: new Map() },
+        getPDFStudyTrace: async () => ({
+            id: 'trace', pdfId: 'book', regions: [{ pageNumber: 2, x: 0.1, y: 0.2, width: 0.4, height: 0.3 }],
+            steps: [{ id: 'answer', type: 'answer', source: 'pdf', layoutMode: 'book-page',
+                sourcePageNumbers: [2], pageDisplayWidth: 900, answerTexts: [
+                    { id: 'text', x: 100, y: 200, text: 'ここはどういう意味？', fontSize: 18,
+                        color: '#222222', direction: 'horizontal' },
+                ] }],
+        }),
+        getPDFStudyAsset: async () => ({}), blobToDataUrl: async () => 'data:image/png;base64,question',
+        setPanelStack: value => { panels = value; }, setActivePanelIndex() {},
+        setIsSelectionMode() {}, setIsGradingCaptureMode() {}, setSelectionRect() {},
+        addStatusMessage() {}, console,
+    });
+    await run('trace');
+    assert.equal(panels[1].fullPageQuestion, true);
+    assert.equal(panels[1].initialTexts[0].text, 'ここはどういう意味？');
+    assert.equal(panels[1].pageDisplayWidth, 900);
+});
+
+test('returning to PDF activates range selection and clears drawing tools', () => {
+    const updates = [];
+    const run = handler('navigateToPanel', {
+        panelStack: [{ type: 'pdf' }, { type: 'answer' }],
+        setIsSelectionMode: value => updates.push(['selection', value]),
+        setIsDrawingMode: value => updates.push(['pen', value]),
+        setIsEraserMode: value => updates.push(['eraser', value]),
+        setIsTextMode: value => updates.push(['text', value]),
+        setSelectionRect: value => updates.push(['rect', value]),
+        setIsHoveringStudyTrace() {}, cancelGradingCapture() {},
+        setActivePanelIndex: value => updates.push(['panel', value]),
+    });
+    run(0);
+    assert.deepEqual(updates.map(([key, value]) => [key, value]), [
+        ['selection', true], ['rect', null], ['pen', false], ['eraser', false],
+        ['text', false], ['panel', 0],
+    ]);
+});
+
+test('typed questions are sent directly without handwriting recognition', async () => {
+    let asked;
+    const run = handler('confirmAndGrade', {
+        setIsGrading() {}, setGradingError() {}, addStatusMessage() {},
+        panelStack: [{ type: 'answer', sourcePageNumbers: [4] }],
+        activePanelIndex: 0, compressImageDataUrl: async value => value,
+        Image: class {
+            width = 100; height = 100;
+            set src(_) { queueMicrotask(() => this.onload()); }
+        },
+        crypto: { randomUUID: () => 'result' },
+        selectedModel: 'default', includeLaterPages: false, numPages: 10, pageA: 4,
+        readBookQuestion: async () => { throw new Error('handwriting recognition should not run'); },
+        bookIndex: { searchBook: async () => ({ passages: [], indexedPages: 0 }) },
+        askBookQuestion: async body => {
+            asked = body;
+            return { success: true, result: { pageType: 'book-question', problems: [] } };
+        },
+        pushPanel() {}, console,
+    });
+    await run('image', [4], '著者はなぜそう考えた？');
+    assert.equal(asked.question, '著者はなぜそう考えた？');
+    assert.equal(asked.currentPage, 4);
+});
+
+test('answer selection is stored relative to the answer card', () => {
+    const measure = handler('getResultCaptureGeometry', {});
+    const result = measure(
+        { x: 35, y: 55, width: 120, height: 90 },
+        { left: 100, top: 100 },
+        { left: 120, top: 140, width: 200, height: 300 },
+    );
+    assert.deepEqual(Array.from([result.x, result.y, result.width, result.height]), [35, 55, 120, 90]);
+    assert.deepEqual(Array.from(Object.values(result.region)), [0.075, 0.05, 0.6, 0.3]);
+});
+
+test('history stops at a fork and opens the selected follow-up', async () => {
+    const root = { id: 'root', pdfId: 'book', regions: [], steps: [
+        { id: 'root-answer', type: 'answer', source: 'pdf', sourcePageNumbers: [1] },
+        { id: 'root-result', type: 'grading', sourcePageNumbers: [1], result: { problems: [] } },
+    ] };
+    const child = id => ({ id, pdfId: 'book', parentTraceId: 'root', parentStepId: 'root-result', regions: [], steps: [
+        { id: id + '-answer', type: 'answer', source: 'grading', sourcePageNumbers: [1] },
+        { id: id + '-result', type: 'grading', sourcePageNumbers: [1], result: { problems: [] } },
+    ] });
+    const first = child('first'), second = child('second');
+    let panels, activeIndex;
+    const run = handler('openStudyTrace', {
+        pdfId: 'book', studyTraces: [root, first, second],
+        pendingQuestionWritesRef: { current: new Map() },
+        getPDFStudyTrace: async id => [root, first, second].find(trace => trace.id === id),
+        getPDFStudyAsset: async () => ({}), blobToDataUrl: async () => 'data:image/png;base64,test',
+        setPanelStack: value => { panels = value; },
+        setActivePanelIndex: value => { activeIndex = value; },
+        setIsSelectionMode() {}, setIsGradingCaptureMode() {}, setSelectionRect() {},
+        addStatusMessage() {}, console,
+    });
+    await run('root');
+    assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading']);
+    assert.equal(activeIndex, 2);
+    await run('second');
+    assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading', 'answer', 'grading']);
+    assert.equal(panels[3].traceId, 'second');
+    assert.equal(activeIndex, 4);
+});
+
+test('history follows a single continuation to its latest answer', async () => {
+    const root = { id: 'root', pdfId: 'book', regions: [], steps: [
+        { id: 'root-answer', type: 'answer', source: 'pdf', sourcePageNumbers: [1] },
+        { id: 'root-result', type: 'grading', sourcePageNumbers: [1], result: { problems: [] } },
+    ] };
+    const child = { id: 'child', pdfId: 'book', parentTraceId: 'root', parentStepId: 'root-result',
+        regions: [], steps: [{ id: 'child-answer', type: 'answer', source: 'grading', sourcePageNumbers: [1] }] };
+    const savedChild = { ...child, steps: [{ ...child.steps[0], layoutMode: 'book-text',
+        questionText: 'もう少し詳しく教えて' }] };
+    let panels, activeIndex;
+    const run = handler('openStudyTrace', {
+        pdfId: 'book', studyTraces: [root, child],
+        pendingQuestionWritesRef: { current: new Map() },
+        getPDFStudyTrace: async id => id === 'root' ? root : savedChild,
+        getPDFStudyAsset: async () => ({}), blobToDataUrl: async () => 'data:image/png;base64,test',
+        setPanelStack: value => { panels = value; },
+        setActivePanelIndex: value => { activeIndex = value; },
+        setIsSelectionMode() {}, setIsGradingCaptureMode() {}, setSelectionRect() {},
+        addStatusMessage() {}, console,
+    });
+    await run('root');
+    assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading', 'answer']);
+    assert.equal(panels[3].traceId, 'child');
+    assert.equal(panels[3].initialTexts[0].text, 'もう少し詳しく教えて');
+    assert.equal(activeIndex, 3);
+});
+
+test('asking again from an earlier question replaces the later saved branch', async () => {
     const appended = [];
     const panels = [];
     const noop = () => {};
@@ -152,9 +319,13 @@ test('grading again from an earlier answer replaces the later saved branch', asy
             width = 100; height = 100;
             set src(_) { queueMicrotask(() => this.onload()); }
         },
-        selectedModel: 'default', i18n: { language: 'ja' },
-        gradeWork: async () => ({ success: true, result: { problems: [] } }),
+        selectedModel: 'default', includeLaterPages: false, numPages: 10, pageA: 1,
+        readBookQuestion: async () => 'なぜですか？',
+        bookIndex: { searchBook: async () => ({ passages: [], indexedPages: 0 }) },
+        askBookQuestion: async () => ({ success: true, result: { pageType: 'book-question', problems: [] } }),
         appendPDFStudyStep: async (...args) => appended.push(args),
+        getPDFStudyTrace: async () => ({ id: 'trace', steps: [{ id: 'answer-original', type: 'answer' }] }),
+        setStudyTraces: noop,
         pushPanel: panel => panels.push(panel),
         pdfId: 'book', pdfRecord: { fileName: 'book.pdf' }, console,
     });

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICON_SVG } from '../../constants/icons';
-import { FiHome, FiRotateCcw, FiTrash2, FiCheckCircle, FiLoader, FiType, FiEdit2 } from 'react-icons/fi';
+import { FiHome, FiRotateCcw, FiX, FiHelpCircle, FiLoader, FiType, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
 import { BiEraser, BiSelection } from 'react-icons/bi';
 
 export type TextDirection = 'horizontal' | 'vertical-rl' | 'vertical-lr';
@@ -21,6 +21,9 @@ interface StudyToolbarProps {
     toggleSplitView: () => void;
     activeTab: 'A' | 'B';
     toggleActiveTab: () => void;
+    showStudyMarkers?: boolean;
+    isSavingStudyMarkerVisibility?: boolean;
+    onToggleStudyMarkers?: () => void;
 
     // Grading
     isSelectionMode: boolean;
@@ -74,6 +77,9 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     toggleSplitView,
     activeTab,
     toggleActiveTab,
+    showStudyMarkers = true,
+    isSavingStudyMarkerVisibility = false,
+    onToggleStudyMarkers,
     isSelectionMode,
     isGrading,
     startGrading,
@@ -181,7 +187,21 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         }}>
                             {breadcrumbs.map((crumb, i) => (
                                 <React.Fragment key={i}>
-                                    {i > 0 && <span style={{ color: '#bbb', fontSize: '13px', flexShrink: 0 }}>›</span>}
+                                    {i > 0 && (i === 1 && onDeleteStudyTrace ? (
+                                        <span className="study-trace-link-connector">
+                                            <span aria-hidden="true">─</span>
+                                            <button
+                                                type="button"
+                                                className="study-trace-unlink-button"
+                                                onClick={onDeleteStudyTrace}
+                                                title="PDFからこの問い合わせ履歴へのリンクを削除"
+                                                aria-label="PDFからこの問い合わせ履歴へのリンクを削除"
+                                            >
+                                                <FiX size={16} />
+                                            </button>
+                                            <span aria-hidden="true">→</span>
+                                        </span>
+                                    ) : <span style={{ color: '#bbb', fontSize: '13px', flexShrink: 0 }}>›</span>)}
                                     <span
                                         onClick={crumb.isCurrent ? undefined : crumb.onClick}
                                         style={{
@@ -202,22 +222,6 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         </div>
                     )}
 
-                    {onDeleteStudyTrace && (
-                        <button
-                            type="button"
-                            className="study-trace-delete-button"
-                            onClick={onDeleteStudyTrace}
-                            title="この問い合わせ履歴を削除"
-                            aria-label="この問い合わせ履歴を削除"
-                        >
-                            <FiTrash2 size={18} />
-                            <span>履歴を削除</span>
-                        </button>
-                    )}
-
-
-
-
                 </>
             )}
 
@@ -227,6 +231,22 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
 
                 <>
+                    {onToggleStudyMarkers && (
+                        <button
+                            type="button"
+                            className={`study-trace-visibility-button${showStudyMarkers ? ' active' : ''}`}
+                            onClick={onToggleStudyMarkers}
+                            disabled={isSavingStudyMarkerVisibility}
+                            aria-label="範囲選択の履歴を表示"
+                            aria-pressed={showStudyMarkers}
+                            title={showStudyMarkers
+                                ? '選択跡の表示 ON（クリックで非表示）'
+                                : '選択跡の表示 OFF（クリックで表示）'}
+                        >
+                            {showStudyMarkers ? <FiEye size={20} /> : <FiEyeOff size={20} />}
+                            <span>選択跡</span>
+                        </button>
+                    )}
                     <div className="divider"></div>
 
                     {/* 描画ツール */}
@@ -355,6 +375,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         )}
                     </div>
 
+
                     {!onGrade && (
                         <>
                             <div className="divider" style={{ margin: '0 4px' }}></div>
@@ -430,14 +451,15 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                 onClick={onGrade}
                                 disabled={isGrading}
                                 className="btn-submit"
-                                title="採点する"
+                                title="先生に質問する"
+                                aria-label="先生に質問する"
                                 style={{
                                     cursor: isGrading ? 'wait' : 'pointer',
                                     opacity: isGrading ? 0.6 : 1,
                                     transition: 'all 0.15s',
                                 }}
                             >
-                                {isGrading ? <FiLoader size={20} className="animate-spin" /> : <FiCheckCircle size={20} />}
+                                {isGrading ? <FiLoader size={20} className="animate-spin" /> : <FiHelpCircle size={20} />}
                             </button>
                         </>
                     ) : (

@@ -71,6 +71,20 @@
   z-index: 100;
 }
 
+.toolbar button.study-trace-visibility-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.toolbar button.study-trace-visibility-button svg {
+  width: 20px;
+  height: 20px;
+}
+
 .toolbar button, .toolbar select {
   height: 34px;
   padding: 0 0.6rem;
@@ -92,24 +106,32 @@
   height: 18px;
 }
 
-.toolbar button.study-trace-delete-button {
+.study-trace-link-connector {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   flex-shrink: 0;
-  gap: 6px;
-  padding: 0 10px;
+  color: #9b6863;
+  font-size: 13px;
+}
+
+.toolbar button.study-trace-unlink-button {
+  flex-shrink: 0;
+  width: 34px;
+  padding: 0;
+  border-radius: 50%;
   color: #a52a21;
   border-color: #e8c6c2;
   background: #fff8f7;
-  font-size: 12px;
 }
 
-.toolbar button.study-trace-delete-button:hover {
+.toolbar button.study-trace-unlink-button:hover {
   background: #ffeae7;
 }
 
-@media (max-width: 800px) {
-  .toolbar button.study-trace-delete-button span {
-    display: none;
-  }
+.toolbar button.study-trace-unlink-button svg {
+  width: 16px;
+  height: 16px;
 }
 
 .toolbar button:disabled {
@@ -719,3 +741,14 @@
   border-radius: 8px;
   user-select: none;
 }
+.book-index-launcher { position: absolute; top: 12px; right: 12px; z-index: 10001; }
+.book-index-launcher > button { background: rgba(255,255,255,.96); border: 1px solid #b7cada; border-radius: 18px; padding: 7px 12px; color: #245474; cursor: pointer; box-shadow: 0 2px 8px #0002; }
+.book-index-card { width: min(330px, calc(100vw - 32px)); margin-top: 8px; padding: 16px; border: 1px solid #cbd9e5; border-radius: 12px; background: #fff; box-shadow: 0 8px 30px #0003; color: #243746; font-size: 13px; }
+.book-index-card p { line-height: 1.5; margin: 9px 0; }
+.book-index-progress { font-weight: 600; }
+.book-index-card progress { display: block; width: 100%; height: 10px; }
+.book-index-error { color: #b3261e; overflow-wrap: anywhere; }
+.book-index-option { display: flex; gap: 7px; align-items: center; margin: 12px 0; }
+.book-index-actions { display: flex; justify-content: flex-end; }
+.book-index-actions button { background: #237ab5; color: white; border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+.book-index-actions button:disabled { opacity: .5; cursor: default; }

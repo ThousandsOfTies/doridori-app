@@ -10,6 +10,7 @@ const files = [
   ['server/package.json', 'package.json'],
   ['server/package-lock.json', 'package-lock.json'],
   ['server/index.ts', 'app/server/index.ts'],
+  ['server/bookKnowledgeRoutes.ts', 'app/server/bookKnowledgeRoutes.ts'],
   ['../home-teacher-common/src/constants/grading.ts', 'home-teacher-common/src/constants/grading.ts'],
 ]
 

@@ -77,7 +77,7 @@ export default defineConfig(({ mode }) => {
           skipWaiting: false,
           clientsClaim: false,
           globIgnores: ['**/opencv*.js'],
-          globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2}'],
+          globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2,ttf}'],
           maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // 15MB 念のため増やす
           runtimeCaching: [
             {
