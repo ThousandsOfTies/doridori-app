@@ -74,10 +74,9 @@
 .toolbar button.study-trace-visibility-button {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  width: 34px;
+  padding: 0;
   flex-shrink: 0;
-  white-space: nowrap;
-  font-size: 13px;
 }
 
 .toolbar button.study-trace-visibility-button svg {

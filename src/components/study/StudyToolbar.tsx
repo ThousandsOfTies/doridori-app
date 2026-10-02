@@ -244,7 +244,6 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                 : '選択跡の表示 OFF（クリックで表示）'}
                         >
                             {showStudyMarkers ? <FiEye size={20} /> : <FiEyeOff size={20} />}
-                            <span>選択跡</span>
                         </button>
                     )}
                     <div className="divider"></div>

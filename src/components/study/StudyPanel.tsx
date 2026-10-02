@@ -1629,6 +1629,9 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             drawingPaths={drawingPathsA}
             isCtrlPressed={isCtrlPressed}
             splitMode={isSplitView}
+            wheelPageNavigation={!editingText && !isLoading && !pdfError}
+            wheelEventTargetRef={splitContainerRef}
+            drawingPathsByPage={drawingPaths}
             onPageChange={handlePageAChange}
             onPathAdd={(path) => handlePathAdd(pageA, path)}
             onPathsChange={(paths) => handlePathsChange(pageA, paths)}
@@ -1677,6 +1680,9 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             drawingPaths={drawingPaths.get(pageB) || []}
             isCtrlPressed={isCtrlPressed}
             splitMode={isSplitView}
+            wheelPageNavigation={!editingText && !isLoading && !pdfError}
+            wheelEventTargetRef={splitContainerRef}
+            drawingPathsByPage={drawingPaths}
             onPageChange={handlePageBChange}
             onPathAdd={(path) => handlePathAdd(pageB, path)}
             onPathsChange={(paths) => handlePathsChange(pageB, paths)}
