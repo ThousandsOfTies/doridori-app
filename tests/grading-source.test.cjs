@@ -9,15 +9,18 @@ const ts = require('typescript');
 const filename = path.join(__dirname, '../src/components/study/StudyPanel.tsx');
 const source = fs.readFileSync(filename, 'utf8');
 const ast = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-function handler(name, adapters) {
+function handler(name, adapters, component = 'StudyPanel') {
+    const componentAst = component === 'StudyPanel' ? ast : ts.createSourceFile(component,
+        fs.readFileSync(path.join(__dirname, '../src/components/study/' + component + '.tsx'), 'utf8'),
+        ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
     let initializer;
     function visit(node) {
-        if (ts.isVariableDeclaration(node) && node.name.getText(ast) === name) initializer = node.initializer;
+        if (ts.isVariableDeclaration(node) && node.name.getText(componentAst) === name) initializer = node.initializer;
         ts.forEachChild(node, visit);
     }
-    visit(ast);
+    visit(componentAst);
     assert.ok(initializer, name);
-    const code = ts.transpileModule('const run = ' + initializer.getText(ast), {
+    const code = ts.transpileModule('const run = ' + initializer.getText(componentAst), {
         compilerOptions: { target: ts.ScriptTarget.ES2022 }
     }).outputText;
     return vm.runInNewContext(code + '\nrun', adapters);
@@ -144,7 +147,7 @@ test('a saved PDF mark restores the question, answer drawing, and grading panel 
     assert.equal(panels[1].focusRegion.pageNumber, 2);
     assert.equal(panels[1].focusRegion.x, 0.1);
     assert.equal(panels[2].traceId, 'trace');
-    assert.equal(activeIndex, 2);
+    assert.equal(activeIndex, 1);
 });
 
 test('a book question restores the full page focus and earlier typed text', async () => {
@@ -247,7 +250,7 @@ test('answer selection is stored relative to the answer card', () => {
     assert.deepEqual(Array.from(Object.values(result.region)), [0.075, 0.05, 0.6, 0.3]);
 });
 
-test('history stops at a fork and opens the selected follow-up', async () => {
+test('marks open the selected question and keep its saved teacher answer in the breadcrumbs', async () => {
     const root = { id: 'root', pdfId: 'book', regions: [], steps: [
         { id: 'root-answer', type: 'answer', source: 'pdf', sourcePageNumbers: [1] },
         { id: 'root-result', type: 'grading', sourcePageNumbers: [1], result: { problems: [] } },
@@ -270,14 +273,14 @@ test('history stops at a fork and opens the selected follow-up', async () => {
     });
     await run('root');
     assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading']);
-    assert.equal(activeIndex, 2);
+    assert.equal(activeIndex, 1);
     await run('second');
     assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading', 'answer', 'grading']);
     assert.equal(panels[3].traceId, 'second');
-    assert.equal(activeIndex, 4);
+    assert.equal(activeIndex, 3);
 });
 
-test('history follows a single continuation to its latest answer', async () => {
+test('a PDF mark opens one question even when it has a single continuation', async () => {
     const root = { id: 'root', pdfId: 'book', regions: [], steps: [
         { id: 'root-answer', type: 'answer', source: 'pdf', sourcePageNumbers: [1] },
         { id: 'root-result', type: 'grading', sourcePageNumbers: [1], result: { problems: [] } },
@@ -298,10 +301,136 @@ test('history follows a single continuation to its latest answer', async () => {
         addStatusMessage() {}, console,
     });
     await run('root');
+    assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading']);
+    assert.equal(activeIndex, 1);
+    await run('child');
     assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading', 'answer']);
     assert.equal(panels[3].traceId, 'child');
     assert.equal(panels[3].initialTexts[0].text, 'もう少し詳しく教えて');
     assert.equal(activeIndex, 3);
+});
+
+test('a teacher answer selection saves the whole paper, focus, size and scroll position', async () => {
+    const sourcePanel = { type: 'grading', traceId: 'root', stepId: 'result', sourcePageNumbers: [4] };
+    const inner = { getBoundingClientRect: () => ({ left: 120, top: -500, width: 1000, height: 2000 }) };
+    const overlay = { style: { display: '' } }, markers = { style: { display: '' } };
+    const panel = {
+        getBoundingClientRect: () => ({ left: 100, top: 80 }),
+        querySelector: selector => ({
+            '.result-inner': inner, '.result-content': { scrollTop: 600 },
+            '.grading-capture-overlay': overlay, '.grading-study-markers': markers,
+        })[selector],
+    };
+    let saved, opened;
+    const run = handler('handleGradingCaptureEnd', {
+        panelStack: [sourcePanel], activePanelIndex: 0,
+        gradingPanelRef: { current: panel }, isGradingCapturingRef: { current: true },
+        gradingCaptureRectRef: { current: { x: 300, y: 200, width: 200, height: 100 } },
+        getResultCaptureGeometry: handler('getResultCaptureGeometry', {}),
+        captureResultPage: async element => {
+            assert.equal(element, inner);
+            assert.equal(overlay.style.display, 'none');
+            assert.equal(markers.style.display, 'none');
+            return { toDataURL: () => 'full-answer-image' };
+        },
+        crypto: { randomUUID: () => 'followup' }, pdfId: 'book',
+        dataUrlToBlob: async image => {
+            assert.equal(image, 'full-answer-image');
+            return image;
+        },
+        createPDFStudyTrace: async trace => { saved = trace; },
+        setStudyTraces() {}, pushPanel: value => { opened = value; },
+        setIsGradingCaptureMode() {}, setGradingCaptureRect() {},
+        addStatusMessage: message => assert.fail(message), console,
+    });
+    await run();
+    assert.equal(opened.questionImage, 'full-answer-image');
+    assert.equal(opened.fullPageQuestion, true);
+    assert.equal(opened.pageDisplayWidth, 1000);
+    assert.equal(opened.pageScrollTop, 600);
+    assert.deepEqual(Array.from(Object.values(opened.imageFocusRegion)), [0.28, 0.39, 0.2, 0.05]);
+    assert.equal(saved.steps[0].layoutMode, 'book-result-focus');
+    assert.equal(saved.steps[0].imageFocusRegion, opened.imageFocusRegion);
+    assert.equal(saved.steps[0].pageDisplayWidth, 1000);
+    assert.equal(saved.steps[0].pageScrollTop, 600);
+    assert.equal(overlay.style.display, '');
+    assert.equal(markers.style.display, '');
+});
+
+test('reopening a teacher follow-up restores its full-paper focus and viewport', async () => {
+    const root = { id: 'root', pdfId: 'book', regions: [], steps: [
+        { id: 'root-answer', type: 'answer', source: 'pdf', sourcePageNumbers: [1] },
+        { id: 'root-result', type: 'grading', sourcePageNumbers: [1], result: { problems: [] } },
+    ] };
+    const region = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
+    const child = { id: 'child', pdfId: 'book', parentTraceId: 'root', parentStepId: 'root-result',
+        regions: [], resultRegion: region, steps: [
+            { id: 'child-answer', type: 'answer', source: 'grading', sourcePageNumbers: [1],
+                layoutMode: 'book-result-focus', imageFocusRegion: region,
+                pageDisplayWidth: 1000, pageScrollTop: 480, answerTexts: [{ text: 'なぜですか？' }] },
+        ] };
+    let panels, activeIndex;
+    await handler('openStudyTrace', {
+        pdfId: 'book', pendingQuestionWritesRef: { current: new Map() },
+        getPDFStudyTrace: async id => id === 'root' ? root : child,
+        getPDFStudyAsset: async () => ({}), blobToDataUrl: async () => 'full-answer-image',
+        setPanelStack: value => { panels = value; }, setActivePanelIndex: value => { activeIndex = value; },
+        setIsSelectionMode() {}, setIsGradingCaptureMode() {}, setSelectionRect() {},
+        addStatusMessage: message => assert.fail(message), console,
+    })('child');
+    assert.equal(activeIndex, 3);
+    assert.equal(panels[3].fullPageQuestion, true);
+    assert.equal(panels[3].focusRegion, undefined);
+    assert.equal(panels[3].imageFocusRegion, region);
+    assert.equal(panels[3].pageDisplayWidth, 1000);
+    assert.equal(panels[3].pageScrollTop, 480);
+    assert.equal(panels[3].initialTexts[0].text, 'なぜですか？');
+});
+
+test('the question canvas keeps the original paper size and fades only outside the focus', () => {
+    const region = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
+    for (const pixelRatio of [1, 2]) {
+        const images = [], fills = [], outlines = [];
+        const bg = { getContext: () => ({
+            drawImage: (...args) => images.push(args.slice(1)),
+            fillRect: (...args) => fills.push(args),
+            strokeRect: (...args) => outlines.push(args), setLineDash() {},
+        }) };
+        const drawing = { getContext: () => ({ clearRect() {} }) };
+        const constants = Object.fromEntries(['SIDE_MARGIN', 'TOP_MARGIN', 'BOTTOM_MARGIN',
+            'MIN_IMAGE_WIDTH', 'BOOK_PAGE_WIDTH', 'BOOK_WRITING_WIDTH']
+            .map(name => [name, handler(name, {}, 'AnswerPanel')]));
+        handler('initCanvas', {
+            ...constants, bgCanvasRef: { current: bg }, drawCanvasRef: { current: drawing },
+            writingBoundsRef: { current: null }, historyRef: { current: [] },
+            fullPageQuestion: true, imageFocusRegion: region, pageDisplayWidth: 1000,
+            setCanUndo() {}, onCanUndoChange: undefined, console: { log() {} },
+        }, 'AnswerPanel')({ naturalWidth: 1000 * pixelRatio, naturalHeight: 800 * pixelRatio }, region);
+        assert.deepEqual([bg.width, bg.height, drawing.width, drawing.height], [1000, 800, 1000, 800]);
+        assert.deepEqual(images, [[0, 0, 1000, 800]]);
+        assert.deepEqual(outlines, [[200, 240, 400, 160]]);
+        assert.deepEqual(fills.slice(1), [
+            [0, 0, 1000, 240], [0, 400, 1000, 400], [0, 240, 200, 160], [600, 240, 400, 160],
+        ]);
+    }
+});
+
+test('an image focus loads the whole answer image and preserves the scrolled view', async () => {
+    const region = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
+    let loaded, pan;
+    await handler('restore', {
+        Image: class { set src(value) { this.source = value; queueMicrotask(() => this.onload()); } },
+        pdfContext: undefined, imageFocusRegion: region, questionImage: 'full-answer-image',
+        initialDrawing: undefined, initialTexts: [], cancelled: false,
+        initCanvas: (image, focus) => { loaded = [image.source, focus]; },
+        bgCanvasRef: { current: { width: 1000 } }, containerRef: { current: { clientWidth: 1032 } },
+        textAnnotationsRef: { current: [] }, fullPageQuestion: true, pageScrollTop: 480,
+        setTextAnnotations() {}, setZoom() {}, setIsReady() {},
+        setPanOffset: value => { pan = value; }, console,
+    }, 'AnswerPanel')();
+    assert.equal(loaded[0], 'full-answer-image');
+    assert.equal(loaded[1], region);
+    assert.deepEqual(Array.from(Object.values(pan)), [0, -480]);
 });
 
 test('asking again from an earlier question replaces the later saved branch', async () => {

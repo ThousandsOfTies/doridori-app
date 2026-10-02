@@ -38,6 +38,13 @@ interface StudyPanelProps {
 const SPLIT_RATIO_STORAGE_KEY = 'doridori.splitRatio'
 
 type ResultRegion = { x: number; y: number; width: number; height: number }
+type BookStudyStep = PDFStudyStep & {
+  layoutMode?: 'full-page-focus' | 'book-page' | 'book-text' | 'book-result-focus'
+  pageDisplayWidth?: number
+  pageScrollTop?: number
+  imageFocusRegion?: ResultRegion
+  questionText?: string
+}
 type BookStudyTrace = PDFStudyTraceRecord & {
   parentTraceId?: string
   parentStepId?: string
@@ -63,9 +70,21 @@ const getResultCaptureGeometry = (
   }
 }
 
+const captureResultPage = async (element: HTMLElement) => {
+  const html2canvas = (await import('html2canvas')).default
+  const bounds = element.getBoundingClientRect()
+  return html2canvas(element, {
+    scale: window.devicePixelRatio || 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    width: bounds.width,
+    height: bounds.height,
+  })
+}
+
 type PanelData =
   | { type: 'pdf' }
-  | { type: 'answer'; questionImage: string; sourcePageNumbers: number[]; source?: 'grading'; traceId?: string; stepId?: string; initialDrawing?: Blob | null; initialTexts?: PDFStudyAnswerState['texts']; focusRegion?: PDFStudyRegion; pageDisplayWidth?: number; fullPageQuestion?: boolean }
+  | { type: 'answer'; questionImage: string; sourcePageNumbers: number[]; source?: 'grading'; traceId?: string; stepId?: string; initialDrawing?: Blob | null; initialTexts?: PDFStudyAnswerState['texts']; focusRegion?: PDFStudyRegion; imageFocusRegion?: ResultRegion; pageDisplayWidth?: number; pageScrollTop?: number; fullPageQuestion?: boolean }
   | { type: 'grading'; result: GradingResponseResult; modelName: string | null; responseTime: number | null; sourcePageNumbers: number[]; traceId?: string; stepId?: string }
 
 const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
@@ -376,14 +395,15 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
               traceId: trace.id, stepId: step.id,
             } : null
           }
-          const layoutMode = (step as PDFStudyStep & { layoutMode?: string }).layoutMode
-          const fullPageQuestion = layoutMode === 'book-page' || layoutMode === 'book-text'
+          const bookStep = step as BookStudyStep
+          const layoutMode = bookStep.layoutMode
+          const fullPageQuestion = layoutMode === 'book-page' || layoutMode === 'book-text' || layoutMode === 'book-result-focus'
           const [question, drawing] = await Promise.all([
             getPDFStudyAsset(trace.id, step.id, 'question'),
             getPDFStudyAsset(trace.id, step.id, 'drawing'),
           ])
           if (!question) throw new Error('質問画像が見つかりません')
-          const oldQuestionText = (step as PDFStudyStep & { questionText?: string }).questionText
+          const oldQuestionText = bookStep.questionText
           const initialTexts = step.answerTexts ?? (oldQuestionText?.trim() ? [{
             id: `legacy_${step.id}`, x: 80, y: 80, text: oldQuestionText,
             fontSize: 20, color: '#1e293b', direction: 'horizontal' as const,
@@ -393,30 +413,23 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             sourcePageNumbers: step.sourcePageNumbers, source: step.source === 'grading' ? 'grading' : undefined,
             focusRegion: step.source === 'pdf' && (layoutMode === 'full-page-focus' || fullPageQuestion) && trace.regions.length === 1
               ? trace.regions[0] : undefined,
-            pageDisplayWidth: (step as PDFStudyStep & { pageDisplayWidth?: number }).pageDisplayWidth,
+            imageFocusRegion: bookStep.imageFocusRegion,
+            pageDisplayWidth: bookStep.pageDisplayWidth,
+            pageScrollTop: bookStep.pageScrollTop,
             fullPageQuestion, initialTexts,
             traceId: trace.id, stepId: step.id,
           }
         }))
         panels.push(...restored.filter((panel): panel is PanelData => panel !== null))
       }
+      let questionPanelIndex = 1
       for (let index = 0; index < ancestry.length; index++) {
+        if (index === ancestry.length - 1) questionPanelIndex = panels.length
         await appendPanels(ancestry[index], ancestry[index + 1]?.parentStepId)
       }
-      let tip = ancestry[ancestry.length - 1]
-      while (panels[panels.length - 1]?.type === 'grading') {
-        const last = panels[panels.length - 1]
-        const children = studyTraces.filter(item => item.parentTraceId === tip.id &&
-          item.parentStepId === (last.type === 'grading' ? last.stepId : undefined))
-        if (children.length !== 1 || visited.has(children[0].id)) break
-        const child = await getPDFStudyTrace(children[0].id) as BookStudyTrace | null
-        if (!child || child.pdfId !== pdfId) throw new Error('続きの質問が見つかりません')
-        tip = child
-        visited.add(tip.id)
-        await appendPanels(tip)
-      }
       setPanelStack(panels)
-      setActivePanelIndex(panels.length - 1)
+      // Open only this marker's question. Its saved answer stays available in the breadcrumbs.
+      setActivePanelIndex(questionPanelIndex)
       setIsSelectionMode(false)
       setIsGradingCaptureMode(false)
       setSelectionRect(null)
@@ -739,12 +752,13 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     }
 
     try {
-      const html2canvas = (await import('html2canvas')).default
       const panel = gradingPanelRef.current
       const resultInner = panel.querySelector('.result-inner') as HTMLElement | null
       if (!resultInner) throw new Error('回答の表示領域が見つかりません')
-      const geometry = getResultCaptureGeometry(captureRect, panel.getBoundingClientRect(), resultInner.getBoundingClientRect())
+      const resultBounds = resultInner.getBoundingClientRect()
+      const geometry = getResultCaptureGeometry(captureRect, panel.getBoundingClientRect(), resultBounds)
       if (!geometry) throw new Error('回答の内側を選択してください')
+      const pageScrollTop = (panel.querySelector('.result-content') as HTMLElement | null)?.scrollTop ?? 0
       const overlay = panel.querySelector('.grading-capture-overlay') as HTMLElement | null
       const markers = panel.querySelector('.grading-study-markers') as HTMLElement | null
       const previousOverlayDisplay = overlay?.style.display
@@ -753,36 +767,13 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       try {
         if (overlay) overlay.style.display = 'none'
         if (markers) markers.style.display = 'none'
-        fullCanvas = await html2canvas(panel, {
-          scale: window.devicePixelRatio || 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-          width: panel.clientWidth,
-          height: panel.clientHeight,
-        })
+        fullCanvas = await captureResultPage(resultInner)
       } finally {
         if (overlay) overlay.style.display = previousOverlayDisplay || ''
         if (markers) markers.style.display = previousMarkerDisplay || ''
       }
 
-      const scaleX = fullCanvas.width / panel.clientWidth
-      const scaleY = fullCanvas.height / panel.clientHeight
-      const cropCanvas = document.createElement('canvas')
-      cropCanvas.width = Math.round(geometry.width * scaleX)
-      cropCanvas.height = Math.round(geometry.height * scaleY)
-      const ctx = cropCanvas.getContext('2d')!
-      ctx.drawImage(
-        fullCanvas,
-        geometry.x * scaleX,
-        geometry.y * scaleY,
-        cropCanvas.width,
-        cropCanvas.height,
-        0, 0,
-        cropCanvas.width,
-        cropCanvas.height
-      )
-
-      const capturedImage = cropCanvas.toDataURL('image/png')
+      const capturedImage = fullCanvas.toDataURL('image/png')
       const stepId = `answer_${crypto.randomUUID()}`
       let childTraceId: string | undefined
       if (sourcePanel.traceId && sourcePanel.stepId) {
@@ -792,14 +783,16 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
           parentTraceId: sourcePanel.traceId, parentStepId: sourcePanel.stepId,
           resultRegion: geometry.region,
           steps: [{ id: stepId, type: 'answer', source: 'grading', sourcePageNumbers: sourcePanel.sourcePageNumbers,
-            layoutMode: 'book-page', answerTexts: [] } as PDFStudyStep & { layoutMode: 'book-page' }],
+            layoutMode: 'book-result-focus', answerTexts: [], imageFocusRegion: geometry.region,
+            pageDisplayWidth: resultBounds.width, pageScrollTop } as BookStudyStep],
         }
         await createPDFStudyTrace(child, await dataUrlToBlob(capturedImage))
         setStudyTraces(previous => [...previous, child])
       }
       pushPanel({
         type: 'answer', questionImage: capturedImage, sourcePageNumbers: sourcePanel.sourcePageNumbers,
-        source: 'grading', fullPageQuestion: true, initialTexts: [],
+        source: 'grading', fullPageQuestion: true, initialTexts: [], imageFocusRegion: geometry.region,
+        pageDisplayWidth: resultBounds.width, pageScrollTop,
         traceId: childTraceId, stepId: childTraceId ? stepId : undefined,
       })
       setIsGradingCaptureMode(false)
@@ -1864,10 +1857,12 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
                   ref={i === activePanelIndex ? answerPanelRef : undefined}
                   questionImage={panel.questionImage}
                   pdfContext={panel.focusRegion && pdfDoc ? { pdfDoc, region: panel.focusRegion } : undefined}
+                  imageFocusRegion={panel.imageFocusRegion}
                   initialDrawing={panel.initialDrawing}
                   initialTexts={panel.initialTexts}
                   fullPageQuestion={panel.fullPageQuestion}
                   pageDisplayWidth={panel.pageDisplayWidth}
+                  pageScrollTop={panel.pageScrollTop}
                   onTextsChange={panel.traceId && panel.stepId
                     ? texts => queueQuestionTextSave(panel.traceId!, panel.stepId!, texts) : undefined}
                   onDrawingChange={panel.traceId && panel.stepId

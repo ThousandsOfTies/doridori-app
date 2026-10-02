@@ -17,11 +17,13 @@ export interface AnswerPanelHandle {
 interface AnswerPanelProps {
   questionImage: string | null
   pdfContext?: { pdfDoc: PDFDocumentProxy; region: PDFStudyRegion }
+  imageFocusRegion?: Pick<PDFStudyRegion, 'x' | 'y' | 'width' | 'height'>
   initialDrawing?: Blob | null
   initialTexts?: PDFStudyAnswerState['texts']
   onTextsChange?: (texts: PDFStudyAnswerState['texts']) => void
   fullPageQuestion?: boolean
   pageDisplayWidth?: number
+  pageScrollTop?: number
   onDrawingChange?: (drawing: Blob) => void
   penColor: string
   penSize: number
@@ -47,11 +49,13 @@ type Snapshot = { drawing: ImageData; texts: AnswerText[] }
 const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   questionImage,
   pdfContext,
+  imageFocusRegion,
   initialDrawing,
   initialTexts = [],
   onTextsChange,
   fullPageQuestion = false,
   pageDisplayWidth,
+  pageScrollTop,
   onDrawingChange,
   penColor,
   penSize,
@@ -93,7 +97,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   // Build background canvas: question image + writing space
   // Portrait → image top, writing space below (×2 height ≈ A4→A3)
   // Landscape → image left, writing space right (same width, ≈ A4→A3)
-  const initCanvas = (img: HTMLImageElement, focusRegion?: PDFStudyRegion) => {
+  const initCanvas = (img: HTMLImageElement, focusRegion?: AnswerPanelProps['imageFocusRegion']) => {
     const bgCanvas = bgCanvasRef.current
     const drawCanvas = drawCanvasRef.current
     if (!bgCanvas || !drawCanvas) return
@@ -109,19 +113,24 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     console.log('[AnswerPanel] initCanvas:', { naturalW: img.naturalWidth, naturalH: img.naturalHeight, displayScale, imgW, imgH })
 
     const isLandscape = imgW > imgH
+    // A rendered answer already includes the paper's margins. Keep that frame unchanged.
+    const preserveImageFrame = fullPageQuestion && !!imageFocusRegion
+    const sideMargin = preserveImageFrame ? 0 : SIDE_MARGIN
+    const imageTop = preserveImageFrame ? 0 : TOP_MARGIN
+    const bottomMargin = preserveImageFrame ? 0 : BOTTOM_MARGIN
 
     // 横長・縦長ともに画像は上部中央に配置、書き込みスペースは下
     // 横長はキャンバス幅を広くとって横長比率を維持
-    const w = fullPageQuestion ? SIDE_MARGIN * 2 + imgW : focusRegion ? SIDE_MARGIN * 3 + imgW + BOOK_WRITING_WIDTH : isLandscape
+    const w = fullPageQuestion ? sideMargin * 2 + imgW : focusRegion ? SIDE_MARGIN * 3 + imgW + BOOK_WRITING_WIDTH : isLandscape
       ? SIDE_MARGIN * 2 + imgW * 2 + 32  // 画像幅×2＋余白（横長比率維持）
       : Math.max(imgW + SIDE_MARGIN * 2, 800)
     const writingH = isLandscape
       ? Math.max(Math.round(imgH * 1.5), 400)
       : Math.max(imgH * 2, 360)
-    const h = fullPageQuestion ? TOP_MARGIN + imgH + BOTTOM_MARGIN : focusRegion
+    const h = fullPageQuestion ? imageTop + imgH + bottomMargin : focusRegion
       ? Math.max(TOP_MARGIN + imgH + BOTTOM_MARGIN, 740)
       : TOP_MARGIN + imgH + writingH + BOTTOM_MARGIN
-    const imageLeft = focusRegion || fullPageQuestion ? SIDE_MARGIN : Math.round((w - imgW) / 2)
+    const imageLeft = focusRegion || fullPageQuestion ? sideMargin : Math.round((w - imgW) / 2)
     writingBoundsRef.current = focusRegion && !fullPageQuestion
       ? { x: SIDE_MARGIN * 2 + imgW, y: TOP_MARGIN + 54,
           width: BOOK_WRITING_WIDTH, height: h - TOP_MARGIN - BOTTOM_MARGIN - 54 }
@@ -140,15 +149,15 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     ctx.fillRect(0, 0, w, h)
 
     // Question image
-    ctx.drawImage(img, imageLeft, TOP_MARGIN, imgW, imgH)
+    ctx.drawImage(img, imageLeft, imageTop, imgW, imgH)
     if (focusRegion) {
       const x = imageLeft + focusRegion.x * imgW
-      const y = TOP_MARGIN + focusRegion.y * imgH
+      const y = imageTop + focusRegion.y * imgH
       const rw = focusRegion.width * imgW
       const rh = focusRegion.height * imgH
       ctx.fillStyle = 'rgba(255, 255, 255, 0.58)'
-      ctx.fillRect(imageLeft, TOP_MARGIN, imgW, Math.max(0, y - TOP_MARGIN))
-      ctx.fillRect(imageLeft, y + rh, imgW, Math.max(0, TOP_MARGIN + imgH - y - rh))
+      ctx.fillRect(imageLeft, imageTop, imgW, Math.max(0, y - imageTop))
+      ctx.fillRect(imageLeft, y + rh, imgW, Math.max(0, imageTop + imgH - y - rh))
       ctx.fillRect(imageLeft, y, Math.max(0, x - imageLeft), rh)
       ctx.fillRect(x + rw, y, Math.max(0, imageLeft + imgW - x - rw), rh)
       ctx.strokeStyle = '#1769aa'
@@ -187,7 +196,8 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     setIsReady(false)
     const restore = async () => {
       const img = new Image()
-      let focusRegion = pdfContext?.region
+      let focusRegion = pdfContext?.region ?? imageFocusRegion
+      let renderedPDF = false
       if (pdfContext) {
         try {
           const page = await pdfContext.pdfDoc.getPage(pdfContext.region.pageNumber)
@@ -205,16 +215,17 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
               img.onerror = () => reject(new Error('PDFページを開けません'))
               img.src = pageCanvas.toDataURL('image/png')
             })
+            renderedPDF = true
           } finally {
             pageCanvas.width = 0
             pageCanvas.height = 0
           }
         } catch (error) {
           console.error('PDFページの再描画に失敗しました:', error)
-          focusRegion = undefined
+          focusRegion = imageFocusRegion
         }
       }
-      if (!focusRegion) {
+      if (!renderedPDF) {
         await new Promise<void>((resolve, reject) => {
           img.onload = () => resolve()
           img.onerror = () => reject(new Error('質問画像を開けません'))
@@ -248,7 +259,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
       textAnnotationsRef.current = initialTexts
       setTextAnnotations(initialTexts)
       setZoom(focusRegion || fullPageQuestion ? fitWidth : 1)
-      setPanOffset({ x: 0, y: 0 })
+      setPanOffset({ x: 0, y: imageFocusRegion ? -(pageScrollTop ?? 0) * fitWidth : 0 })
       setIsReady(true)
     }
     void restore().catch(error => {
@@ -259,7 +270,8 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     return () => { cancelled = true }
   }, [questionImage, initialDrawing, pdfContext?.pdfDoc, pdfContext?.region.pageNumber,
     pdfContext?.region.x, pdfContext?.region.y, pdfContext?.region.width, pdfContext?.region.height,
-    fullPageQuestion, pageDisplayWidth])
+    imageFocusRegion?.x, imageFocusRegion?.y, imageFocusRegion?.width, imageFocusRegion?.height,
+    fullPageQuestion, pageDisplayWidth, pageScrollTop])
 
   const persistDrawing = () => {
     if (!onDrawingChange || !drawCanvasRef.current) return
@@ -560,6 +572,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
       <div
         className="answer-canvas-stack"
         style={{
+          margin: imageFocusRegion ? '0 auto auto' : undefined,
           transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
           transformOrigin: '0 0',
           transition: isPanning ? 'none' : 'transform 0.1s ease-out'
