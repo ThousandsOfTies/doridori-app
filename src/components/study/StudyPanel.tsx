@@ -1458,10 +1458,12 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     else await openStudyTrace(destination.id)
   }
 
-  const canGoForward = getWheelDestination(1) !== null
+  // Open PDF questions explicitly from their marks; only questions and answers use lateral navigation.
+  const isPanelNavigationEnabled = !!activePanel && activePanel.type !== 'pdf'
+  const canGoForward = isPanelNavigationEnabled && getWheelDestination(1) !== null
   const panelNavigationBusy = isGrading || !!editingText || isSelectingRef.current || isGradingCapturingRef.current
   const { navigate: navigatePanel, isNavigating } = useWheelPanelNavigation({
-    enabled: true, containerRef: panelNavigationRef, navigationKey: activePanel,
+    enabled: isPanelNavigationEnabled, containerRef: panelNavigationRef, navigationKey: activePanel,
     canGoBack: getWheelDestination(-1) !== null, canGoForward,
     busy: panelNavigationBusy,
     onNavigate: navigateWithWheel,
