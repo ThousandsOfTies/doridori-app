@@ -11,6 +11,8 @@ import { DrawingPath } from '@thousands-of-ties/drawing-common'
 import { PDFPane, PDFPaneHandle } from '@home-teacher/common/components/study/PDFPane'
 import { StudyToolbar, BreadcrumbItem } from './StudyToolbar'
 import { usePDFRenderer } from '@home-teacher/common/hooks/pdf/usePDFRenderer'
+import { useWheelPanelNavigation } from '@home-teacher/common/hooks/useWheelPanelNavigation'
+import { getPanelWheelDestination } from '@home-teacher/common/utils/panelWheelNavigation'
 import './StudyPanel.css'
 import { compressImageDataUrl } from '@home-teacher/common/utils/image'
 import { useAuth } from '@home-teacher/common/contexts/AuthContext'
@@ -92,6 +94,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   // Refs
   const paneARef = useRef<PDFPaneHandle>(null)
   const paneBRef = useRef<PDFPaneHandle>(null)
+  const panelNavigationRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const answerPanelRef = useRef<AnswerPanelHandle>(null)
   const pendingQuestionWritesRef = useRef(new Map<string, Promise<void>>())
@@ -1413,6 +1416,38 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     setActivePanelIndex(index)
   }
 
+  const getWheelDestination = (direction: -1 | 1) => {
+    let outgoingIds: string[] | undefined
+    if (activePanel?.type === 'pdf') {
+      const visiblePages = isSplitView ? [pageA, pageB] : [activeTab === 'A' ? pageA : pageB]
+      outgoingIds = studyTraces.filter(trace => trace.regions.some(region => visiblePages.includes(region.pageNumber)))
+        .map(trace => trace.id)
+    } else if (activePanel?.type === 'grading' && activePanel.traceId && activePanel.stepId) {
+      const children = studyTraces.filter(trace => trace.parentTraceId === activePanel.traceId &&
+        trace.parentStepId === activePanel.stepId)
+      if (children.length) outgoingIds = children.map(child => child.id)
+    }
+    const next = panelStack[activePanelIndex + 1]
+    return getPanelWheelDestination({
+      direction, currentIndex: activePanelIndex, panelCount: panelStack.length, outgoingIds,
+      nextPanelId: next?.type !== 'pdf' ? next?.traceId : undefined,
+    })
+  }
+
+  const navigateWithWheel = async (direction: -1 | 1) => {
+    const destination = getWheelDestination(direction)
+    if (!destination) return
+    if (destination.type === 'panel') navigateToPanel(destination.index)
+    else await openStudyTrace(destination.id)
+  }
+
+  useWheelPanelNavigation({
+    enabled: true, containerRef: panelNavigationRef, navigationKey: activePanel,
+    canGoBack: getWheelDestination(-1) !== null, canGoForward: getWheelDestination(1) !== null,
+    busy: isGrading || !!editingText || isSelectingRef.current || isGradingCapturingRef.current,
+    onNavigate: navigateWithWheel,
+  })
+
   const renderResultMarkers = (panel: Extract<PanelData, { type: 'grading' }>) => {
     if (!panel.traceId || !panel.stepId) return null
     const children = studyTraces.filter(trace => trace.parentTraceId === panel.traceId &&
@@ -1857,7 +1892,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
           defaultModelName={defaultModelName}
         />
 
-        <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+        <div ref={panelNavigationRef} style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
           {panelStack.map((panel, i) => (
             <div
               key={i}

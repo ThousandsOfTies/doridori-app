@@ -9,6 +9,12 @@ const ts = require('typescript');
 const filename = path.join(__dirname, '../src/components/study/StudyPanel.tsx');
 const source = fs.readFileSync(filename, 'utf8');
 const ast = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+const panelWheelExports = {};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(__dirname,
+    '../../home-teacher-common/src/utils/panelWheelNavigation.ts'), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText, { exports: panelWheelExports });
+const { getPanelWheelDestination } = panelWheelExports;
 function handler(name, adapters, component = 'StudyPanel') {
     const componentAst = component === 'StudyPanel' ? ast : ts.createSourceFile(component,
         fs.readFileSync(path.join(__dirname, '../src/components/study/' + component + '.tsx'), 'utf8'),
@@ -212,6 +218,51 @@ test('returning to PDF activates range selection and clears drawing tools', () =
         ['selection', true], ['rect', null], ['pen', false], ['eraser', false],
         ['text', false], ['panel', 0],
     ]);
+});
+
+test('PDF horizontal navigation uses visible-page marks and never chooses between multiple ranges', () => {
+    const root = { id: 'root', regions: [{ pageNumber: 1 }] };
+    const other = { id: 'other', regions: [{ pageNumber: 2 }] };
+    const panelStack = [{ type: 'pdf' }, { type: 'answer', traceId: 'root' }];
+    const base = { activePanel: panelStack[0], panelStack, activePanelIndex: 0,
+        studyTraces: [root, other], pageA: 1, pageB: 2, isSplitView: false, activeTab: 'A', getPanelWheelDestination };
+    const read = overrides => handler('getWheelDestination', { ...base, ...overrides })(1);
+    assert.deepEqual(JSON.parse(JSON.stringify(read())), { type: 'panel', index: 1 });
+    assert.equal(read({ studyTraces: [root, { id: 'second', regions: [{ pageNumber: 1 }] }] }), null);
+    assert.equal(read({ isSplitView: true }), null);
+    assert.deepEqual(JSON.parse(JSON.stringify(read({ activeTab: 'B' }))), { type: 'marker', id: 'other' });
+    assert.equal(read({ pageA: 3 }), null);
+});
+
+test('teacher-answer forks block right even with a retained child panel and always allow going left', () => {
+    const activePanel = { type: 'grading', traceId: 'root', stepId: 'result' };
+    const panelStack = [{ type: 'pdf' }, { type: 'answer' }, activePanel, { type: 'answer', traceId: 'a' }];
+    const children = [{ id: 'a', parentTraceId: 'root', parentStepId: 'result' },
+        { id: 'b', parentTraceId: 'root', parentStepId: 'result' },
+        { id: 'later', parentTraceId: 'a', parentStepId: 'a-result' }];
+    const base = { activePanel, panelStack, activePanelIndex: 2, studyTraces: children, getPanelWheelDestination };
+    const read = handler('getWheelDestination', base);
+    assert.equal(read(1), null);
+    assert.deepEqual(JSON.parse(JSON.stringify(read(-1))), { type: 'panel', index: 1 });
+    const single = handler('getWheelDestination', { ...base, studyTraces: children.slice(0, 1) });
+    assert.deepEqual(JSON.parse(JSON.stringify(single(1))), { type: 'panel', index: 3 });
+    const unsaved = handler('getWheelDestination', { ...base, activePanel: { type: 'grading' },
+        studyTraces: [{ id: 'root' }, { id: 'other' }] });
+    assert.deepEqual(JSON.parse(JSON.stringify(unsaved(1))), { type: 'panel', index: 3 });
+});
+
+test('horizontal movement opens an adjacent panel or its sole marker and does nothing at a fork', async () => {
+    const calls = [];
+    let destination = null;
+    const run = handler('navigateWithWheel', {
+        getWheelDestination: () => destination,
+        navigateToPanel: index => calls.push(['panel', index]),
+        openStudyTrace: async id => calls.push(['mark', id]),
+    });
+    await run(1); assert.deepEqual(calls, []);
+    destination = { type: 'panel', index: 1 }; await run(-1);
+    destination = { type: 'marker', id: 'child' }; await run(1);
+    assert.deepEqual(calls, [['panel', 1], ['mark', 'child']]);
 });
 
 test('typed questions are sent directly without handwriting recognition', async () => {
