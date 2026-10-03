@@ -5,7 +5,7 @@ import { DEFAULT_MODEL_ID } from '@home-teacher/common/constants/grading'
 import { GradingResponseResult, getAvailableModels, ModelInfo } from '@home-teacher/common/services/api'
 import GradingResult from './GradingResult'
 import AnswerPanel, { AnswerPanelHandle } from './AnswerPanel'
-import { deleteAllDrawings, flushDrawingSaves, getAllDrawings, getAllTextAnnotations, updatePDFRecord, getAllSNSLinks, SNSLinkRecord, PDFFileRecord, scheduleDrawingSave, saveTextAnnotation, PDFStudyRegion, PDFStudyTraceRecord, PDFStudyStep, PDFStudyAnswerState, createPDFStudyTrace, appendPDFStudyStep, getPDFStudyTrace, getPDFStudyTracesByPdfId, getPDFStudyAsset, savePDFStudyDrawing, savePDFStudyAnswerTexts, deletePDFStudyTrace, dataUrlToBlob, blobToDataUrl } from '@home-teacher/common/utils/indexedDB'
+import { deleteAllDrawings, flushDrawingSaves, getAllDrawings, getAllTextAnnotations, updatePDFRecord, getAllSNSLinks, SNSLinkRecord, PDFFileRecord, scheduleDrawingSave, saveTextAnnotation, PDFStudyRegion, PDFStudyTraceRecord, PDFStudyStep, PDFStudyAnswerState, createPDFStudyTrace, appendPDFStudyStep, getPDFStudyTrace, getPDFStudyTracesByPdfId, getPDFStudyAsset, savePDFStudyDrawing, savePDFStudyAnswerTexts, dataUrlToBlob, blobToDataUrl } from '@home-teacher/common/utils/indexedDB'
 import { ICON_SVG } from '../../constants/icons'
 import { DrawingPath } from '@thousands-of-ties/drawing-common'
 import { PDFPane, PDFPaneHandle } from '@home-teacher/common/components/study/PDFPane'
@@ -13,12 +13,16 @@ import { StudyToolbar, BreadcrumbItem } from './StudyToolbar'
 import { usePDFRenderer } from '@home-teacher/common/hooks/pdf/usePDFRenderer'
 import { useWheelPanelNavigation } from '@home-teacher/common/hooks/useWheelPanelNavigation'
 import { PanelForwardButton } from '@home-teacher/common/components/study/PanelForwardButton'
+import { StudyRegionMarker } from '@home-teacher/common/components/study/StudyRegionMarker'
 import { getPanelWheelDestination } from '@home-teacher/common/utils/panelWheelNavigation'
 import './StudyPanel.css'
 import { compressImageDataUrl } from '@home-teacher/common/utils/image'
 import { useAuth } from '@home-teacher/common/contexts/AuthContext'
 import { askBookQuestion, readBookQuestion } from '../../book/bookKnowledgeApi'
 import { useBookIndex } from '../../book/useBookIndex'
+import { useStudyTraceUndo } from '@home-teacher/common/hooks/useStudyTraceUndo'
+import { StudyTraceUndoButton } from '@home-teacher/common/components/study/StudyTraceUndoButton'
+import { deletePDFStudyTraceTree, restorePDFStudyTraceDeletion } from '@home-teacher/common/utils/indexedDB'
 
 // テキストアノテーションの型定義
 export type TextDirection = 'horizontal' | 'vertical-rl' | 'vertical-lr'
@@ -99,6 +103,13 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const answerPanelRef = useRef<AnswerPanelHandle>(null)
   const pendingQuestionWritesRef = useRef(new Map<string, Promise<void>>())
+  const pendingStudyDrawingWritesRef = useRef(new Set<Promise<void>>())
+  const deletedTraceIdsRef = useRef(new Set<string>())
+  const handledTracePointerRef = useRef(false)
+  const traceUndo = useStudyTraceUndo(pdfId, {
+    remove: (id: string) => deletePDFStudyTraceTree(pdfId, id),
+    restore: restorePDFStudyTraceDeletion,
+  })
   const gradingPanelRef = useRef<HTMLDivElement>(null)
   const isGradingCapturingRef = useRef(false)
   const gradingCaptureStartRef = useRef<{ x: number; y: number } | null>(null)
@@ -361,6 +372,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   }
 
   const queueQuestionTextSave = (traceId: string, stepId: string, texts: PDFStudyAnswerState['texts']) => {
+    if (deletedTraceIdsRef.current.has(traceId)) return
     const key = `${traceId}:${stepId}`
     const previous = pendingQuestionWritesRef.current.get(key) ?? Promise.resolve()
     const pending = previous.catch(() => {}).then(() => savePDFStudyAnswerTexts(traceId, stepId, texts))
@@ -373,7 +385,19 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     })
   }
 
+  const queueStudyDrawingSave = (traceId: string, stepId: string, drawing: Blob) => {
+    if (deletedTraceIdsRef.current.has(traceId)) return
+    const pending = savePDFStudyDrawing(traceId, stepId, drawing)
+    pendingStudyDrawingWritesRef.current.add(pending)
+    void pending.catch(error => {
+      if (deletedTraceIdsRef.current.has(traceId)) return
+      console.error('質問の書き込みを保存できませんでした:', error)
+      addStatusMessage('❌ 質問の書き込みを保存できませんでした')
+    }).finally(() => pendingStudyDrawingWritesRef.current.delete(pending))
+  }
+
   const openStudyTrace = async (traceId: string) => {
+    if (traceUndo.busy || deletedTraceIdsRef.current.has(traceId)) return
     try {
       await Promise.all([...pendingQuestionWritesRef.current.values()].map(write => write.catch(() => {})))
       const ancestry: BookStudyTrace[] = []
@@ -462,17 +486,29 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     }
   }
 
+  const getStudyTraceControlAtPoint = (clientX: number, clientY: number) => {
+    const control = document.elementsFromPoint(clientX, clientY)
+      .find(element => element.hasAttribute('data-study-trace-id') || element.hasAttribute('data-study-trace-delete-id'))
+    if (!control) return null
+    const deleteId = control.getAttribute('data-study-trace-delete-id')
+    const id = deleteId || control.getAttribute('data-study-trace-id')
+    return id ? { id, action: deleteId ? 'delete' : 'open' } : null
+  }
+
   const getStudyTraceAtPoint = (clientX: number, clientY: number): string | null =>
-    document.elementsFromPoint(clientX, clientY)
-      .find(element => element.hasAttribute('data-study-trace-id'))
-      ?.getAttribute('data-study-trace-id') ?? null
+    getStudyTraceControlAtPoint(clientX, clientY)?.id ?? null
 
   const handleTraceOverlayPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    handledTracePointerRef.current = false
     if (event.button !== 0) return
-    const traceId = getStudyTraceAtPoint(event.clientX, event.clientY)
-    if (!traceId) return
+    const control = getStudyTraceControlAtPoint(event.clientX, event.clientY)
+    if (!control) return
     event.preventDefault()
-    void openStudyTrace(traceId)
+    handledTracePointerRef.current = true
+    isSelectingRef.current = false
+    isGradingCapturingRef.current = false
+    if (control.action === 'delete') void deleteStudyTrace(control.id)
+    else void openStudyTrace(control.id)
   }
 
   const handleTraceOverlayPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -484,6 +520,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   const handleSelectionStart = (e: React.MouseEvent) => {
     // Only left click
     if (e.button !== 0) return
+    if (handledTracePointerRef.current) return
     if (getStudyTraceAtPoint(e.clientX, e.clientY)) return
 
     // Get relative position within the container
@@ -650,6 +687,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
   /* Selection Mode Touch Handlers */
   const handleTouchSelectionStart = (e: React.TouchEvent) => {
+    if (handledTracePointerRef.current) return
     if (e.touches.length === 1 && getStudyTraceAtPoint(e.touches[0].clientX, e.touches[0].clientY)) return
     handleOverlayTouchStart(e, (x, y) => {
       isSelectingRef.current = true
@@ -726,15 +764,8 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   // 採点結果パネル用の範囲選択ハンドラ
   const handleGradingCaptureStart = (e: React.MouseEvent) => {
     if (e.button !== 0) return
-    const followUpId = document.elementsFromPoint(e.clientX, e.clientY)
-      .find(element => element.hasAttribute('data-study-followup-id'))
-      ?.getAttribute('data-study-followup-id')
-    if (followUpId) {
-      e.preventDefault()
-      isGradingCapturingRef.current = false
-      void openStudyTrace(followUpId)
-      return
-    }
+    if (handledTracePointerRef.current) return
+    if (getStudyTraceAtPoint(e.clientX, e.clientY)) return
     const rect = gradingPanelRef.current?.getBoundingClientRect()
     if (!rect) return
     const x = e.clientX - rect.left
@@ -977,6 +1008,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
   // 本の選択箇所についての質問。本文索引から根拠を探して回答する。
   const confirmAndGrade = async (compositeImage: string, sourcePageNumbers: number[], typedQuestion?: string) => {
+    if (traceUndo.busy) return
     setIsGrading(true)
     setGradingError(null)
     const answerPanel = panelStack[activePanelIndex]
@@ -1461,7 +1493,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   // Open PDF questions explicitly from their marks; only questions and answers use lateral navigation.
   const isPanelNavigationEnabled = !!activePanel && activePanel.type !== 'pdf'
   const canGoForward = isPanelNavigationEnabled && getWheelDestination(1) !== null
-  const panelNavigationBusy = isGrading || !!editingText || isSelectingRef.current || isGradingCapturingRef.current
+  const panelNavigationBusy = isGrading || traceUndo.busy || !!editingText || isSelectingRef.current || isGradingCapturingRef.current
   const { navigate: navigatePanel, isNavigating } = useWheelPanelNavigation({
     enabled: isPanelNavigationEnabled, containerRef: panelNavigationRef, navigationKey: activePanel,
     canGoBack: getWheelDestination(-1) !== null, canGoForward,
@@ -1469,7 +1501,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     onNavigate: navigateWithWheel,
   })
 
-  const renderResultMarkers = (panel: Extract<PanelData, { type: 'grading' }>) => {
+  const renderResultMarkers = (panel: Extract<PanelData, { type: 'grading' }>, viewportRef: React.RefObject<HTMLDivElement>) => {
     if (!panel.traceId || !panel.stepId) return null
     const children = studyTraces.filter(trace => trace.parentTraceId === panel.traceId &&
       trace.parentStepId === panel.stepId && trace.resultRegion)
@@ -1477,23 +1509,66 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     return (
       <div className="grading-study-markers">
         {children.map(child => (
-          <div key={child.id}
-            className={`grading-study-marker ${child.steps.some(step => step.type === 'grading') ? 'completed' : ''}`}
+          <StudyRegionMarker key={child.id} id={child.id}
+            completed={child.steps.some(step => step.type === 'grading')}
+            onOpen={id => { void openStudyTrace(id) }}
+            onDelete={id => { void deleteStudyTrace(id) }}
+            deleteDisabled={traceUndo.busy || isGrading}
+            viewportRef={viewportRef}
             style={{ left: `${child.resultRegion!.x * 100}%`, top: `${child.resultRegion!.y * 100}%`,
-              width: `${child.resultRegion!.width * 100}%`, height: `${child.resultRegion!.height * 100}%` }}>
-            <button type="button" data-study-followup-id={child.id}
-              aria-label="この範囲の質問を開く" title="この範囲の質問を開く"
-              onClick={event => { event.stopPropagation(); void openStudyTrace(child.id) }}>▶</button>
-          </div>
+              width: `${child.resultRegion!.width * 100}%`, height: `${child.resultRegion!.height * 100}%` }} />
         ))}
       </div>
     )
   }
 
-  const deleteActiveStudyTrace = async () => {
-    if (!activeTraceId || !confirm('PDF上の印と、そこから続く質問・回答履歴を削除しますか？')) return
+  const deleteStudyTrace = async (traceId: string) => {
+    if (isGrading || traceUndo.busy) return
     try {
-      await Promise.all([...pendingQuestionWritesRef.current.values()].map(write => write.catch(() => {})))
+      const snapshot = await traceUndo.deleteTrace(traceId, async () => {
+        await Promise.all([...pendingQuestionWritesRef.current.values(), ...pendingStudyDrawingWritesRef.current])
+        if (activePanel?.type === 'answer' && activePanel.traceId && activePanel.stepId && answerPanelRef.current) {
+          const drawing = await answerPanelRef.current.getDrawingBlob()
+          if (drawing) await savePDFStudyDrawing(activePanel.traceId, activePanel.stepId, drawing)
+        }
+      })
+      if (!snapshot) return
+      const ids = new Set(snapshot.traces.map(trace => trace.id))
+      ids.forEach(id => deletedTraceIdsRef.current.add(id))
+      setStudyTraces(previous => previous.filter(trace => !ids.has(trace.id)))
+      const firstRemovedPanel = panelStack.findIndex(panel => panel.type !== 'pdf' && panel.traceId && ids.has(panel.traceId))
+      if (firstRemovedPanel >= 0) {
+        setPanelStack(previous => previous.slice(0, firstRemovedPanel))
+        if (activePanelIndex >= firstRemovedPanel) {
+          const index = firstRemovedPanel - 1
+          setActivePanelIndex(index)
+          activatePanelMode(panelStack[index].type)
+        }
+      }
+      addStatusMessage('問い合わせ履歴を削除しました')
+    } catch (error) {
+      console.error('質問の印を削除できませんでした:', error)
+      addStatusMessage('❌ 質問の印を削除できませんでした')
+    }
+  }
+
+  const undoStudyTraceDeletion = async () => {
+    try {
+      const snapshot = await traceUndo.undoDelete()
+      if (!snapshot) return
+      const ids = new Set(snapshot.traces.map(trace => trace.id))
+      ids.forEach(id => deletedTraceIdsRef.current.delete(id))
+      setStudyTraces(previous => [...previous.filter(trace => !ids.has(trace.id)), ...snapshot.traces as BookStudyTrace[]])
+      addStatusMessage('問い合わせ履歴を元に戻しました')
+    } catch (error) {
+      console.error('質問の印を元に戻せませんでした:', error)
+      addStatusMessage('❌ 質問の印を元に戻せませんでした')
+    }
+  }
+
+  const deleteActiveStudyTrace = async () => {
+    if (!activeTraceId || isGrading || traceUndo.busy || !confirm('PDF上の印と、そこから続く質問・回答履歴を削除しますか？')) return
+    try {
       let rootId = activeTraceId
       const ancestors = new Set<string>()
       while (true) {
@@ -1503,19 +1578,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
         if (!parentId) break
         rootId = parentId
       }
-      const ids = [rootId]
-      for (let index = 0; index < ids.length; index++) {
-        ids.push(...studyTraces.filter(trace => trace.parentTraceId === ids[index]).map(trace => trace.id))
-      }
-      for (const id of ids.reverse()) await deletePDFStudyTrace(id)
-      setStudyTraces(previous => previous.filter(trace => !ids.includes(trace.id)))
-      setPanelStack([{ type: 'pdf' }])
-      setActivePanelIndex(0)
-      setIsSelectionMode(true)
-      setIsDrawingMode(false)
-      setIsEraserMode(false)
-      setIsTextMode(false)
-      addStatusMessage('問い合わせ履歴を削除しました')
+      await deleteStudyTrace(rootId)
     } catch (error) {
       console.error('質問の印を削除できませんでした:', error)
       addStatusMessage('❌ 質問の印を削除できませんでした')
@@ -1689,6 +1752,8 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             pageNum={pageA}
             regionMarkers={pdfRegionMarkers}
             onRegionMarkerClick={openStudyTrace}
+            onRegionMarkerDelete={id => { void deleteStudyTrace(id) }}
+            regionMarkerDeleteDisabled={traceUndo.busy || isGrading}
             tool={isEraserMode ? 'eraser' : (isDrawingMode ? 'pen' : 'none')}
             color={penColor}
             size={penSize}
@@ -1740,6 +1805,8 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             pageNum={pageB}
             regionMarkers={pdfRegionMarkers}
             onRegionMarkerClick={openStudyTrace}
+            onRegionMarkerDelete={id => { void deleteStudyTrace(id) }}
+            regionMarkerDeleteDisabled={traceUndo.busy || isGrading}
             tool={isEraserMode ? 'eraser' : (isDrawingMode ? 'pen' : 'none')}
             color={penColor}
             size={penSize}
@@ -1776,6 +1843,11 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             onPointerMove={handleTraceOverlayPointerMove}
             onPointerLeave={() => setIsHoveringStudyTrace(false)}
             onClick={(e) => {
+              if (handledTracePointerRef.current) {
+                handledTracePointerRef.current = false
+                e.preventDefault()
+                return
+              }
               if (getStudyTraceAtPoint(e.clientX, e.clientY)) return
               const rect = containerRef.current?.getBoundingClientRect()
               if (!rect) return
@@ -1790,6 +1862,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
               handleTextClick(currentPage, normalizedX, normalizedY, e.clientX, e.clientY)
             }}
             onTouchStart={(e) => {
+              if (handledTracePointerRef.current) return
               if (e.touches.length === 1 && getStudyTraceAtPoint(e.touches[0].clientX, e.touches[0].clientY)) return
               handleOverlayTouchStart(e)
             }}
@@ -1942,10 +2015,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
                   onTextsChange={panel.traceId && panel.stepId
                     ? texts => queueQuestionTextSave(panel.traceId!, panel.stepId!, texts) : undefined}
                   onDrawingChange={panel.traceId && panel.stepId
-                    ? drawing => { void savePDFStudyDrawing(panel.traceId!, panel.stepId!, drawing).catch(error => {
-                        console.error('回答の保存に失敗しました:', error)
-                        addStatusMessage('❌ 回答の保存に失敗しました')
-                      }) }
+                    ? drawing => queueStudyDrawingSave(panel.traceId!, panel.stepId!, drawing)
                     : undefined}
                   penColor={penColor}
                   penSize={penSize}
@@ -1969,7 +2039,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
                     modelName={panel.modelName}
                     responseTime={panel.responseTime}
                     pdfId={pdfId}
-                    studyMarkers={renderResultMarkers(panel)}
+                    studyMarkers={viewportRef => renderResultMarkers(panel, viewportRef)}
                     onOpenReferencePage={page => {
                       handlePageAChange(page)
                       setActiveTab('A')
@@ -1985,10 +2055,11 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
                         zIndex: 9999,
                         cursor: isHoveringStudyTrace ? 'pointer' : 'crosshair',
                       }}
+                      onPointerDown={handleTraceOverlayPointerDown}
                       onMouseDown={handleGradingCaptureStart}
                       onMouseMove={event => {
                         setIsHoveringStudyTrace(document.elementsFromPoint(event.clientX, event.clientY)
-                          .some(element => element.hasAttribute('data-study-followup-id')))
+                          .some(element => element.hasAttribute('data-study-trace-id') || element.hasAttribute('data-study-trace-delete-id')))
                         handleGradingCaptureMove(event)
                       }}
                       onMouseUp={handleGradingCaptureEnd}
@@ -2022,6 +2093,9 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             onNext={() => navigatePanel(1)}
           />
         </div>
+
+        <StudyTraceUndoButton available={traceUndo.undoAvailable} busy={traceUndo.busy}
+          onUndo={() => { void undoStudyTraceDeletion() }} />
 
         {/* テキスト入力ボックス */}
         {editingText && (

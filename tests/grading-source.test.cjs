@@ -29,7 +29,10 @@ function handler(name, adapters, component = 'StudyPanel') {
     const code = ts.transpileModule('const run = ' + initializer.getText(componentAst), {
         compilerOptions: { target: ts.ScriptTarget.ES2022 }
     }).outputText;
-    return vm.runInNewContext(code + '\nrun', adapters);
+    return vm.runInNewContext(code + '\nrun', {
+        traceUndo: { busy: false }, deletedTraceIdsRef: { current: new Set() }, handledTracePointerRef: { current: false },
+        ...adapters,
+    });
 }
 
 function capture({ activeTab = 'A', isSplitView = false, pageA = 1, pageB = 5 } = {}) {

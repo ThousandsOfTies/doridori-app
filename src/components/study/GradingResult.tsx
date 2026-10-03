@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode, type RefObject } from 'react'
 import { GradingResponseResult } from '@home-teacher/common/services/api'
 import { SNSLinkRecord } from '@home-teacher/common/utils/indexedDB'
 import { getSNSIcon } from '@home-teacher/common/constants/sns'
@@ -14,10 +14,11 @@ interface GradingResultProps {
   responseTime?: number | null
   pdfId?: string
   onOpenReferencePage?: (page: number) => void
-  studyMarkers?: ReactNode
+  studyMarkers?: ReactNode | ((viewportRef: RefObject<HTMLDivElement>) => ReactNode)
 }
 
 const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName, responseTime, pdfId, onOpenReferencePage, studyMarkers }: GradingResultProps) => {
+  const viewportRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   const isBookQuestion = result?.pageType === 'book-question'
   const referencePages = (result as (GradingResponseResult & { referencePages?: number[] }) | null)?.referencePages || []
@@ -45,10 +46,10 @@ const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName
   }
 
   return (
-    <div className="grading-result-content">
+    <div className="grading-result-content" ref={viewportRef}>
       <div className="result-content">
         <div className="result-inner">
-          {studyMarkers}
+          {typeof studyMarkers === 'function' ? studyMarkers(viewportRef) : studyMarkers}
           {isBookQuestion ? (
             <BookAnswer text={result?.overallComment || result?.rawResponse || ''}
               referencePages={referencePages} onOpenPage={onOpenReferencePage} />
