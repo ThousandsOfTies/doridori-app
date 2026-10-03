@@ -280,7 +280,7 @@ test('marks open the selected question and keep its saved teacher answer in the 
     assert.equal(activeIndex, 3);
 });
 
-test('a PDF mark opens one question even when it has a single continuation', async () => {
+test('a PDF mark restores its single continuation while displaying the question after the PDF', async () => {
     const root = { id: 'root', pdfId: 'book', regions: [], steps: [
         { id: 'root-answer', type: 'answer', source: 'pdf', sourcePageNumbers: [1] },
         { id: 'root-result', type: 'grading', sourcePageNumbers: [1], result: { problems: [] } },
@@ -301,13 +301,81 @@ test('a PDF mark opens one question even when it has a single continuation', asy
         addStatusMessage() {}, console,
     });
     await run('root');
-    assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading']);
+    assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading', 'answer']);
+    assert.equal(panels[3].initialTexts[0].text, 'もう少し詳しく教えて');
     assert.equal(activeIndex, 1);
     await run('child');
     assert.deepEqual(Array.from(panels, panel => panel.type), ['pdf', 'answer', 'grading', 'answer']);
     assert.equal(panels[3].traceId, 'child');
     assert.equal(panels[3].initialTexts[0].text, 'もう少し詳しく教えて');
     assert.equal(activeIndex, 3);
+});
+
+test('PDF breadcrumbs restore a chain up to the first fork without jumping past the first question', async () => {
+    const makeTrace = (id, parent, graded = true) => ({
+        id, pdfId: 'book', regions: [],
+        ...(parent ? { parentTraceId: parent, parentStepId: parent + '-result' } : {}),
+        steps: [
+            { id: id + '-answer', type: 'answer', source: parent ? 'grading' : 'pdf', sourcePageNumbers: [1] },
+            ...(graded ? [{ id: id + '-result', type: 'grading', sourcePageNumbers: [1], result: { problems: [] } }] : []),
+        ],
+    });
+    for (const branches of [false, true]) {
+        const traces = [makeTrace('root'), makeTrace('first', 'root'), makeTrace('second', 'first'),
+            ...(branches ? [makeTrace('branch-a', 'second', false), makeTrace('branch-b', 'second', false)]
+                : [makeTrace('last-question', 'second', false)])];
+        let panels, activeIndex;
+        const loaded = [];
+        const run = handler('openStudyTrace', {
+            pdfId: 'book', studyTraces: traces, pendingQuestionWritesRef: { current: new Map() },
+            getPDFStudyTrace: async id => traces.find(trace => trace.id === id),
+            getPDFStudyAsset: async (id, _, kind) => {
+                if (kind === 'question') loaded.push(id);
+                return { kind };
+            },
+            blobToDataUrl: async () => 'question-image',
+            setPanelStack: value => { panels = value; }, setActivePanelIndex: value => { activeIndex = value; },
+            setIsSelectionMode() {}, setIsGradingCaptureMode() {}, setSelectionRect() {},
+            addStatusMessage: message => assert.fail(message), console,
+        });
+        await run('root');
+        assert.equal(activeIndex, 1);
+        assert.equal(panels[activeIndex].traceId, 'root');
+        assert.deepEqual(Array.from(panels, panel => panel.traceId), [
+            undefined, 'root', 'root', 'first', 'first', 'second', 'second',
+            ...(branches ? [] : ['last-question']),
+        ]);
+        assert.deepEqual(loaded, branches ? ['root', 'first', 'second'] : ['root', 'first', 'second', 'last-question']);
+        // An answer's mark still opens that chosen question without expanding further descendants.
+        await run('first');
+        assert.equal(activeIndex, 3);
+        assert.deepEqual(Array.from(panels, panel => panel.traceId), [undefined, 'root', 'root', 'first', 'first']);
+    }
+});
+
+test('PDF restoration stops at a fork inside older linear history', async () => {
+    const root = { id: 'root', pdfId: 'book', regions: [], steps: [
+        { id: 'root-answer', type: 'answer', source: 'pdf', sourcePageNumbers: [1] },
+        { id: 'root-result', type: 'grading', sourcePageNumbers: [1], result: { problems: [] } },
+        { id: 'older-answer', type: 'answer', source: 'grading', sourcePageNumbers: [1] },
+        { id: 'older-result', type: 'grading', sourcePageNumbers: [1], result: { problems: [] } },
+    ] };
+    const children = ['a', 'b'].map(id => ({ id, parentTraceId: 'root', parentStepId: 'root-result' }));
+    let panels, activeIndex;
+    const loaded = [];
+    const run = handler('openStudyTrace', {
+        pdfId: 'book', studyTraces: [root, ...children], pendingQuestionWritesRef: { current: new Map() },
+        getPDFStudyTrace: async id => { assert.equal(id, 'root'); return root; },
+        getPDFStudyAsset: async (_, id) => { loaded.push(id); return {}; },
+        blobToDataUrl: async () => 'question-image',
+        setPanelStack: value => { panels = value; }, setActivePanelIndex: value => { activeIndex = value; },
+        setIsSelectionMode() {}, setIsGradingCaptureMode() {}, setSelectionRect() {},
+        addStatusMessage: message => assert.fail(message), console,
+    });
+    await run('root');
+    assert.equal(activeIndex, 1);
+    assert.deepEqual(Array.from(panels, panel => panel.stepId), [undefined, 'root-answer', 'root-result']);
+    assert.deepEqual(loaded, ['root-answer', 'root-answer']);
 });
 
 test('a teacher answer selection saves the whole paper, focus, size and scroll position', async () => {

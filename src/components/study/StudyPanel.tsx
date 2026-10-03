@@ -384,9 +384,14 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
         currentId = trace.parentTraceId
       }
       const panels: PanelData[] = [{ type: 'pdf' }]
-      const appendPanels = async (trace: BookStudyTrace, throughStepId?: string) => {
-        const end = throughStepId ? trace.steps.findIndex(step => step.id === throughStepId) : trace.steps.length - 1
+      const appendPanels = async (trace: BookStudyTrace, throughStepId?: string, stopAtBranches = false) => {
+        let end = throughStepId ? trace.steps.findIndex(step => step.id === throughStepId) : trace.steps.length - 1
         if (end < 0) throw new Error('質問履歴の接続が不正です')
+        if (stopAtBranches) {
+          const branchIndex = trace.steps.findIndex(step => step.type === 'grading' && step.result &&
+            studyTraces.filter(child => child.parentTraceId === trace.id && child.parentStepId === step.id).length > 1)
+          if (branchIndex >= 0) end = Math.min(end, branchIndex)
+        }
         const restored = await Promise.all(trace.steps.slice(0, end + 1).map(async (step): Promise<PanelData | null> => {
           if (step.type === 'grading') {
             return step.result ? {
@@ -422,13 +427,27 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
         }))
         panels.push(...restored.filter((panel): panel is PanelData => panel !== null))
       }
+      const restorePDFRoute = ancestry.length === 1
       let questionPanelIndex = 1
       for (let index = 0; index < ancestry.length; index++) {
         if (index === ancestry.length - 1) questionPanelIndex = panels.length
-        await appendPanels(ancestry[index], ancestry[index + 1]?.parentStepId)
+        await appendPanels(ancestry[index], ancestry[index + 1]?.parentStepId, restorePDFRoute)
+      }
+      // A PDF mark restores its unbranched route. Answer marks still open one question.
+      let tip = ancestry[ancestry.length - 1]
+      while (restorePDFRoute && panels[panels.length - 1]?.type === 'grading') {
+        const last = panels[panels.length - 1]
+        const children = studyTraces.filter(child => child.parentTraceId === tip.id &&
+          child.parentStepId === (last.type === 'grading' ? last.stepId : undefined))
+        if (children.length !== 1 || visited.has(children[0].id)) break
+        const child = await getPDFStudyTrace(children[0].id) as BookStudyTrace | null
+        if (!child || child.pdfId !== pdfId) throw new Error('続きの質問が見つかりません')
+        tip = child
+        visited.add(tip.id)
+        await appendPanels(tip, undefined, true)
       }
       setPanelStack(panels)
-      // Open only this marker's question. Its saved answer stays available in the breadcrumbs.
+      // Keep the restored route in breadcrumbs and show the question immediately after its source.
       setActivePanelIndex(questionPanelIndex)
       setIsSelectionMode(false)
       setIsGradingCaptureMode(false)
