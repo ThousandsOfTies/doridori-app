@@ -21,7 +21,6 @@ import { useAuth } from '@home-teacher/common/contexts/AuthContext'
 import { askBookQuestion, readBookQuestion } from '../../book/bookKnowledgeApi'
 import { useBookIndex } from '../../book/useBookIndex'
 import { useStudyTraceUndo } from '@home-teacher/common/hooks/useStudyTraceUndo'
-import { StudyTraceUndoButton } from '@home-teacher/common/components/study/StudyTraceUndoButton'
 import { deletePDFStudyTraceTree, restorePDFStudyTraceDeletion } from '@home-teacher/common/utils/indexedDB'
 
 // テキストアノテーションの型定義
@@ -341,11 +340,17 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   const [activePanelIndex, setActivePanelIndex] = useState(0)
   const [studyTraces, setStudyTraces] = useState<BookStudyTrace[]>([])
   const [isHoveringStudyTrace, setIsHoveringStudyTrace] = useState(false)
+  const undoTrace = useMemo(() => {
+    const traces = (traceUndo.undoSnapshot?.traces ?? []) as BookStudyTrace[]
+    const ids = new Set(traces.map(trace => trace.id))
+    return traces.find(trace => !trace.parentTraceId || !ids.has(trace.parentTraceId))
+  }, [traceUndo.undoSnapshot])
   const pdfRegionMarkers = useMemo(() => showStudyMarkers
-    ? studyTraces.flatMap(trace => trace.regions.map(region => ({
-      id: trace.id, region, completed: trace.steps.some(step => step.type === 'grading'),
-    })))
-    : [], [showStudyMarkers, studyTraces])
+    ? [...studyTraces.flatMap(trace => trace.regions.map(region => ({
+        id: trace.id, region, completed: trace.steps.some(step => step.type === 'grading'),
+      }))), ...(undoTrace && !undoTrace.parentTraceId
+        ? undoTrace.regions.map(region => ({ id: undoTrace.id, region, completed: false, undo: true })) : [])]
+    : [], [showStudyMarkers, studyTraces, undoTrace])
 
   useEffect(() => {
     let active = true
@@ -488,11 +493,13 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
   const getStudyTraceControlAtPoint = (clientX: number, clientY: number) => {
     const control = document.elementsFromPoint(clientX, clientY)
-      .find(element => element.hasAttribute('data-study-trace-id') || element.hasAttribute('data-study-trace-delete-id'))
+      .find(element => element.hasAttribute('data-study-trace-id') || element.hasAttribute('data-study-trace-delete-id') ||
+        element.hasAttribute('data-study-trace-undo-id'))
     if (!control) return null
     const deleteId = control.getAttribute('data-study-trace-delete-id')
-    const id = deleteId || control.getAttribute('data-study-trace-id')
-    return id ? { id, action: deleteId ? 'delete' : 'open' } : null
+    const undoId = control.getAttribute('data-study-trace-undo-id')
+    const id = undoId || deleteId || control.getAttribute('data-study-trace-id')
+    return id ? { id, action: undoId ? 'undo' : deleteId ? 'delete' : 'open' } : null
   }
 
   const getStudyTraceAtPoint = (clientX: number, clientY: number): string | null =>
@@ -507,7 +514,9 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     handledTracePointerRef.current = true
     isSelectingRef.current = false
     isGradingCapturingRef.current = false
-    if (control.action === 'delete') void deleteStudyTrace(control.id)
+    if (control.action === 'undo') {
+      if (!isGrading) void undoStudyTraceDeletion()
+    } else if (control.action === 'delete') void deleteStudyTrace(control.id)
     else void openStudyTrace(control.id)
   }
 
@@ -1505,7 +1514,9 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     if (!panel.traceId || !panel.stepId) return null
     const children = studyTraces.filter(trace => trace.parentTraceId === panel.traceId &&
       trace.parentStepId === panel.stepId && trace.resultRegion)
-    if (!children.length) return null
+    const undoChild = undoTrace?.parentTraceId === panel.traceId && undoTrace.parentStepId === panel.stepId &&
+      undoTrace.resultRegion ? undoTrace : undefined
+    if (!children.length && !undoChild) return null
     return (
       <div className="grading-study-markers">
         {children.map(child => (
@@ -1518,6 +1529,13 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             style={{ left: `${child.resultRegion!.x * 100}%`, top: `${child.resultRegion!.y * 100}%`,
               width: `${child.resultRegion!.width * 100}%`, height: `${child.resultRegion!.height * 100}%` }} />
         ))}
+        {undoChild && (
+          <StudyRegionMarker key={`undo-${undoChild.id}`} id={undoChild.id}
+            onOpen={id => { void openStudyTrace(id) }} onUndo={() => { void undoStudyTraceDeletion() }}
+            deleteDisabled={traceUndo.busy || isGrading} viewportRef={viewportRef}
+            style={{ left: `${undoChild.resultRegion!.x * 100}%`, top: `${undoChild.resultRegion!.y * 100}%`,
+              width: `${undoChild.resultRegion!.width * 100}%`, height: `${undoChild.resultRegion!.height * 100}%` }} />
+        )}
       </div>
     )
   }
@@ -1753,6 +1771,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             regionMarkers={pdfRegionMarkers}
             onRegionMarkerClick={openStudyTrace}
             onRegionMarkerDelete={id => { void deleteStudyTrace(id) }}
+            onRegionMarkerUndo={() => { void undoStudyTraceDeletion() }}
             regionMarkerDeleteDisabled={traceUndo.busy || isGrading}
             tool={isEraserMode ? 'eraser' : (isDrawingMode ? 'pen' : 'none')}
             color={penColor}
@@ -1806,6 +1825,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             regionMarkers={pdfRegionMarkers}
             onRegionMarkerClick={openStudyTrace}
             onRegionMarkerDelete={id => { void deleteStudyTrace(id) }}
+            onRegionMarkerUndo={() => { void undoStudyTraceDeletion() }}
             regionMarkerDeleteDisabled={traceUndo.busy || isGrading}
             tool={isEraserMode ? 'eraser' : (isDrawingMode ? 'pen' : 'none')}
             color={penColor}
@@ -2059,7 +2079,8 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
                       onMouseDown={handleGradingCaptureStart}
                       onMouseMove={event => {
                         setIsHoveringStudyTrace(document.elementsFromPoint(event.clientX, event.clientY)
-                          .some(element => element.hasAttribute('data-study-trace-id') || element.hasAttribute('data-study-trace-delete-id')))
+                          .some(element => element.hasAttribute('data-study-trace-id') || element.hasAttribute('data-study-trace-delete-id') ||
+                            element.hasAttribute('data-study-trace-undo-id')))
                         handleGradingCaptureMove(event)
                       }}
                       onMouseUp={handleGradingCaptureEnd}
@@ -2093,9 +2114,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
             onNext={() => navigatePanel(1)}
           />
         </div>
-
-        <StudyTraceUndoButton available={traceUndo.undoAvailable} busy={traceUndo.busy}
-          onUndo={() => { void undoStudyTraceDeletion() }} />
 
         {/* テキスト入力ボックス */}
         {editingText && (
