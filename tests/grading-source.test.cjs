@@ -222,14 +222,20 @@ test('new book-page history restores text annotations on the PDF page', async ()
 
 test('returning to PDF activates range selection and clears drawing tools', () => {
     const updates = [];
-    const run = handler('navigateToPanel', {
-        panelStack: [{ type: 'pdf' }, { type: 'answer' }],
+    const activatePanelMode = handler('activatePanelMode', {
+        useCallback: callback => callback,
         setIsSelectionMode: value => updates.push(['selection', value]),
         setIsDrawingMode: value => updates.push(['pen', value]),
         setIsEraserMode: value => updates.push(['eraser', value]),
         setIsTextMode: value => updates.push(['text', value]),
         setSelectionRect: value => updates.push(['rect', value]),
-        setIsHoveringStudyTrace() {}, cancelGradingCapture() {},
+        setIsHoveringStudyTrace() {}, setIsGradingCaptureMode() {}, setGradingCaptureRect() {},
+        isSelectingRef: { current: false }, selectionStartRef: { current: null },
+        isGradingCapturingRef: { current: false }, gradingCaptureStartRef: { current: null },
+        gradingCaptureRectRef: { current: null },
+    });
+    const run = handler('navigateToPanel', {
+        panelStack: [{ type: 'pdf' }, { type: 'answer' }], activatePanelMode,
         setActivePanelIndex: value => updates.push(['panel', value]),
     });
     run(0);

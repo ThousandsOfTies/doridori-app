@@ -836,6 +836,22 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     isGradingCapturingRef.current = false
   }
 
+  const activatePanelMode = useCallback((panelType: PanelData['type']) => {
+    setIsSelectionMode(panelType === 'pdf')
+    setSelectionRect(null)
+    isSelectingRef.current = false
+    selectionStartRef.current = null
+    setIsDrawingMode(false)
+    setIsEraserMode(false)
+    setIsTextMode(panelType === 'answer')
+    setIsGradingCaptureMode(panelType === 'grading')
+    gradingCaptureStartRef.current = null
+    gradingCaptureRectRef.current = null
+    setGradingCaptureRect(null)
+    isGradingCapturingRef.current = false
+    setIsHoveringStudyTrace(false)
+  }, [])
+
   const captureSelectionArea = async (rect: { x: number, y: number, width: number, height: number }) => {
     if (!containerRef.current) return null
 
@@ -1080,6 +1096,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   // 描画モードの切り替え
   const toggleDrawingMode = () => {
     if (!isDrawingMode) {
+      cancelGradingCapture()
       setIsDrawingMode(true)
       setIsEraserMode(false)
       setIsTextMode(false)
@@ -1092,6 +1109,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   // 消しゴムモードの切り替え
   const toggleEraserMode = () => {
     if (!isEraserMode) {
+      cancelGradingCapture()
       setIsEraserMode(true)
       setIsDrawingMode(false)
       setIsTextMode(false)
@@ -1136,8 +1154,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     const currentPanel = panelStack[activePanelIndex]
     if (currentPanel?.type === 'grading') {
       // 採点結果パネル上での範囲選択（html2canvasでキャプチャ）
-      setIsGradingCaptureMode(true)
-      setGradingCaptureRect(null)
+      activatePanelMode('grading')
       addStatusMessage('📐 キャプチャする範囲を選択してください')
       return
     }
@@ -1157,6 +1174,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   // テキストモードのトグル
   const toggleTextMode = () => {
     if (!isTextMode) {
+      cancelGradingCapture()
       setIsTextMode(true)
       setIsDrawingMode(false)
       setIsEraserMode(false)
@@ -1394,6 +1412,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   }
 
   const activePanel = panelStack[activePanelIndex]
+  useEffect(() => {
+    if (activePanel) activatePanelMode(activePanel.type)
+  }, [activePanel, activatePanelMode])
+
   const isOnAnswerPanel = activePanel?.type === 'answer'
   const isPenActive = isOnAnswerPanel ? !isEraserMode && !isTextMode : isDrawingMode
   const activeTraceId = activePanel?.type !== 'pdf' ? activePanel?.traceId : undefined
@@ -1405,17 +1427,9 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   )
 
   const navigateToPanel = (index: number) => {
-    if (panelStack[index]?.type === 'pdf') {
-      setIsSelectionMode(true)
-      setSelectionRect(null)
-    } else {
-      setIsSelectionMode(false)
-    }
-    setIsDrawingMode(false)
-    setIsEraserMode(false)
-    setIsTextMode(false)
-    setIsHoveringStudyTrace(false)
-    cancelGradingCapture()
+    const panel = panelStack[index]
+    if (!panel) return
+    activatePanelMode(panel.type)
     setActivePanelIndex(index)
   }
 
