@@ -12,6 +12,7 @@ import { PDFPane, PDFPaneHandle } from '@home-teacher/common/components/study/PD
 import { StudyToolbar, BreadcrumbItem } from './StudyToolbar'
 import { usePDFRenderer } from '@home-teacher/common/hooks/pdf/usePDFRenderer'
 import { useWheelPanelNavigation } from '@home-teacher/common/hooks/useWheelPanelNavigation'
+import { PanelForwardButton } from '@home-teacher/common/components/study/PanelForwardButton'
 import { getPanelWheelDestination } from '@home-teacher/common/utils/panelWheelNavigation'
 import './StudyPanel.css'
 import { compressImageDataUrl } from '@home-teacher/common/utils/image'
@@ -1441,10 +1442,12 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     else await openStudyTrace(destination.id)
   }
 
-  useWheelPanelNavigation({
+  const canGoForward = getWheelDestination(1) !== null
+  const panelNavigationBusy = isGrading || !!editingText || isSelectingRef.current || isGradingCapturingRef.current
+  const { navigate: navigatePanel, isNavigating } = useWheelPanelNavigation({
     enabled: true, containerRef: panelNavigationRef, navigationKey: activePanel,
-    canGoBack: getWheelDestination(-1) !== null, canGoForward: getWheelDestination(1) !== null,
-    busy: isGrading || !!editingText || isSelectingRef.current || isGradingCapturingRef.current,
+    canGoBack: getWheelDestination(-1) !== null, canGoForward,
+    busy: panelNavigationBusy,
     onNavigate: navigateWithWheel,
   })
 
@@ -1993,6 +1996,12 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
               )}
             </div>
           ))}
+          <PanelForwardButton
+            canGoForward={canGoForward}
+            disabled={panelNavigationBusy || isNavigating}
+            label="次の画面へ"
+            onNext={() => navigatePanel(1)}
+          />
         </div>
 
         {/* テキスト入力ボックス */}
