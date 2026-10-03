@@ -55,6 +55,25 @@ function capture({ activeTab = 'A', isSplitView = false, pageA = 1, pageB = 5 } 
     });
 }
 const rect = (x, width) => ({ x, y: 0, width, height: 100 });
+test('clearing the selected PDF pane preserves and never overwrites the other page drawing', () => {
+    for (const activeTab of ['A', 'B']) {
+        const pageA = 4, pageB = 9;
+        const original = new Map([[pageA, [{ id: 'a' }]], [pageB, [{ id: 'b' }]]]);
+        let drawings = original;
+        const writes = new Map();
+        handler('clearDrawing', {
+            activeTab, pageA, pageB,
+            setDrawingPaths: update => { drawings = update(drawings); },
+            pendingDrawingWritesRef: { current: writes }, addStatusMessage() {},
+        })();
+        const selected = activeTab === 'A' ? pageA : pageB;
+        const other = activeTab === 'A' ? pageB : pageA;
+        assert.equal(drawings.has(selected), false);
+        assert.equal(drawings.get(other), original.get(other));
+        assert.deepEqual(Array.from(writes), [[selected, '[]']]);
+    }
+});
+
 test('captures A, B, both panes, duplicate pages and empty selections accurately', async () => {
     for (const [options, selection, expected] of [
         [{}, rect(0, 100), [1]],
