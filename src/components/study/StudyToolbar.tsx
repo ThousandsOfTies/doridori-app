@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ICON_SVG } from '../../constants/icons';
-import { FiHome, FiRotateCcw, FiX, FiHelpCircle, FiLoader, FiType, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiHome, FiX, FiHelpCircle, FiLoader, FiType, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
 import { BiEraser, BiSelection } from 'react-icons/bi';
 
 export type TextDirection = 'horizontal' | 'vertical-rl' | 'vertical-lr';
@@ -53,16 +52,8 @@ interface StudyToolbarProps {
     eraserSize: number;
     setEraserSize: (size: number) => void;
 
-    // Actions
-    onUndo: () => void;
-    onClear: () => void;
-    onClearAll: () => void;
-
     // Answer panel actions (shown when on answer panel)
     onGrade?: () => void;
-    canUndoAnswer?: boolean;
-    onUndoAnswer?: () => void;
-    onClearAnswer?: () => void;
     onDeleteStudyTrace?: () => void;
     selectedModel?: string;
     setSelectedModel?: (model: string) => void;
@@ -100,13 +91,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     toggleEraserMode,
     eraserSize,
     setEraserSize,
-    onUndo,
-    onClear,
-    onClearAll,
     onGrade,
-    canUndoAnswer,
-    onUndoAnswer,
-    onClearAnswer,
     onDeleteStudyTrace,
     selectedModel,
     setSelectedModel,

@@ -3,7 +3,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 import AdminPanel from '@home-teacher/common/components/admin/AdminPanel'
 import StudyPanel from './components/study/StudyPanel'
 import PDFEditorPanel from '@home-teacher/common/components/admin/PDFEditorLoader'
-import { PDFFileRecord, getPDFRecord, getAppSettings, saveAppSettings } from '@home-teacher/common/utils/indexedDB'
+import { PDFFileRecord } from '@home-teacher/common/utils/indexedDB'
 import { useAppInitializer } from '@home-teacher/common/hooks/useAppInitializer'
 import { removeDeletedBookIndexes } from './book/bookIndex'
 

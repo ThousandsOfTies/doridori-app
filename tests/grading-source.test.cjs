@@ -58,20 +58,28 @@ function capture({ activeTab = 'A', isSplitView = false, pageA = 1, pageB = 5 } 
     });
 }
 const rect = (x, width) => ({ x, y: 0, width, height: 100 });
-test('clearing the selected PDF pane preserves and never overwrites the other page drawing', () => {
+test('Undo removes only the last stroke on the selected PDF page and saves that page', () => {
     for (const activeTab of ['A', 'B']) {
         const pageA = 4, pageB = 9;
-        const original = new Map([[pageA, [{ id: 'a' }]], [pageB, [{ id: 'b' }]]]);
+        const original = new Map([[pageA, [{ id: 'a1' }, { id: 'a2' }]], [pageB, [{ id: 'b1' }, { id: 'b2' }]]]);
         let drawings = original;
         const writes = new Map();
-        handler('clearDrawing', {
+        const undo = handler('handleUndo', {
             activeTab, pageA, pageB,
             setDrawingPaths: update => { drawings = update(drawings); },
-            pendingDrawingWritesRef: { current: writes }, addStatusMessage() {},
-        })();
+            pendingDrawingWritesRef: { current: writes },
+        });
         const selected = activeTab === 'A' ? pageA : pageB;
         const other = activeTab === 'A' ? pageB : pageA;
-        assert.equal(drawings.has(selected), false);
+        undo();
+        assert.deepEqual(drawings.get(selected), original.get(selected).slice(0, 1));
+        assert.equal(drawings.get(other), original.get(other));
+        assert.equal(original.get(selected).length, 2);
+        assert.deepEqual(Array.from(writes), [[selected, JSON.stringify(original.get(selected).slice(0, 1))]]);
+        undo();
+        assert.deepEqual(Array.from(drawings.get(selected)), []);
+        assert.deepEqual(Array.from(writes), [[selected, '[]']]);
+        undo();
         assert.equal(drawings.get(other), original.get(other));
         assert.deepEqual(Array.from(writes), [[selected, '[]']]);
     }
