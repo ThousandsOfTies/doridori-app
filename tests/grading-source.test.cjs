@@ -492,6 +492,59 @@ test('PDF restoration stops at a fork inside older linear history', async () => 
     assert.deepEqual(loaded, ['root-answer', 'root-answer']);
 });
 
+test('answer selection leaves scrollbars and controls native while selecting within the text viewport', () => {
+    class Element { constructor(control = false) { this.control = control; } closest() { return this.control ? this : null; } }
+    const viewport = { clientLeft: 0, clientTop: 0, clientWidth: 385, clientHeight: 460,
+        getBoundingClientRect: () => ({ left: 100, top: 80, width: 400, height: 460 }) };
+    const panel = { getBoundingClientRect: () => ({ left: 100, top: 80, width: 400, height: 500 }),
+        querySelector: () => viewport };
+    const capturing = { current: false }, start = { current: null }, selection = { current: null };
+    const adapters = { Element, gradingPanelRef: { current: panel }, isGradingCapturingRef: capturing,
+        gradingCaptureStartRef: start, gradingCaptureRectRef: selection, setGradingCaptureRect() {},
+        getResultViewportBounds: handler('getResultViewportBounds', {}), getStudyTraceAtPoint: () => null };
+    const begin = handler('handleGradingCaptureStart', adapters);
+    let prevented = 0;
+    const down = (clientX, clientY, target = new Element()) => begin({
+        button: 0, clientX, clientY, target, preventDefault() { prevented++; },
+    });
+    for (const [x, y, target] of [[492, 200], [485, 200], [150, 555], [99, 180], [150, 180, new Element(true)]]) {
+        down(x, y, target);
+        assert.equal(capturing.current, false);
+        assert.equal(selection.current, null);
+        assert.equal(prevented, 0);
+    }
+    // An RTL scrollbar occupies the left edge and must also retain native dragging.
+    viewport.clientLeft = 15;
+    down(108, 180);
+    assert.equal(capturing.current, false);
+    assert.equal(prevented, 0);
+    viewport.clientLeft = 0;
+    down(150, 180);
+    assert.equal(capturing.current, true);
+    assert.equal(prevented, 1);
+    assert.deepEqual({ ...start.current }, { x: 50, y: 100 });
+    handler('handleGradingCaptureMove', adapters)({ clientX: 900, clientY: 900 });
+    assert.deepEqual({ ...selection.current }, { x: 50, y: 100, width: 335, height: 360 });
+});
+
+test('scrolling discards an unfinished answer selection without creating a follow-up', async () => {
+    const capturing = { current: true }, start = { current: { x: 20, y: 30 } };
+    const selection = { current: { x: 20, y: 30, width: 100, height: 50 } };
+    const changes = [];
+    const adapters = { isGradingCapturingRef: capturing, gradingCaptureStartRef: start,
+        gradingCaptureRectRef: selection, setGradingCaptureRect: value => changes.push(value) };
+    const scroll = handler('handleGradingCaptureScroll', adapters);
+    scroll();
+    assert.equal(capturing.current, false);
+    assert.equal(start.current, null);
+    assert.equal(selection.current, null);
+    assert.deepEqual(changes, [null]);
+    await handler('handleGradingCaptureEnd', { ...adapters, panelStack: [{ type: 'grading' }], activePanelIndex: 0,
+        gradingPanelRef: { current: {} }, pushPanel: () => assert.fail('Scrolling must not create a question') })();
+    scroll();
+    assert.deepEqual(changes, [null]);
+});
+
 test('a teacher answer selection saves the whole paper, focus, size and scroll position', async () => {
     const sourcePanel = { type: 'grading', traceId: 'root', stepId: 'result', sourcePageNumbers: [4] };
     const inner = { getBoundingClientRect: () => ({ left: 120, top: -500, width: 1000, height: 2000 }) };

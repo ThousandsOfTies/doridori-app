@@ -23,6 +23,7 @@
 }
 
 .grading-study-markers { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+.grading-selection-mode .result-inner { cursor: crosshair; }
 
 /* ===== 問題リスト ===== */
 .problems-list {

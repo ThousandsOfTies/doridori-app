@@ -77,6 +77,16 @@ const getResultCaptureGeometry = (
   }
 }
 
+const getResultViewportBounds = (panel: HTMLElement) => {
+  const viewport = panel.querySelector<HTMLElement>('.result-content')
+  if (!viewport) return null
+  const bounds = viewport.getBoundingClientRect()
+  const left = bounds.left + viewport.clientLeft
+  const top = bounds.top + viewport.clientTop
+  // clientLeft also excludes a left-side scrollbar in RTL layouts.
+  return { left, top, right: left + viewport.clientWidth, bottom: top + viewport.clientHeight }
+}
+
 const captureResultPage = async (element: HTMLElement) => {
   const html2canvas = (await import('html2canvas')).default
   const bounds = element.getBoundingClientRect()
@@ -751,12 +761,19 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   // 採点結果パネル用の範囲選択ハンドラ
   const handleGradingCaptureStart = (e: React.MouseEvent) => {
     if (e.button !== 0) return
-    if (handledTracePointerRef.current) return
+    if (e.target instanceof Element && e.target.closest(
+      'button, a, input, textarea, select, [contenteditable="true"], dialog, .book-reference-media',
+    )) return
     if (getStudyTraceAtPoint(e.clientX, e.clientY)) return
-    const rect = gradingPanelRef.current?.getBoundingClientRect()
-    if (!rect) return
+    const panel = gradingPanelRef.current
+    if (!panel) return
+    const viewport = getResultViewportBounds(panel)
+    if (!viewport || e.clientX < viewport.left || e.clientX >= viewport.right ||
+      e.clientY < viewport.top || e.clientY >= viewport.bottom) return
+    const rect = panel.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
+    e.preventDefault()
     isGradingCapturingRef.current = true
     gradingCaptureStartRef.current = { x, y }
     gradingCaptureRectRef.current = { x, y, width: 0, height: 0 }
@@ -766,8 +783,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   const handleGradingCaptureMove = (e: React.MouseEvent) => {
     if (!isGradingCapturingRef.current || !gradingCaptureStartRef.current || !gradingPanelRef.current) return
     const rect = gradingPanelRef.current.getBoundingClientRect()
-    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
-    const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top))
+    const viewport = getResultViewportBounds(gradingPanelRef.current)
+    if (!viewport) return
+    const x = Math.max(viewport.left, Math.min(viewport.right, e.clientX)) - rect.left
+    const y = Math.max(viewport.top, Math.min(viewport.bottom, e.clientY)) - rect.top
     const sx = gradingCaptureStartRef.current.x
     const sy = gradingCaptureStartRef.current.y
     gradingCaptureRectRef.current = {
@@ -777,6 +796,15 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       height: Math.abs(y - sy)
     }
     setGradingCaptureRect(gradingCaptureRectRef.current)
+  }
+
+  const handleGradingCaptureScroll = () => {
+    if (!isGradingCapturingRef.current) return
+    // Scrolling changes the answer's coordinates; discard only the unfinished selection.
+    isGradingCapturingRef.current = false
+    gradingCaptureStartRef.current = null
+    gradingCaptureRectRef.current = null
+    setGradingCaptureRect(null)
   }
 
   const handleGradingCaptureEnd = async () => {
@@ -1968,7 +1996,15 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
               {panel.type === 'grading' && (
                 <div
                   ref={i === activePanelIndex ? gradingPanelRef : undefined}
+                  className={isGradingCaptureMode && i === activePanelIndex ? 'grading-selection-mode' : undefined}
                   style={{ position: 'relative', width: '100%', height: '100%', isolation: 'isolate' }}
+                  onMouseDown={isGradingCaptureMode && i === activePanelIndex ? handleGradingCaptureStart : undefined}
+                  onMouseMove={isGradingCaptureMode && i === activePanelIndex ? handleGradingCaptureMove : undefined}
+                  onMouseUp={isGradingCaptureMode && i === activePanelIndex ? handleGradingCaptureEnd : undefined}
+                  onScrollCapture={isGradingCaptureMode && i === activePanelIndex ? handleGradingCaptureScroll : undefined}
+                  onMouseLeave={isGradingCaptureMode && i === activePanelIndex ? () => {
+                    if (isGradingCapturingRef.current) void handleGradingCaptureEnd()
+                  } : undefined}
                 >
                   <GradingResult
                     result={panel.result}
@@ -1988,24 +2024,12 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
                   {isGradingCaptureMode && i === activePanelIndex && (
                     <div
                       className="grading-capture-overlay"
+                      aria-hidden="true"
                       style={{
                         position: 'absolute',
                         top: 0, left: 0, width: '100%', height: '100%',
                         zIndex: 9999,
-                        cursor: isHoveringStudyTrace ? 'pointer' : 'crosshair',
-                      }}
-                      onPointerDown={handleTraceOverlayPointerDown}
-                      onMouseDown={handleGradingCaptureStart}
-                      onMouseMove={event => {
-                        setIsHoveringStudyTrace(document.elementsFromPoint(event.clientX, event.clientY)
-                          .some(element => element.hasAttribute('data-study-trace-id') || element.hasAttribute('data-study-trace-delete-id') ||
-                            element.hasAttribute('data-study-trace-undo-id')))
-                        handleGradingCaptureMove(event)
-                      }}
-                      onMouseUp={handleGradingCaptureEnd}
-                      onMouseLeave={() => {
-                        setIsHoveringStudyTrace(false)
-                        if (isGradingCapturingRef.current) handleGradingCaptureEnd()
+                        pointerEvents: 'none',
                       }}
                     >
                       {gradingCaptureRect && (
