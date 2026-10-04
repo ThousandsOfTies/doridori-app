@@ -1,4 +1,5 @@
 import type { GradeResponse } from '@home-teacher/common/services/api'
+import { createReferenceMediaLoader, type BookQuestionResult } from './bookReferenceMedia'
 
 const productionApiUrl = 'https://hometeacher-api-736494768812.asia-northeast1.run.app'
 const apiBaseUrl = import.meta.env.VITE_API_URL ||
@@ -43,8 +44,10 @@ export interface BookContext {
 }
 
 export interface BookQuestionResponse extends GradeResponse {
-  result: GradeResponse['result'] & { referencePages?: number[] }
+  result: BookQuestionResult
 }
+
+export const findBookReferenceMedia = createReferenceMediaLoader(body => postBookApi('reference-media', body))
 
 export const askBookQuestion = (body: {
   questionImageData: string

@@ -1,6 +1,7 @@
 // Book-reading endpoints are also included in TutoTuto's shared API.
 import type { Express } from 'express'
 import { GoogleGenAI, ThinkingLevel } from '@google/genai'
+import { registerBookReferenceMediaRoute } from './bookReferenceMedia'
 
 const IMAGE_PATTERN = /^data:(image\/(?:png|jpeg));base64,([A-Za-z0-9+/=]+)$/
 
@@ -19,6 +20,7 @@ function lowThinking(model: string) {
 }
 
 export function registerBookKnowledgeRoutes(app: Express, ai: GoogleGenAI, defaultModel: string): void {
+  registerBookReferenceMediaRoute(app, ai, defaultModel)
   app.post('/api/book/ocr', async (req, res) => {
     const image = imagePart(req.body?.imageData)
     if (!image) return res.status(400).json({ error: 'PNGまたはJPEGのページ画像が必要です' })

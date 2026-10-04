@@ -35,6 +35,33 @@ function handler(name, adapters, component = 'StudyPanel') {
     });
 }
 
+test('older teacher answers retain their layout while new answers include reference media', () => {
+    const componentFile = path.join(__dirname, '../src/components/study/BookAnswer.tsx');
+    const module = { exports: {} };
+    const referenceComponent = () => null;
+    const compiled = ts.transpileModule(fs.readFileSync(componentFile, 'utf8'), {
+        compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS,
+            jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true },
+    }).outputText;
+    vm.runInNewContext(compiled, { exports: module.exports, require: name => {
+        if (name === 'react/jsx-runtime') return require(name);
+        return name === './BookReferenceMedia' ? referenceComponent : () => null;
+    } });
+    const find = (element, predicate) => {
+        if (!element || typeof element !== 'object') return undefined;
+        if (predicate(element)) return element;
+        const children = element.props?.children;
+        return (Array.isArray(children) ? children : [children]).map(child => find(child, predicate)).find(Boolean);
+    };
+    const render = props => module.exports.default({ text: '保存済みの回答', referencePages: [], ...props });
+    const oldAnswer = render({});
+    assert.equal(find(oldAnswer, node => node.type === referenceComponent), undefined);
+    assert.equal(find(oldAnswer, node => node.props?.className?.includes('book-answer-with-media')), undefined);
+    const newAnswer = render({ question: '新しい質問' });
+    assert.ok(find(newAnswer, node => node.type === referenceComponent));
+    assert.ok(find(newAnswer, node => node.props?.className?.includes('book-answer-with-media')));
+})
+
 function capture({ activeTab = 'A', isSplitView = false, pageA = 1, pageB = 5 } = {}) {
     const bounds = (left, right) => ({ left, right, top: 0, bottom: 100, width: right - left, height: 100 });
     // A's zoomed canvas extends under B; it must be clipped at the pane edge.

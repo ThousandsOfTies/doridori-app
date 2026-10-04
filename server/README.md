@@ -2,6 +2,9 @@
 
 CopiCopiと同じく、ソースを `src/`、設定と依存をこの `server/`、ビルド成果物を `dist/` に分ける。
 入口は `src/index.ts`、本への質問処理は `src/bookKnowledgeRoutes.ts`。
+本の回答に添える参考図の検索は `src/bookReferenceMedia.ts` の `/api/book/reference-media` で扱う。
+Wikimedia CommonsのAPIから出典・作者・ライセンス付きの資料を取得し、Geminiで関連性を選ぶ。追加の検索APIキーは不要。
+参考資料の検索は回答APIから独立し、検索失敗は `status: unavailable` として返す。
 共有の採点定義は兄弟サブモジュール `home-teacher-common` を参照するため、サブモジュールも初期化しておく。
 
 ## ローカル起動

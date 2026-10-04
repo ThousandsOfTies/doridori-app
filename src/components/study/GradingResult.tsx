@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { useRef, type ReactNode, type RefObject } from 'react'
+import { useMemo, useRef, type ReactNode, type RefObject } from 'react'
 import { GradingResponseResult } from '@home-teacher/common/services/api'
 import { SNSLinkRecord } from '@home-teacher/common/utils/indexedDB'
 import { getSNSIcon } from '@home-teacher/common/constants/sns'
 import './GradingResult.css'
 import BookAnswer from './BookAnswer'
+import { normalizeReferenceMedia, type BookQuestionResult, type ReferenceMediaResult } from '../../book/bookReferenceMedia'
 
 interface GradingResultProps {
   result: GradingResponseResult | null
@@ -14,14 +15,18 @@ interface GradingResultProps {
   responseTime?: number | null
   pdfId?: string
   onOpenReferencePage?: (page: number) => void
+  onReferenceMediaResolved?: (media: ReferenceMediaResult) => void
   studyMarkers?: ReactNode | ((viewportRef: RefObject<HTMLDivElement>) => ReactNode)
 }
 
-const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName, responseTime, pdfId, onOpenReferencePage, studyMarkers }: GradingResultProps) => {
+const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName, responseTime, pdfId, onOpenReferencePage, onReferenceMediaResolved, studyMarkers }: GradingResultProps) => {
   const viewportRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
   const isBookQuestion = result?.pageType === 'book-question'
-  const referencePages = (result as (GradingResponseResult & { referencePages?: number[] }) | null)?.referencePages || []
+  const bookResult = result as BookQuestionResult | null
+  const referencePages = bookResult?.referencePages || []
+  const savedMedia = useMemo(() => bookResult?.referenceMedia ? normalizeReferenceMedia(bookResult.referenceMedia) : undefined,
+    [bookResult?.referenceMedia])
 
   const validProblems = result?.problems?.filter(problem =>
     problem.problemNumber !== null && problem.isCorrect !== null
@@ -52,7 +57,9 @@ const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName
           {typeof studyMarkers === 'function' ? studyMarkers(viewportRef) : studyMarkers}
           {isBookQuestion ? (
             <BookAnswer text={result?.overallComment || result?.rawResponse || ''}
-              referencePages={referencePages} onOpenPage={onOpenReferencePage} />
+              referencePages={referencePages} onOpenPage={onOpenReferencePage}
+              question={bookResult?.referenceQuestion} model={modelName || undefined}
+              referenceMedia={savedMedia} onMediaResolved={onReferenceMediaResolved} />
           ) : result && validProblems.length > 0 ? (
             <div className="problems-list">
               {validProblems.map((problem, index) => (

@@ -12,6 +12,7 @@ const files = [
   ['server/tsconfig.json', 'app/server/tsconfig.json'],
   ['server/src/index.ts', 'app/server/src/index.ts'],
   ['server/src/bookKnowledgeRoutes.ts', 'app/server/src/bookKnowledgeRoutes.ts'],
+  ['server/src/bookReferenceMedia.ts', 'app/server/src/bookReferenceMedia.ts'],
   ['server/src/runtimePaths.ts', 'app/server/src/runtimePaths.ts'],
   ['../home-teacher-common/src/constants/grading.ts', 'home-teacher-common/src/constants/grading.ts'],
 ]

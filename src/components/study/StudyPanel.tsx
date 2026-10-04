@@ -18,6 +18,8 @@ import './StudyPanel.css'
 import { compressImageDataUrl } from '@home-teacher/common/utils/image'
 import { useAuth } from '@home-teacher/common/contexts/AuthContext'
 import { askBookQuestion, readBookQuestion } from '../../book/bookKnowledgeApi'
+import { saveBookReferenceMedia } from '../../book/bookReferenceMediaStorage'
+import type { BookQuestionResult, ReferenceMediaResult } from '../../book/bookReferenceMedia'
 import { useBookIndex } from '../../book/useBookIndex'
 import { useStudyTraceUndo } from '@home-teacher/common/hooks/useStudyTraceUndo'
 import { deletePDFStudyTraceTree, restorePDFStudyTraceDeletion } from '@home-teacher/common/utils/indexedDB'
@@ -351,6 +353,23 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   const pushPanel = (panel: PanelData) => {
     setPanelStack(prev => [...prev.slice(0, activePanelIndex + 1), panel])
     setActivePanelIndex(prev => prev + 1)
+  }
+
+  const handleReferenceMediaResolved = async (panel: Extract<PanelData, { type: 'grading' }>, media: ReferenceMediaResult) => {
+    const answer = panel.result.overallComment || panel.result.rawResponse || ''
+    const result: BookQuestionResult = { ...panel.result, referenceMedia: media }
+    setPanelStack(previous => previous.map(item => item === panel ||
+      item.type === 'grading' && item.traceId === panel.traceId && item.stepId === panel.stepId &&
+      !!panel.traceId && (item.result.overallComment || item.result.rawResponse || '') === answer
+      ? { ...item, result } : item))
+    if (!panel.traceId || !panel.stepId || deletedTraceIdsRef.current.has(panel.traceId)) return
+    try {
+      await saveBookReferenceMedia(import.meta.env.VITE_INDEXED_DB_NAME, panel.traceId, panel.stepId, answer, media)
+      const updated = await getPDFStudyTrace(panel.traceId) as BookStudyTrace | null
+      if (updated) setStudyTraces(previous => previous.map(trace => trace.id === panel.traceId ? updated : trace))
+    } catch (error) {
+      console.error('参考資料の保存に失敗しました:', error)
+    }
   }
 
   const queueQuestionTextSave = (traceId: string, stepId: string, texts: PDFStudyAnswerState['texts']) => {
@@ -1048,7 +1067,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
       setGradingError(null)
 
-      const gradingResult = response.result
+      const gradingResult: BookQuestionResult = { ...response.result, referenceQuestion: question }
       const gradingStepId = `grading_${crypto.randomUUID()}`
       let savedTraceId: string | undefined
       if (traceId) {
@@ -1959,7 +1978,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
               {panel.type === 'grading' && (
                 <div
                   ref={i === activePanelIndex ? gradingPanelRef : undefined}
-                  style={{ position: 'relative', width: '100%', height: '100%' }}
+                  style={{ position: 'relative', width: '100%', height: '100%', isolation: 'isolate' }}
                 >
                   <GradingResult
                     result={panel.result}
@@ -1969,6 +1988,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
                     responseTime={panel.responseTime}
                     pdfId={pdfId}
                     studyMarkers={viewportRef => renderResultMarkers(panel, viewportRef)}
+                    onReferenceMediaResolved={media => { void handleReferenceMediaResolved(panel, media) }}
                     onOpenReferencePage={page => {
                       handlePageAChange(page)
                       setActiveTab('A')
