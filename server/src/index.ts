@@ -1,9 +1,9 @@
 import express from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
 import { GoogleGenAI, ThinkingLevel } from '@google/genai'
 import { registerBookKnowledgeRoutes } from './bookKnowledgeRoutes.ts'
-import { AVAILABLE_MODELS, DEFAULT_MODEL_ID, SUBJECTS, buildGradingPrompt } from '../../home-teacher-common/src/constants/grading.ts'
+import { AVAILABLE_MODELS, DEFAULT_MODEL_ID, SUBJECTS, buildGradingPrompt } from '../../../home-teacher-common/src/constants/grading.ts'
+import { loadServerEnvironment, resolveConfigFile } from './runtimePaths.ts'
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -11,10 +11,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const result = dotenv.config({ path: path.resolve(__dirname, '../.env') })
-if (result.error) {
-  console.log('Dotenv error:', result.error)
-}
+const serverPaths = loadServerEnvironment(import.meta.url)
 console.log('CWD:', process.cwd())
 console.log('__dirname:', __dirname)
 
@@ -36,7 +33,7 @@ if (!admin.apps.length) {
     const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (serviceAccountPath) {
       // ローカル開発: サービスアカウントキーファイルを使用
-      const fullPath = path.resolve(__dirname, `../${serviceAccountPath}`);
+      const fullPath = resolveConfigFile(serviceAccountPath, serverPaths);
       const serviceAccountJson = fs.readFileSync(fullPath, 'utf8');
       const serviceAccount = JSON.parse(serviceAccountJson);
       admin.initializeApp({

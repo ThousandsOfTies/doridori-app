@@ -1,3 +1,4 @@
+// Book-reading endpoints are also included in TutoTuto's shared API.
 import type { Express } from 'express'
 import { GoogleGenAI, ThinkingLevel } from '@google/genai'
 

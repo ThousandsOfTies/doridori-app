@@ -19,11 +19,11 @@ DoriDori側の `npm run dev:server` はローカル開発に使用できる。
 `npm run prepare:server` もDockerによるローカル検証用に残しているが、生成物は共有Cloud Runへ公開しない。
 
 `prepare:server` は生成用ディレクトリ `.cloud-run` を作り直し、
-サーバー、共通の採点定義、専用の依存定義・lockfile、Dockerfileのみをコピーする。
+サーバーの `src/`・`tsconfig.json`・依存定義・lockfileと、共通の採点定義、`server/Dockerfile` のみをコピーする。
 共通定義は兄弟サブモジュールの現在のチェックアウトから取得する。
 検証時はメタリポジトリが固定しているコミットを確認すること。`.env` や認証ファイルはコピーされない。
 
-Docker内で `npm ci` とビルドを実行し、共通定義をサーバーへまとめる。
+Docker内の `server/` で `npm ci` とビルドを実行し、共通定義を `dist/index.js` にまとめる。
 実行イメージはサーバー用依存だけを含み、TypeScript実行ツールやフロント資産を必要としない。
 依存を更新する場合は `server/package.json` を変更し、
 `npm install --package-lock-only --prefix server` でlockfileも更新する。

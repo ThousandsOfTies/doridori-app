@@ -6,11 +6,13 @@ const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const output = path.join(appRoot, '.cloud-run')
 // Explicit allowlist: never upload local .env files, credentials, or frontend assets.
 const files = [
-  ['Dockerfile', 'Dockerfile'],
-  ['server/package.json', 'package.json'],
-  ['server/package-lock.json', 'package-lock.json'],
-  ['server/index.ts', 'app/server/index.ts'],
-  ['server/bookKnowledgeRoutes.ts', 'app/server/bookKnowledgeRoutes.ts'],
+  ['server/Dockerfile', 'Dockerfile'],
+  ['server/package.json', 'app/server/package.json'],
+  ['server/package-lock.json', 'app/server/package-lock.json'],
+  ['server/tsconfig.json', 'app/server/tsconfig.json'],
+  ['server/src/index.ts', 'app/server/src/index.ts'],
+  ['server/src/bookKnowledgeRoutes.ts', 'app/server/src/bookKnowledgeRoutes.ts'],
+  ['server/src/runtimePaths.ts', 'app/server/src/runtimePaths.ts'],
   ['../home-teacher-common/src/constants/grading.ts', 'home-teacher-common/src/constants/grading.ts'],
 ]
 
