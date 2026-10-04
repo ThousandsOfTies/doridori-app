@@ -120,23 +120,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   // Layout State
   const [isSplitView, setIsSplitView] = useState(false)
   const [activeTab, setActiveTab] = useState<'A' | 'B'>('B')
-  const [showStudyMarkers, setShowStudyMarkers] = useState(pdfRecord.showStudyMarkers !== false)
-  const [isSavingStudyMarkerVisibility, setIsSavingStudyMarkerVisibility] = useState(false)
+  // PDFを開くたびに選択跡を表示し、非表示への切替は今回の閲覧中だけ適用する。
+  const [showStudyMarkers, setShowStudyMarkers] = useState(true)
 
-  const toggleStudyMarkers = async () => {
-    if (isSavingStudyMarkerVisibility) return
-    const next = !showStudyMarkers
-    setShowStudyMarkers(next)
-    setIsSavingStudyMarkerVisibility(true)
-    try {
-      await updatePDFRecord(pdfId, { showStudyMarkers: next })
-    } catch (error) {
-      console.error('選択跡の表示設定を保存できませんでした:', error)
-      setShowStudyMarkers(!next)
-    } finally {
-      setIsSavingStudyMarkerVisibility(false)
-    }
-  }
+  const toggleStudyMarkers = () => setShowStudyMarkers(visible => !visible)
 
   // Split Ratio
   const [splitRatio, setSplitRatio] = useState(() => {
@@ -1894,7 +1881,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
         <StudyToolbar
           onBack={onBack}
           showStudyMarkers={showStudyMarkers}
-          isSavingStudyMarkerVisibility={isSavingStudyMarkerVisibility}
           onToggleStudyMarkers={activePanel?.type === 'pdf' ? toggleStudyMarkers : undefined}
           breadcrumbs={visibleBreadcrumbPanels.map((panel, i) => ({
             label: getPanelLabel(panel),

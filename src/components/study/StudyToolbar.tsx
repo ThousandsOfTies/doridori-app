@@ -21,7 +21,6 @@ interface StudyToolbarProps {
     activeTab: 'A' | 'B';
     toggleActiveTab: () => void;
     showStudyMarkers?: boolean;
-    isSavingStudyMarkerVisibility?: boolean;
     onToggleStudyMarkers?: () => void;
 
     // Grading
@@ -69,7 +68,6 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     activeTab,
     toggleActiveTab,
     showStudyMarkers = true,
-    isSavingStudyMarkerVisibility = false,
     onToggleStudyMarkers,
     isSelectionMode,
     isGrading,
@@ -221,7 +219,6 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                             type="button"
                             className={`study-trace-visibility-button${showStudyMarkers ? ' active' : ''}`}
                             onClick={onToggleStudyMarkers}
-                            disabled={isSavingStudyMarkerVisibility}
                             aria-label="範囲選択の履歴を表示"
                             aria-pressed={showStudyMarkers}
                             title={showStudyMarkers
