@@ -2,6 +2,7 @@ import Markdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
+import type { ReactNode } from 'react'
 import BookReferenceMedia from './BookReferenceMedia'
 import type { ReferenceMediaResult } from '../../book/bookReferenceMedia'
 
@@ -13,20 +14,25 @@ interface BookAnswerProps {
   model?: string
   referenceMedia?: ReferenceMediaResult
   onMediaResolved?: (media: ReferenceMediaResult) => void
+  studyMarkers?: ReactNode
+  anchorToBody?: boolean
 }
 
-export default function BookAnswer({ text, referencePages, onOpenPage, question, model, referenceMedia, onMediaResolved }: BookAnswerProps) {
+export default function BookAnswer({ text, referencePages, onOpenPage, question, model, referenceMedia, onMediaResolved, studyMarkers, anchorToBody }: BookAnswerProps) {
   // Keep older answers' geometry intact so their saved follow-up regions still line up.
   const hasReferenceMedia = question !== undefined || referenceMedia !== undefined
   return (
     <div className="book-answer">
       <div className="book-answer-heading">先生の回答</div>
       <div className={`book-answer-layout${hasReferenceMedia ? ' book-answer-with-media' : ''}`}>
-        <div className="book-answer-body">
-          <Markdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}
-            components={{ img: () => null, a: ({ children }) => <span>{children}</span> }}>
-            {text}
-          </Markdown>
+        <div className="book-answer-body" data-book-answer-anchor={anchorToBody || undefined}>
+          <div className="book-answer-text">
+            <Markdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}
+              components={{ img: () => null, a: ({ children }) => <span>{children}</span> }}>
+              {text}
+            </Markdown>
+          </div>
+          {studyMarkers}
         </div>
         {hasReferenceMedia && <BookReferenceMedia question={question || ''} answer={text} model={model} saved={referenceMedia} onResolved={onMediaResolved} />}
       </div>

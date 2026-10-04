@@ -30,6 +30,7 @@ export interface BookQuestionResult extends GradingResponseResult {
   referencePages?: number[]
   referenceQuestion?: string
   referenceMedia?: ReferenceMediaResult
+  referenceRegionAnchor?: 'answer-body'
 }
 
 function allowedUrl(value: unknown, kind: 'image' | 'source' | 'license'): value is string {

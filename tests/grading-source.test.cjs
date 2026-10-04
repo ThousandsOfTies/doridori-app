@@ -539,6 +539,39 @@ test('a teacher answer selection saves the whole paper, focus, size and scroll p
     assert.equal(markers.style.display, '');
 });
 
+test('new answer selection anchors to the text even when reference media changes the card height', async () => {
+    const captures = [];
+    for (const cardHeight of [900, 1600]) {
+        const body = { getBoundingClientRect: () => ({ left: 120, top: -320, width: 600, height: 800 }) };
+        const panel = {
+            getBoundingClientRect: () => ({ left: 100, top: 80 }),
+            querySelector: selector => ({
+                '[data-book-answer-anchor]': body,
+                '.result-inner': { getBoundingClientRect: () => ({ left: 120, top: -400, width: 1000, height: cardHeight }) },
+                '.result-content': { scrollTop: 500, getBoundingClientRect: () => ({ top: 80 }) },
+            })[selector],
+        };
+        await handler('handleGradingCaptureEnd', {
+            panelStack: [{ type: 'grading', sourcePageNumbers: [1] }], activePanelIndex: 0,
+            gradingPanelRef: { current: panel }, isGradingCapturingRef: { current: true },
+            gradingCaptureRectRef: { current: { x: 80, y: 100, width: 120, height: 80 } },
+            getResultCaptureGeometry: handler('getResultCaptureGeometry', {}),
+            captureResultPage: async element => {
+                assert.equal(element, body);
+                return { toDataURL: () => 'text-answer-image' };
+            },
+            crypto: { randomUUID: () => 'followup' },
+            pushPanel: value => captures.push(value),
+            setIsGradingCaptureMode() {}, setGradingCaptureRect() {}, console,
+        })();
+    }
+    assert.equal(captures.length, 2);
+    assert.deepEqual({ ...captures[0].imageFocusRegion }, { ...captures[1].imageFocusRegion });
+    assert.equal(captures[0].pageDisplayWidth, 600);
+    assert.equal(captures[0].pageScrollTop, 400);
+    assert.deepEqual(Array.from(Object.values(captures[0].imageFocusRegion)), [0.1, 0.625, 0.2, 0.1]);
+});
+
 test('reopening a teacher follow-up restores its full-paper focus and viewport', async () => {
     const root = { id: 'root', pdfId: 'book', regions: [], steps: [
         { id: 'root-answer', type: 'answer', source: 'pdf', sourcePageNumbers: [1] },

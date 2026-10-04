@@ -143,9 +143,9 @@
 .book-answer { background: #f2f7fd; border-left: 4px solid #2490e8; border-radius: 8px; padding: 20px 24px; color: #203044; container-type: inline-size; }
 .book-answer-heading { font-weight: 700; color: #1676cc; margin-bottom: 12px; }
 .book-answer-layout { display: grid; gap: 24px; min-width: 0; }
-.book-answer-body { line-height: 1.85; overflow-wrap: anywhere; }
-.book-answer-body > :first-child { margin-top: 0; }
-.book-answer-body > :last-child { margin-bottom: 0; }
+.book-answer-body { position: relative; line-height: 1.85; overflow-wrap: anywhere; min-width: 0; }
+.book-answer-text > :first-child { margin-top: 0; }
+.book-answer-text > :last-child { margin-bottom: 0; }
 .book-answer-body .katex-display { overflow-x: auto; overflow-y: hidden; }
 .book-answer-references { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-top: 1px solid #d4e3f3; margin-top: 20px; padding-top: 12px; font-size: 13px; }
 .book-answer-references button { border: 1px solid #b8d9f6; color: #126bb1; background: white; border-radius: 16px; padding: 4px 10px; cursor: pointer; }

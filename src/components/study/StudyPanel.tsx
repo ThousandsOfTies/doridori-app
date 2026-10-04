@@ -807,12 +807,16 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
     try {
       const panel = gradingPanelRef.current
-      const resultInner = panel.querySelector('.result-inner') as HTMLElement | null
+      const bodyAnchor = panel.querySelector('[data-book-answer-anchor]') as HTMLElement | null
+      const resultInner = bodyAnchor || panel.querySelector('.result-inner') as HTMLElement | null
       if (!resultInner) throw new Error('回答の表示領域が見つかりません')
       const resultBounds = resultInner.getBoundingClientRect()
       const geometry = getResultCaptureGeometry(captureRect, panel.getBoundingClientRect(), resultBounds)
       if (!geometry) throw new Error('回答の内側を選択してください')
-      const pageScrollTop = (panel.querySelector('.result-content') as HTMLElement | null)?.scrollTop ?? 0
+      const resultContent = panel.querySelector('.result-content') as HTMLElement | null
+      const pageScrollTop = bodyAnchor && resultContent
+        ? Math.max(0, resultContent.getBoundingClientRect().top - resultBounds.top)
+        : resultContent?.scrollTop ?? 0
       const overlay = panel.querySelector('.grading-capture-overlay') as HTMLElement | null
       const markers = panel.querySelector('.grading-study-markers') as HTMLElement | null
       const previousOverlayDisplay = overlay?.style.display
@@ -1067,7 +1071,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
       setGradingError(null)
 
-      const gradingResult: BookQuestionResult = { ...response.result, referenceQuestion: question }
+      const gradingResult: BookQuestionResult = { ...response.result, referenceQuestion: question, referenceRegionAnchor: 'answer-body' }
       const gradingStepId = `grading_${crypto.randomUUID()}`
       let savedTraceId: string | undefined
       if (traceId) {

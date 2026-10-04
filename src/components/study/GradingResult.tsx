@@ -25,6 +25,8 @@ const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName
   const isBookQuestion = result?.pageType === 'book-question'
   const bookResult = result as BookQuestionResult | null
   const referencePages = bookResult?.referencePages || []
+  const anchorToBody = isBookQuestion && bookResult?.referenceRegionAnchor === 'answer-body'
+  const markers = typeof studyMarkers === 'function' ? studyMarkers(viewportRef) : studyMarkers
   const savedMedia = useMemo(() => bookResult?.referenceMedia ? normalizeReferenceMedia(bookResult.referenceMedia) : undefined,
     [bookResult?.referenceMedia])
 
@@ -54,12 +56,13 @@ const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName
     <div className="grading-result-content" ref={viewportRef}>
       <div className="result-content">
         <div className="result-inner">
-          {typeof studyMarkers === 'function' ? studyMarkers(viewportRef) : studyMarkers}
+          {!anchorToBody && markers}
           {isBookQuestion ? (
             <BookAnswer text={result?.overallComment || result?.rawResponse || ''}
               referencePages={referencePages} onOpenPage={onOpenReferencePage}
               question={bookResult?.referenceQuestion} model={modelName || undefined}
-              referenceMedia={savedMedia} onMediaResolved={onReferenceMediaResolved} />
+              referenceMedia={savedMedia} onMediaResolved={onReferenceMediaResolved}
+              studyMarkers={anchorToBody ? markers : undefined} anchorToBody={anchorToBody} />
           ) : result && validProblems.length > 0 ? (
             <div className="problems-list">
               {validProblems.map((problem, index) => (
