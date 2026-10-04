@@ -87,6 +87,8 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   // Zoom & Pan state
   const [zoom, setZoom] = useState(1.0)
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 })
+  const viewportRef = useRef({ zoom, panOffset })
+  viewportRef.current = { zoom, panOffset }
   const [isPanning, setIsPanning] = useState(false)
   const [isCtrlPressed, setIsCtrlPressed] = useState(false)
   const panStartRef = useRef<{ x: number; y: number } | null>(null)
@@ -513,11 +515,19 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     if (!container) return
 
     const handleWheelNative = (e: WheelEvent) => {
-      if (e.ctrlKey) {
-        e.preventDefault()
-        e.stopPropagation()
+      if (e.defaultPrevented || e.buttons !== 0) return
+      if (e.target instanceof Element && e.target.closest(
+        '.voice-text-editor, input, textarea, select, button, [contenteditable="true"], [role="dialog"]'
+      )) return
+      const deltaY = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? container.clientHeight : 1)
+      if (!Number.isFinite(deltaY) || deltaY === 0) return
+      e.preventDefault()
+      e.stopPropagation()
+      // Successive native wheel events can arrive before React renders the last one.
+      const { zoom, panOffset } = viewportRef.current
+      if (e.ctrlKey || e.metaKey) {
 
-        const delta = -e.deltaY
+        const delta = -deltaY
         const scaleFactor = 1.1
         const newZoom = delta > 0 ? zoom * scaleFactor : zoom / scaleFactor
         const clampedZoom = Math.min(Math.max(newZoom, 0.2), 5.0)
@@ -530,14 +540,18 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
         const contentX = (mouseX - panOffset.x) / zoom
         const contentY = (mouseY - panOffset.y) / zoom
 
-        setPanOffset({
+        const nextPan = {
           x: mouseX - contentX * clampedZoom,
           y: mouseY - contentY * clampedZoom
-        })
+        }
+        viewportRef.current = { zoom: clampedZoom, panOffset: nextPan }
+        setPanOffset(nextPan)
         setZoom(clampedZoom)
       } else {
         // Normal scroll translates to pan
-        setPanOffset(prev => ({ ...prev, y: prev.y - e.deltaY }))
+        const nextPan = { ...panOffset, y: panOffset.y - deltaY }
+        viewportRef.current = { zoom, panOffset: nextPan }
+        setPanOffset(nextPan)
       }
     }
 

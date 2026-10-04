@@ -15,6 +15,55 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(__dirname,
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
 }).outputText, { exports: panelWheelExports });
 const { getPanelWheelDestination } = panelWheelExports;
+
+function answerWheelHarness() {
+    class Element { constructor(control = false) { this.control = control; } closest() { return this.control ? this : null; } }
+    const viewportRef = { current: { zoom: 1, panOffset: { x: 0, y: 0 } } };
+    const updates = [];
+    const run = handler('handleWheelNative', { Element, viewportRef,
+        container: { clientHeight: 500, getBoundingClientRect: () => ({ left: 100, top: 80 }) },
+        setZoom: value => updates.push(['zoom', value]), setPanOffset: value => updates.push(['pan', value]) }, 'AnswerPanel');
+    const send = (options = {}) => {
+        let prevented = false, stopped = false;
+        run({ target: new Element(), buttons: 0, deltaY: 100, deltaMode: 0, clientX: 300, clientY: 280,
+            preventDefault() { prevented = true; }, stopPropagation() { stopped = true; }, ...options });
+        return { prevented, stopped };
+    };
+    return { viewportRef, updates, send, control: () => new Element(true) };
+}
+
+test('writing-area wheel leaves text editors and consumed or drawing events alone', () => {
+    const h = answerWheelHarness();
+    for (const options of [{ target: h.control() }, { target: h.control(), ctrlKey: true },
+        { defaultPrevented: true }, { buttons: 1 }, { deltaY: 0 }, { deltaY: NaN }]) {
+        assert.deepEqual(h.send(options), { prevented: false, stopped: false });
+        assert.equal(h.updates.length, 0);
+    }
+    assert.deepEqual(h.send({ deltaY: 3, deltaMode: 1 }), { prevented: true, stopped: true });
+    assert.equal(h.viewportRef.current.panOffset.y, -48);
+    h.send({ deltaY: 1, deltaMode: 2 });
+    assert.equal(h.viewportRef.current.panOffset.y, -548);
+});
+
+test('rapid writing-area wheel events accumulate and keep the zoom focus stable', () => {
+    const h = answerWheelHarness();
+    h.send({ deltaY: 10 });
+    h.send({ deltaY: 20 });
+    assert.equal(h.viewportRef.current.panOffset.y, -30);
+    const focus = () => {
+        const { zoom, panOffset } = h.viewportRef.current;
+        return [(200 - panOffset.x) / zoom, (200 - panOffset.y) / zoom];
+    };
+    const before = focus();
+    h.send({ deltaY: -100, ctrlKey: true });
+    h.send({ deltaY: -100, metaKey: true });
+    assert.ok(Math.abs(h.viewportRef.current.zoom - 1.21) < 1e-10);
+    focus().forEach((value, index) => assert.ok(Math.abs(value - before[index]) < 1e-10));
+    for (let i = 0; i < 30; i++) h.send({ deltaY: -100, ctrlKey: true });
+    assert.equal(h.viewportRef.current.zoom, 5);
+    for (let i = 0; i < 50; i++) h.send({ deltaY: 100, ctrlKey: true });
+    assert.equal(h.viewportRef.current.zoom, 0.2);
+});
 function handler(name, adapters, component = 'StudyPanel') {
     const componentAst = component === 'StudyPanel' ? ast : ts.createSourceFile(component,
         fs.readFileSync(path.join(__dirname, '../src/components/study/' + component + '.tsx'), 'utf8'),
