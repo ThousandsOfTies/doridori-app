@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiHome, FiX, FiHelpCircle, FiLoader, FiType, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiHome, FiHelpCircle, FiLoader, FiType, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
 import { BiEraser, BiSelection } from 'react-icons/bi';
 
 export type TextDirection = 'horizontal' | 'vertical-rl' | 'vertical-lr';
@@ -53,7 +53,6 @@ interface StudyToolbarProps {
 
     // Answer panel actions (shown when on answer panel)
     onGrade?: () => void;
-    onDeleteStudyTrace?: () => void;
     selectedModel?: string;
     setSelectedModel?: (model: string) => void;
     availableModels?: Array<{ id: string; name: string; description?: string }>;
@@ -90,7 +89,6 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     eraserSize,
     setEraserSize,
     onGrade,
-    onDeleteStudyTrace,
     selectedModel,
     setSelectedModel,
     availableModels,
@@ -170,21 +168,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         }}>
                             {breadcrumbs.map((crumb, i) => (
                                 <React.Fragment key={i}>
-                                    {i > 0 && (i === 1 && onDeleteStudyTrace ? (
-                                        <span className="study-trace-link-connector">
-                                            <span aria-hidden="true">─</span>
-                                            <button
-                                                type="button"
-                                                className="study-trace-unlink-button"
-                                                onClick={onDeleteStudyTrace}
-                                                title="PDFからこの問い合わせ履歴へのリンクを削除"
-                                                aria-label="PDFからこの問い合わせ履歴へのリンクを削除"
-                                            >
-                                                <FiX size={16} />
-                                            </button>
-                                            <span aria-hidden="true">→</span>
-                                        </span>
-                                    ) : <span style={{ color: '#bbb', fontSize: '13px', flexShrink: 0 }}>›</span>)}
+                                    {i > 0 && <span style={{ color: '#bbb', fontSize: '13px', flexShrink: 0 }}>›</span>}
                                     <span
                                         onClick={crumb.isCurrent ? undefined : crumb.onClick}
                                         style={{

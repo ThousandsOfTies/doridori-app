@@ -1418,7 +1418,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
 
   const isOnAnswerPanel = activePanel?.type === 'answer'
   const isPenActive = isOnAnswerPanel ? !isEraserMode && !isTextMode : isDrawingMode
-  const activeTraceId = activePanel?.type !== 'pdf' ? activePanel?.traceId : undefined
   const activeResultHasBranches = activePanel?.type === 'grading' &&
     studyTraces.filter(trace => trace.parentTraceId === activePanel.traceId &&
       trace.parentStepId === activePanel.stepId).length > 1
@@ -1536,24 +1535,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       setStudyTraces(previous => [...previous.filter(trace => !ids.has(trace.id)), ...snapshot.traces as BookStudyTrace[]])
     } catch (error) {
       console.error('質問の印を元に戻せませんでした:', error)
-    }
-  }
-
-  const deleteActiveStudyTrace = async () => {
-    if (!activeTraceId || isGrading || traceUndo.busy || !confirm('PDF上の印と、そこから続く質問・回答履歴を削除しますか？')) return
-    try {
-      let rootId = activeTraceId
-      const ancestors = new Set<string>()
-      while (true) {
-        if (ancestors.has(rootId)) throw new Error('質問履歴の接続が不正です')
-        ancestors.add(rootId)
-        const parentId = studyTraces.find(trace => trace.id === rootId)?.parentTraceId
-        if (!parentId) break
-        rootId = parentId
-      }
-      await deleteStudyTrace(rootId)
-    } catch (error) {
-      console.error('質問の印を削除できませんでした:', error)
     }
   }
 
@@ -1947,7 +1928,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
           eraserSize={eraserSize}
           setEraserSize={setEraserSize}
           onGrade={isOnAnswerPanel ? handleGradeFromToolbar : undefined}
-          onDeleteStudyTrace={activeTraceId ? deleteActiveStudyTrace : undefined}
           selectedModel={selectedModel}
           setSelectedModel={setSelectedModel}
           availableModels={availableModels}
