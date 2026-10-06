@@ -21,7 +21,8 @@ import { askBookQuestion, readBookQuestion } from '../../book/bookKnowledgeApi'
 import { saveBookReferenceMedia } from '../../book/bookReferenceMediaStorage'
 import type { BookQuestionResult, ReferenceMediaResult } from '../../book/bookReferenceMedia'
 import { useBookIndex } from '../../book/useBookIndex'
-import { BookIndexPanel } from './BookIndexPanel'
+import { BookIndexBadge } from '../book/BookIndexBadge'
+import { BookReferenceOptions } from '../book/BookReferenceOptions'
 import { useStudyTraceUndo } from '@home-teacher/common/hooks/useStudyTraceUndo'
 import { deletePDFStudyTraceTree, restorePDFStudyTraceDeletion } from '@home-teacher/common/utils/indexedDB'
 
@@ -41,6 +42,7 @@ interface StudyPanelProps {
   pdfRecord: PDFFileRecord
   pdfId: string
   onBack?: () => void
+  onOpenSettings?: () => void
 }
 
 const SPLIT_RATIO_STORAGE_KEY = 'doridori.splitRatio'
@@ -105,7 +107,7 @@ type PanelData =
   | { type: 'answer'; questionImage: string; sourcePageNumbers: number[]; source?: 'grading'; traceId?: string; stepId?: string; initialDrawing?: Blob | null; initialTexts?: PDFStudyAnswerState['texts']; focusRegion?: PDFStudyRegion; imageFocusRegion?: ResultRegion; pageDisplayWidth?: number; pageScrollTop?: number; fullPageQuestion?: boolean }
   | { type: 'grading'; result: GradingResponseResult; modelName: string | null; responseTime: number | null; sourcePageNumbers: number[]; traceId?: string; stepId?: string }
 
-const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
+const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProps) => {
   const { t } = useTranslation()
   // Refs
   const paneARef = useRef<PDFPaneHandle>(null)
@@ -174,7 +176,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     }
   })
   const bookIndex = useBookIndex(pdfId, pdfDoc, numPages)
-  const [showBookIndex, setShowBookIndex] = useState(false)
+  const [showBookReferenceOptions, setShowBookReferenceOptions] = useState(false)
   const [includeLaterPages, setIncludeLaterPages] = useState(false)
 
   // Grading State (Additional)
@@ -1605,9 +1607,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
           )}
         </div>
       )}
-      <BookIndexPanel bookIndex={bookIndex} numPages={numPages} canReadPDF={!!pdfDoc}
-        isOpen={showBookIndex} onToggle={() => setShowBookIndex(value => !value)}
-        includeLaterPages={includeLaterPages} onIncludeLaterPagesChange={setIncludeLaterPages} />
       {isGrading && bookAgentStatus && <div className="book-agent-status" role="status">{bookAgentStatus}</div>}
       {/* Main Content Area: PDF Panes */}
       <div
@@ -1861,6 +1860,8 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       <div className="pdf-viewer">
         <StudyToolbar
           onBack={onBack}
+          bookIndexStatus={<BookIndexBadge summary={numPages ? bookIndex.summary : null} expanded={showBookReferenceOptions}
+            onClick={() => setShowBookReferenceOptions(value => !value)} />}
           showStudyMarkers={showStudyMarkers}
           onToggleStudyMarkers={activePanel?.type === 'pdf' ? toggleStudyMarkers : undefined}
           breadcrumbs={visibleBreadcrumbPanels.map((panel, i) => ({
@@ -1905,6 +1906,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
           availableModels={availableModels}
           defaultModelName={defaultModelName}
         />
+
+        {showBookReferenceOptions && <BookReferenceOptions summary={bookIndex.summary}
+          onClose={() => setShowBookReferenceOptions(false)} onOpenSettings={onOpenSettings}
+          includeLaterPages={includeLaterPages} onIncludeLaterPagesChange={setIncludeLaterPages} />}
 
         <div ref={panelNavigationRef} style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
           {panelStack.map((panel, i) => (

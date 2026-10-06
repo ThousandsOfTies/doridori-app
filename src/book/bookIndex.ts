@@ -1,3 +1,5 @@
+import type { BookIndexSummary } from './bookIndexStatus'
+
 export interface BookPassage {
   start: number
   end: number
@@ -23,18 +25,62 @@ export interface RetrievedPassage {
 
 const DB_NAME = 'DoriDoriBookIndexDB'
 const STORE_NAME = 'pages'
+const SUMMARY_DB_NAME = 'DoriDoriBookIndexStatusDB'
+const SUMMARY_STORE_NAME = 'books'
+export const BOOK_INDEX_CHANGED_EVENT = 'doridori-book-index-changed'
 
 function openIndexDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1)
     request.onupgradeneeded = () => {
       const db = request.result
-      const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' })
-      store.createIndex('pdfId', 'pdfId')
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' })
+        store.createIndex('pdfId', 'pdfId')
+      }
     }
-    request.onsuccess = () => resolve(request.result)
+    request.onsuccess = () => {
+      request.result.onversionchange = () => request.result.close()
+      resolve(request.result)
+    }
     request.onerror = () => reject(request.error)
   })
+}
+
+// Keep the text/vector database at version 1 so already-open older clients can
+// continue reading it. List badges use this small, separate metadata database.
+function openSummaryDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(SUMMARY_DB_NAME, 1)
+    request.onupgradeneeded = () => request.result.createObjectStore(SUMMARY_STORE_NAME, { keyPath: 'pdfId' })
+    request.onsuccess = () => { request.result.onversionchange = () => request.result.close(); resolve(request.result) }
+    request.onerror = () => reject(request.error)
+  })
+}
+
+export async function loadBookIndexSummary(pdfId: string): Promise<BookIndexSummary | null> {
+  const db = await openSummaryDB()
+  try {
+    return await new Promise((resolve, reject) => {
+      const request = db.transaction(SUMMARY_STORE_NAME, 'readonly').objectStore(SUMMARY_STORE_NAME).get(pdfId)
+      request.onsuccess = () => resolve(request.result || null)
+      request.onerror = () => reject(request.error)
+    })
+  } finally { db.close() }
+}
+
+export async function saveBookIndexSummary(summary: BookIndexSummary): Promise<void> {
+  const db = await openSummaryDB()
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(SUMMARY_STORE_NAME, 'readwrite')
+      transaction.objectStore(SUMMARY_STORE_NAME).put(summary)
+      transaction.oncomplete = () => resolve()
+      transaction.onerror = () => reject(transaction.error)
+      transaction.onabort = () => reject(transaction.error)
+    })
+  } finally { db.close() }
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(BOOK_INDEX_CHANGED_EVENT, { detail: summary.pdfId }))
 }
 
 export async function loadBookPages(pdfId: string): Promise<BookPageIndex[]> {
@@ -91,12 +137,11 @@ export async function removeDeletedBookIndexes(): Promise<void> {
   try {
     await new Promise<void>((resolve, reject) => {
       const transaction = db.transaction(STORE_NAME, 'readwrite')
-      const store = transaction.objectStore(STORE_NAME)
-      const cursor = store.openCursor()
+      const cursor = transaction.objectStore(STORE_NAME).openCursor()
       cursor.onsuccess = () => {
         const item = cursor.result
         if (item) {
-          if (!validPdfIds.has((item.value as BookPageIndex).pdfId)) item.delete()
+          if (!validPdfIds.has(item.value.pdfId)) item.delete()
           item.continue()
         }
       }
@@ -107,6 +152,19 @@ export async function removeDeletedBookIndexes(): Promise<void> {
   } finally {
     db.close()
   }
+  const summaryDB = await openSummaryDB()
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const transaction = summaryDB.transaction(SUMMARY_STORE_NAME, 'readwrite')
+      const request = transaction.objectStore(SUMMARY_STORE_NAME).openCursor()
+      request.onsuccess = () => {
+        const item = request.result
+        if (item) { if (!validPdfIds.has(item.value.pdfId)) item.delete(); item.continue() }
+      }
+      transaction.oncomplete = () => resolve()
+      transaction.onerror = () => reject(transaction.error)
+    })
+  } finally { summaryDB.close() }
 }
 
 export function splitBookText(text: string): BookPassage[] {

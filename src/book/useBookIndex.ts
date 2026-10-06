@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { embedBookTexts } from './bookKnowledgeApi'
-import { BookPageIndex, loadBookPages, retrieveBookPassages, saveBookPage } from './bookIndex'
+import { BookPageIndex, loadBookPages, retrieveBookPassages, saveBookPage, saveBookIndexSummary } from './bookIndex'
+import { summarizeBookIndex } from './bookIndexStatus'
 import { readBookPageText } from './bookPageText'
 import { resolveBookContext } from './bookContextTools'
 import type { BookContextRequest } from '../../shared/bookAgentProtocol'
@@ -18,6 +19,7 @@ function averageVector(page: BookPageIndex): number[] | null {
 
 export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, numPages: number) {
   const [pages, setPages] = useState<BookPageIndex[]>([])
+  const [loadedPdfId, setLoadedPdfId] = useState<string | null>(null)
   const [phase, setPhase] = useState<IndexPhase>('idle')
   const [progress, setProgress] = useState(0)
   const [embeddingProgress, setEmbeddingProgress] = useState({ done: 0, total: 0 })
@@ -31,12 +33,20 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
     loadBookPages(pdfId).then(saved => {
       if (!active) return
       setPages(saved)
+      setLoadedPdfId(pdfId)
       setProgress(saved.length)
-      setPhase(numPages && saved.length === numPages && saved.every(page => page.passages.every(p => p.vector))
+      const summary = summarizeBookIndex(pdfId, saved, numPages)
+      setPhase(summary.state === 'complete' || summary.state === 'no-text'
         ? 'complete' : 'idle')
     }).catch(error => { if (active) setError(String(error)) })
     return () => { active = false; cancelRef.current = true }
   }, [pdfId, numPages])
+
+  const summary = useMemo(() => summarizeBookIndex(pdfId, pages, numPages), [pdfId, pages, numPages])
+  useEffect(() => {
+    if (loadedPdfId !== pdfId || !numPages) return
+    saveBookIndexSummary(summary).catch(reason => setError(`索引の状態を保存できませんでした: ${String(reason)}`))
+  }, [summary, loadedPdfId, pdfId, numPages])
 
   const stopIndexing = useCallback(() => { cancelRef.current = true }, [])
 
@@ -70,7 +80,7 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
 
       setPhase('embedding')
       const pending = [...byPage.values()].flatMap(page => page.passages.map((passage, index) => ({ page, passage, index })))
-        .filter(item => !item.passage.vector)
+        .filter(item => !item.passage.vector?.length)
       setEmbeddingProgress({ done: 0, total: pending.length })
       for (let offset = 0; offset < pending.length; offset += 8) {
         if (cancelRef.current) break
@@ -87,6 +97,7 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
       const indexed = [...byPage.values()]
       const averaged = indexed.map(page => ({ page, vector: averageVector(page) }))
       for (const item of averaged) {
+        if (cancelRef.current) { setPhase('stopped'); return }
         if (!item.vector) continue
         item.page.relatedPages = averaged.filter(other => other.page !== item.page && other.vector)
           .map(other => ({ pageNumber: other.page.pageNumber,
@@ -102,6 +113,10 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
       setError(reason instanceof Error ? reason.message : String(reason))
       setPhase('stopped')
     } finally {
+      // An in-flight embedding batch may finish after the settings view closes.
+      // Refresh persisted status even when React no longer runs this hook's effects.
+      try { await saveBookIndexSummary(summarizeBookIndex(pdfId, await loadBookPages(pdfId), numPages)) }
+      catch (reason) { setError(`索引の状態を保存できませんでした: ${String(reason)}`) }
       runningRef.current = false
     }
   }, [pdfDoc, pdfId, numPages, readPage])
@@ -143,6 +158,6 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
 
   const textPageCount = pages.filter(page => page.text.trim()).length
   const missingTextPageCount = pages.length - textPageCount
-  return { pages, phase, progress, textPageCount, missingTextPageCount,
+  return { pages, phase, progress, textPageCount, missingTextPageCount, summary,
     embeddingProgress, error, startIndexing, stopIndexing, answerContextRequest }
 }

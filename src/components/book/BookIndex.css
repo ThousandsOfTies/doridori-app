@@ -1,0 +1,32 @@
+.book-index-badge { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 34px; width: 34px; height: 34px; padding: 0; border: 1px solid #d4dce2; border-radius: 9px; color: #84929f; background: #f6f8fa; vertical-align: middle; }
+button.book-index-badge { cursor: pointer; }
+.toolbar button.book-index-badge { position: relative; display: inline-flex; flex: 0 0 34px; width: 34px; height: 34px; padding: 0; }
+button.book-index-badge:hover { filter: brightness(.96); }
+button.book-index-badge:focus-visible { outline: 2px solid #267bbb; outline-offset: 3px; }
+.book-index-badge.complete, .toolbar button.book-index-badge.complete { color: #238451; border-color: #a5d6b8; background: #eaf7ef; }
+.book-index-badge.partial, .toolbar button.book-index-badge.partial { color: #af741b; border-color: #e5ca93; background: #fff6e7; }
+.book-index-badge.no-text, .toolbar button.book-index-badge.no-text { color: #9a6254; background: #fbefeb; }
+.book-index-badge-mark { position: absolute; right: -3px; bottom: -3px; display: flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: inherit; border: 1px solid currentColor; font-size: 11px; }
+.book-index-settings { flex: 0 0 auto; background: white; color: #243746; border-bottom: 1px solid #d9e2e9; font-size: 13px; }
+.book-index-settings > summary { display: flex; align-items: center; gap: 12px; padding: 9px 20px; cursor: pointer; list-style: none; }
+.book-index-settings > summary::-webkit-details-marker { display: none; }
+.book-index-settings > summary::after { content: '⌄'; margin-left: auto; font-size: 20px; }
+.book-index-settings[open] > summary::after { content: '⌃'; }
+.book-index-settings > summary > span:last-of-type { color: #657888; }
+.book-index-settings-body { padding: 0 20px 14px; max-height: 40vh; overflow: auto; }
+.book-index-settings-body p, .book-reference-options p { margin: 8px 0; line-height: 1.6; }
+.book-index-progress { font-weight: 600; }
+.book-index-settings progress { display: block; width: 100%; height: 10px; margin: 10px 0; }
+.book-index-note { background: #fff5dd; border-radius: 6px; padding: 9px; }
+.book-index-note a { color: #245474; }
+.book-index-error { color: #b3261e; overflow-wrap: anywhere; }
+.book-index-actions { display: flex; justify-content: flex-end; margin: 10px 0; }
+.book-index-actions button, .book-reference-settings-link { background: #237ab5; color: white; border: 0; border-radius: 6px; padding: 9px 14px; cursor: pointer; font-size: 13px; }
+.book-index-actions button:disabled { opacity: .5; cursor: default; }
+.book-index-settings-body small { display: block; color: #657888; }
+.book-reference-options { position: absolute; top: 64px; left: 20px; z-index: 10002; width: min(340px, calc(100vw - 40px)); padding: 16px; border: 1px solid #cbd9e5; border-radius: 12px; background: white; box-shadow: 0 8px 30px #0003; color: #243746; font-size: 13px; }
+.book-reference-heading { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+.book-reference-heading button { border: 0; background: transparent; color: #657888; font-size: 22px; cursor: pointer; }
+.book-index-option { display: flex; gap: 8px; align-items: center; margin: 14px 0; }
+.book-reference-settings-link { width: 100%; }
+@media (max-width: 600px) { .book-index-settings > summary { gap: 10px; padding: 8px 12px; flex-wrap: wrap; } .book-index-settings > summary > span:last-of-type { font-size: 11px; } .book-index-settings-body { padding: 0 12px 12px; } }

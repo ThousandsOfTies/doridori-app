@@ -6,6 +6,8 @@ import PDFEditorPanel from '@home-teacher/common/components/admin/PDFEditorLoade
 import { PDFFileRecord } from '@home-teacher/common/utils/indexedDB'
 import { useAppInitializer } from '@home-teacher/common/hooks/useAppInitializer'
 import { removeDeletedBookIndexes } from './book/bookIndex'
+import { SavedBookIndexBadge } from './components/book/BookIndexBadge'
+import { BookIndexSettings } from './components/book/BookIndexSettings'
 
 type AppView = 'admin' | 'viewer' | 'editor'
 
@@ -103,6 +105,7 @@ function App() {
           onUpdate={handleUpdate}
           studyTabLabel="Study"
           maxPDFFileSizeMB={512}
+          renderPDFStatus={record => <SavedBookIndexBadge record={record} onOpenSettings={() => handleEditPDF(record)} />}
         />
       ) : currentView === 'viewer' && selectedPDF ? (
         <StudyPanel
@@ -110,6 +113,7 @@ function App() {
           pdfRecord={selectedPDF}
           pdfId={selectedPDF.id}
           onBack={handleBackToAdmin}
+          onOpenSettings={() => handleEditPDF(selectedPDF)}
         />
       ) : currentView === 'editor' && selectedPDF ? (
         <PDFEditorPanel
@@ -117,6 +121,7 @@ function App() {
           pdfRecord={selectedPDF}
           pdfId={selectedPDF.id}
           onBack={handleBackToAdmin}
+          renderAdditionalSettings={({ pdfDoc, numPages }) => <BookIndexSettings pdfId={selectedPDF.id} pdfDoc={pdfDoc} numPages={numPages} />}
         />
       ) : (
         <div>No PDF selected</div>

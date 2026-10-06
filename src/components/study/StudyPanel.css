@@ -712,17 +712,4 @@
   border-radius: 8px;
   user-select: none;
 }
-.book-index-launcher { position: absolute; top: 12px; right: 12px; z-index: 10001; }
-.book-index-launcher > button { background: rgba(255,255,255,.96); border: 1px solid #b7cada; border-radius: 18px; padding: 7px 12px; color: #245474; cursor: pointer; box-shadow: 0 2px 8px #0002; }
-.book-index-card { width: min(330px, calc(100vw - 32px)); margin-top: 8px; padding: 16px; border: 1px solid #cbd9e5; border-radius: 12px; background: #fff; box-shadow: 0 8px 30px #0003; color: #243746; font-size: 13px; }
-.book-index-card p { line-height: 1.5; margin: 9px 0; }
-.book-index-progress { font-weight: 600; }
-.book-index-card progress { display: block; width: 100%; height: 10px; }
-.book-index-error { color: #b3261e; overflow-wrap: anywhere; }
 .book-agent-status { position: absolute; bottom: 12px; left: 12px; z-index: 10001; max-width: min(480px, calc(100% - 24px)); padding: 10px 14px; border: 1px solid #b7cada; border-radius: 10px; background: #fffffff5; color: #245474; font-size: 13px; line-height: 1.5; box-shadow: 0 2px 8px #0002; overflow-wrap: anywhere; pointer-events: none; }
-.book-index-note { background: #fff5dd; border-radius: 6px; padding: 9px; }
-.book-index-note a { color: #245474; }
-.book-index-option { display: flex; gap: 7px; align-items: center; margin: 12px 0; }
-.book-index-actions { display: flex; justify-content: flex-end; }
-.book-index-actions button { background: #237ab5; color: white; border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; }
-.book-index-actions button:disabled { opacity: .5; cursor: default; }

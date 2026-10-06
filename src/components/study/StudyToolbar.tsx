@@ -15,6 +15,7 @@ export interface BreadcrumbItem {
 
 interface StudyToolbarProps {
     onBack?: () => void;
+    bookIndexStatus?: React.ReactNode;
     breadcrumbs?: BreadcrumbItem[];
     isSplitView: boolean;
     toggleSplitView: () => void;
@@ -61,6 +62,7 @@ interface StudyToolbarProps {
 
 export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     onBack,
+    bookIndexStatus,
     breadcrumbs,
     isSplitView,
     toggleSplitView,
@@ -157,6 +159,8 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                     <button onClick={onBack} title="ホームに戻る" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                         <FiHome size={20} />
                     </button>
+
+                    {bookIndexStatus}
 
                     {/* パンくず (ホームの横へ移動) */}
                     {breadcrumbs && breadcrumbs.length > 0 && (
