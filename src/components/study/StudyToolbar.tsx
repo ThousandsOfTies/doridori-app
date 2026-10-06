@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiHome, FiHelpCircle, FiLoader, FiType, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiHome, FiSettings, FiHelpCircle, FiLoader, FiType, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
 import { BiEraser, BiSelection } from 'react-icons/bi';
 
 export type TextDirection = 'horizontal' | 'vertical-rl' | 'vertical-lr';
@@ -9,13 +9,14 @@ const ERASER_SIZE_OPTIONS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100] as cons
 
 export interface BreadcrumbItem {
     label: string;
+    content?: React.ReactNode;
     onClick: () => void;
     isCurrent?: boolean;
 }
 
 interface StudyToolbarProps {
     onBack?: () => void;
-    bookIndexStatus?: React.ReactNode;
+    onOpenSettings?: () => void;
     breadcrumbs?: BreadcrumbItem[];
     isSplitView: boolean;
     toggleSplitView: () => void;
@@ -62,7 +63,7 @@ interface StudyToolbarProps {
 
 export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     onBack,
-    bookIndexStatus,
+    onOpenSettings,
     breadcrumbs,
     isSplitView,
     toggleSplitView,
@@ -160,7 +161,10 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         <FiHome size={20} />
                     </button>
 
-                    {bookIndexStatus}
+                    {onOpenSettings && <button type="button" onClick={onOpenSettings}
+                        aria-label="PDFの設定を開く" title="PDFの設定を開く" className="book-settings-button">
+                        <FiSettings size={20} />
+                    </button>}
 
                     {/* パンくず (ホームの横へ移動) */}
                     {breadcrumbs && breadcrumbs.length > 0 && (
@@ -168,25 +172,26 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                             display: 'flex', alignItems: 'center', gap: '2px',
                             flexWrap: 'nowrap', overflowX: 'auto', minWidth: 0,
                             scrollbarWidth: 'none', msOverflowStyle: 'none',
-                            marginLeft: '8px'
+                            marginLeft: '2px', padding: '6px 0'
                         }}>
                             {breadcrumbs.map((crumb, i) => (
                                 <React.Fragment key={i}>
                                     {i > 0 && <span style={{ color: '#bbb', fontSize: '13px', flexShrink: 0 }}>›</span>}
                                     <span
+                                        className={crumb.content ? 'book-cover-breadcrumb' : undefined}
                                         onClick={crumb.isCurrent ? undefined : crumb.onClick}
                                         style={{
                                             fontSize: '13px',
                                             color: crumb.isCurrent ? '#333' : '#2c7be5',
                                             fontWeight: crumb.isCurrent ? 600 : 400,
                                             cursor: crumb.isCurrent ? 'default' : 'pointer',
-                                            padding: '3px 6px',
+                                            padding: crumb.content ? '0 6px' : '3px 6px',
                                             borderRadius: '10px',
                                             whiteSpace: 'nowrap',
                                             flexShrink: 0,
                                         }}
                                     >
-                                        {crumb.label}
+                                        {crumb.content ?? crumb.label}
                                     </span>
                                 </React.Fragment>
                             ))}

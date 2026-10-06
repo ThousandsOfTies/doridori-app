@@ -12,7 +12,7 @@ export function BookReferenceOptions({ summary, onClose, onOpenSettings, include
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const outside = (event: PointerEvent) => {
-      if (event.target instanceof Element && event.target.closest('.book-index-badge')) return
+      if (event.target instanceof Element && event.target.closest('.book-index-dot')) return
       if (event.target instanceof Node && !ref.current?.contains(event.target)) onClose()
     }
     const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose() }

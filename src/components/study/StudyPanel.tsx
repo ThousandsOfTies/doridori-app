@@ -21,7 +21,7 @@ import { askBookQuestion, readBookQuestion } from '../../book/bookKnowledgeApi'
 import { saveBookReferenceMedia } from '../../book/bookReferenceMediaStorage'
 import type { BookQuestionResult, ReferenceMediaResult } from '../../book/bookReferenceMedia'
 import { useBookIndex } from '../../book/useBookIndex'
-import { BookIndexBadge } from '../book/BookIndexBadge'
+import { BookCoverThumbnail } from '../book/BookCoverThumbnail'
 import { BookReferenceOptions } from '../book/BookReferenceOptions'
 import { useStudyTraceUndo } from '@home-teacher/common/hooks/useStudyTraceUndo'
 import { deletePDFStudyTraceTree, restorePDFStudyTraceDeletion } from '@home-teacher/common/utils/indexedDB'
@@ -1860,12 +1860,14 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
       <div className="pdf-viewer">
         <StudyToolbar
           onBack={onBack}
-          bookIndexStatus={<BookIndexBadge summary={numPages ? bookIndex.summary : null} expanded={showBookReferenceOptions}
-            onClick={() => setShowBookReferenceOptions(value => !value)} />}
+          onOpenSettings={onOpenSettings}
           showStudyMarkers={showStudyMarkers}
           onToggleStudyMarkers={activePanel?.type === 'pdf' ? toggleStudyMarkers : undefined}
           breadcrumbs={visibleBreadcrumbPanels.map((panel, i) => ({
             label: getPanelLabel(panel),
+            content: panel.type === 'pdf' ? <BookCoverThumbnail record={pdfRecord} size="toolbar"
+              summary={numPages ? bookIndex.summary : null} expanded={showBookReferenceOptions}
+              onStatusClick={() => setShowBookReferenceOptions(value => !value)} /> : undefined,
             onClick: () => navigateToPanel(i),
             isCurrent: i === activePanelIndex
           }))}

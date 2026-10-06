@@ -1,7 +1,7 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { useBookIndex } from '../../book/useBookIndex'
 import { bookIndexLabel } from '../../book/bookIndexStatus'
-import { BookIndexBadge } from './BookIndexBadge'
+import { BookIndexDot } from './BookIndexDot'
 
 export function BookIndexSettings({ pdfId, pdfDoc, numPages }: {
   pdfId: string; pdfDoc: PDFDocumentProxy | null; numPages: number
@@ -10,7 +10,7 @@ export function BookIndexSettings({ pdfId, pdfDoc, numPages }: {
   const running = ['reading', 'embedding', 'connecting'].includes(bookIndex.phase)
   const done = ['complete', 'no-text'].includes(bookIndex.summary.state)
   return <details className="book-index-settings">
-    <summary><BookIndexBadge summary={numPages ? bookIndex.summary : null} /><strong>本の索引</strong>
+    <summary><BookIndexDot summary={numPages ? bookIndex.summary : null} /><strong>本の索引</strong>
       <span>{bookIndexLabel(numPages ? bookIndex.summary : null)}</span></summary>
     <section className="book-index-settings-body" aria-label="本の索引の設定">
       <p>PDFに入っている文字から索引を作ります。意味検索のため本文をAIへ送信するので、本文の量に応じて使用量が発生します。本の画像をAIで文字起こしする処理は行いません。</p>

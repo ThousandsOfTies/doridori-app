@@ -1,12 +1,24 @@
-.book-index-badge { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 34px; width: 34px; height: 34px; padding: 0; border: 1px solid #d4dce2; border-radius: 9px; color: #84929f; background: #f6f8fa; vertical-align: middle; }
-button.book-index-badge { cursor: pointer; }
-.toolbar button.book-index-badge { position: relative; display: inline-flex; flex: 0 0 34px; width: 34px; height: 34px; padding: 0; }
-button.book-index-badge:hover { filter: brightness(.96); }
-button.book-index-badge:focus-visible { outline: 2px solid #267bbb; outline-offset: 3px; }
-.book-index-badge.complete, .toolbar button.book-index-badge.complete { color: #238451; border-color: #a5d6b8; background: #eaf7ef; }
-.book-index-badge.partial, .toolbar button.book-index-badge.partial { color: #af741b; border-color: #e5ca93; background: #fff6e7; }
-.book-index-badge.no-text, .toolbar button.book-index-badge.no-text { color: #9a6254; background: #fbefeb; }
-.book-index-badge-mark { position: absolute; right: -3px; bottom: -3px; display: flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: inherit; border: 1px solid currentColor; font-size: 11px; }
+.book-index-dot { --book-index-color: #e1e5e9; display: inline-block; box-sizing: border-box; flex: 0 0 16px; width: 16px; height: 16px; padding: 0; border: 2px solid white; border-radius: 50%; background: var(--book-index-color); box-shadow: 0 0 0 1px #8a989c30; vertical-align: middle; }
+.book-index-dot.no-text, .book-index-dot.unavailable { --book-index-color: #f2c8c7; }
+.book-index-dot.partial { --book-index-color: #f7e3a8; }
+.book-index-dot.complete { --book-index-color: #c4e5cf; }
+button.book-index-dot { cursor: pointer; }
+button.book-index-dot::before { content: ''; position: absolute; inset: -7px; border-radius: 50%; }
+button.book-index-dot:focus-visible { outline: 2px solid #267bbb; outline-offset: 3px; }
+.toolbar button.book-index-dot { min-width: 16px; width: 16px; height: 16px; padding: 0; border: 2px solid white; border-radius: 50%; background: var(--book-index-color); box-shadow: 0 0 0 1px #8a989c30; }
+.book-cover-thumbnail { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; vertical-align: middle; }
+.book-cover-thumbnail.list { width: 64px; height: 64px; }
+.book-cover-thumbnail.compact { height: 34px; }
+.book-cover-image { position: relative; display: inline-flex; vertical-align: middle; }
+.book-cover-image > img { display: block; max-width: 64px; max-height: 64px; width: auto; height: auto; object-fit: contain; border-radius: 4px; border: 1px solid #ddd; box-sizing: border-box; }
+.book-cover-thumbnail.compact .book-cover-image > img { max-width: 48px; max-height: 34px; }
+.book-cover-image > .book-index-dot { position: absolute; top: -5px; right: -5px; z-index: 1; }
+.book-cover-placeholder { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 56px; background: #f6f8fa; color: #81909b; border: 1px solid #ddd; border-radius: 4px; }
+.book-cover-placeholder svg { width: 28px; height: 28px; }
+.book-cover-thumbnail.compact .book-cover-placeholder { width: 24px; height: 32px; }
+.book-cover-thumbnail.compact .book-cover-placeholder svg { width: 18px; height: 18px; }
+.book-cover-breadcrumb { display: inline-flex; align-items: center; }
+.toolbar .book-settings-button { flex-shrink: 0; padding: 0; width: 34px; color: #657888; }
 .book-index-settings { flex: 0 0 auto; background: white; color: #243746; border-bottom: 1px solid #d9e2e9; font-size: 13px; }
 .book-index-settings > summary { display: flex; align-items: center; gap: 12px; padding: 9px 20px; cursor: pointer; list-style: none; }
 .book-index-settings > summary::-webkit-details-marker { display: none; }
