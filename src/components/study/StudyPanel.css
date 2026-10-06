@@ -719,6 +719,8 @@
 .book-index-progress { font-weight: 600; }
 .book-index-card progress { display: block; width: 100%; height: 10px; }
 .book-index-error { color: #b3261e; overflow-wrap: anywhere; }
+.book-index-note { background: #fff5dd; border-radius: 6px; padding: 9px; }
+.book-index-note a { color: #245474; }
 .book-index-option { display: flex; gap: 7px; align-items: center; margin: 12px 0; }
 .book-index-actions { display: flex; justify-content: flex-end; }
 .book-index-actions button { background: #237ab5; color: white; border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; }

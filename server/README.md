@@ -2,6 +2,8 @@
 
 CopiCopiと同じく、ソースを `src/`、設定と依存をこの `server/`、ビルド成果物を `dist/` に分ける。
 入口は `src/index.ts`、本への質問処理は `src/bookKnowledgeRoutes.ts`。
+本の索引は `/api/book/embed` に本文テキストだけを送る。全ページ画像のAI文字起こしは提供せず、旧 `/api/book/ocr` は410を返してAIを呼ばない。
+画像だけのPDFはPDF24などで事前OCRする。選択画像についての質問 `/api/book/ask` と、手書き質問の読み取り `/api/book/read-question` は利用できる。
 本の回答に添える参考図の検索は `src/bookReferenceMedia.ts` の `/api/book/reference-media` で扱う。
 Wikimedia CommonsのAPIから出典・作者・ライセンス付きの資料を取得し、Geminiで関連性を選ぶ。追加の検索APIキーは不要。
 参考資料の検索は回答APIから独立し、検索失敗は `status: unavailable` として返す。

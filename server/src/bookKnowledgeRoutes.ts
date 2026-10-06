@@ -21,20 +21,9 @@ function lowThinking(model: string) {
 
 export function registerBookKnowledgeRoutes(app: Express, ai: GoogleGenAI, defaultModel: string): void {
   registerBookReferenceMediaRoute(app, ai, defaultModel)
-  app.post('/api/book/ocr', async (req, res) => {
-    const image = imagePart(req.body?.imageData)
-    if (!image) return res.status(400).json({ error: 'PNGまたはJPEGのページ画像が必要です' })
-    try {
-      const response = await ai.models.generateContent({
-        model: defaultModel,
-        contents: [{ role: 'user', parts: [image, { text: 'この本のページを忠実に文字起こししてください。見える本文を段落ごとに返し、要約・推測・説明・Markdown装飾はしないでください。判読できない箇所は［判読不能］と記してください。ページ番号だけの画像なら空文字を返してください。' }] }],
-        config: lowThinking(defaultModel),
-      })
-      res.json({ text: response.text?.trim() || '' })
-    } catch (error) {
-      console.error('Book OCR failed:', error)
-      res.status(502).json({ error: errorMessage(error) })
-    }
+  // Old clients must not generate per-page OCR charges for an entire book.
+  app.post('/api/book/ocr', (_req, res) => {
+    res.status(410).json({ error: '本の画像ページのAI文字起こしは停止しています。アプリを更新するか、PDF24などでOCRしたPDFを取り込んでください。' })
   })
 
   app.post('/api/book/embed', async (req, res) => {

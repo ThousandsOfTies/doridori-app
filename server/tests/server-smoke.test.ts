@@ -76,7 +76,7 @@ for (const mode of ['source', 'compiled']) {
     assert.equal(models.default, 'gemini-layout-test')
     assert.ok(models.models.some((model: { id: string }) => model.id === 'gemini-3.8-flash'))
     assert.equal((await fetch(`${base}/api/subjects`)).status, 200)
-    for (const endpoint of ['/api/grade-work', '/api/book/ocr', '/api/book/embed',
+    for (const endpoint of ['/api/grade-work', '/api/book/embed',
       '/api/book/read-question', '/api/book/ask', '/api/book/reference-media']) {
       const response = await fetch(`${base}${endpoint}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
@@ -84,6 +84,12 @@ for (const mode of ['source', 'compiled']) {
       assert.equal(response.status, 400, endpoint)
       assert.equal(typeof (await response.json()).error, 'string')
     }
+    const ocr = await fetch(`${base}/api/book/ocr`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageData: 'data:image/png;base64,YQ==' }),
+    })
+    assert.equal(ocr.status, 410)
+    assert.match((await ocr.json()).error, /PDF24/)
     const tutor = await fetch(`${base}/api/ask-question`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
     })

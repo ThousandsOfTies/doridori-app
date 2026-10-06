@@ -21,6 +21,7 @@ import { askBookQuestion, readBookQuestion } from '../../book/bookKnowledgeApi'
 import { saveBookReferenceMedia } from '../../book/bookReferenceMediaStorage'
 import type { BookQuestionResult, ReferenceMediaResult } from '../../book/bookReferenceMedia'
 import { useBookIndex } from '../../book/useBookIndex'
+import { BookIndexPanel } from './BookIndexPanel'
 import { useStudyTraceUndo } from '@home-teacher/common/hooks/useStudyTraceUndo'
 import { deletePDFStudyTraceTree, restorePDFStudyTraceDeletion } from '@home-teacher/common/utils/indexedDB'
 
@@ -1603,40 +1604,9 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
           )}
         </div>
       )}
-      <div className="book-index-launcher">
-        <button type="button" onClick={() => setShowBookIndex(value => !value)}
-          aria-expanded={showBookIndex} title="本全体の検索索引">
-          📚 本の索引 {bookIndex.pages.length}/{numPages || '…'}
-        </button>
-        {showBookIndex && (
-          <div className="book-index-card">
-            <strong>本の内容を参照</strong>
-            <p>本文をページごとに読み取り、質問に関係する箇所を探せるようにします。意味検索と画像ページの文字認識にGeminiを使うため、ページ数に応じてAPI使用量が発生します。</p>
-            <p className="book-index-progress" role="status">
-              {bookIndex.phase === 'reading' ? `本文を読み取り中: ${bookIndex.progress}/${numPages}ページ` :
-                bookIndex.phase === 'embedding' ? `意味検索の索引を作成中: ${bookIndex.embeddingProgress.done}/${bookIndex.embeddingProgress.total}箇所` :
-                bookIndex.phase === 'connecting' ? '関連ページを結びつけています…' :
-                bookIndex.phase === 'complete' ? `索引完成: ${numPages}ページ` :
-                `読み取り済み: ${bookIndex.pages.length}/${numPages}ページ`}
-            </p>
-            {numPages > 0 && <progress max={numPages} value={bookIndex.progress} />}
-            {bookIndex.error && <p className="book-index-error">{bookIndex.error}</p>}
-            <label className="book-index-option">
-              <input type="checkbox" checked={includeLaterPages}
-                onChange={event => setIncludeLaterPages(event.target.checked)} />
-              今より先のページも検索する
-            </label>
-            <div className="book-index-actions">
-              {['reading', 'embedding', 'connecting'].includes(bookIndex.phase) ?
-                <button type="button" onClick={bookIndex.stopIndexing}>ここで停止</button> :
-                <button type="button" disabled={!pdfDoc || bookIndex.phase === 'complete'}
-                  onClick={() => void bookIndex.startIndexing()}>
-                  {bookIndex.pages.length ? '索引作成を再開' : '索引を作成'}
-                </button>}
-            </div>
-          </div>
-        )}
-      </div>
+      <BookIndexPanel bookIndex={bookIndex} numPages={numPages} canReadPDF={!!pdfDoc}
+        isOpen={showBookIndex} onToggle={() => setShowBookIndex(value => !value)}
+        includeLaterPages={includeLaterPages} onIncludeLaterPagesChange={setIncludeLaterPages} />
       {/* Main Content Area: PDF Panes */}
       <div
         ref={splitContainerRef}

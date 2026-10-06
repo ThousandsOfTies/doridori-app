@@ -1,28 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
-import { embedBookTexts, recognizeBookPage } from './bookKnowledgeApi'
-import { BookPageIndex, loadBookPages, retrieveBookPassages, saveBookPage, splitBookText } from './bookIndex'
+import { embedBookTexts } from './bookKnowledgeApi'
+import { BookPageIndex, loadBookPages, retrieveBookPassages, saveBookPage } from './bookIndex'
+import { readBookPageText } from './bookPageText'
 
 export type IndexPhase = 'idle' | 'reading' | 'embedding' | 'connecting' | 'complete' | 'stopped'
-
-function pageText(items: Awaited<ReturnType<Awaited<ReturnType<PDFDocumentProxy['getPage']>>['getTextContent']>>['items']): string {
-  return items.map(item => 'str' in item ? `${item.str}${item.hasEOL ? '\n' : ' '}` : '').join('').replace(/[ \t]+/g, ' ').trim()
-}
-
-async function pageImage(page: Awaited<ReturnType<PDFDocumentProxy['getPage']>>): Promise<string> {
-  const base = page.getViewport({ scale: 1 })
-  const viewport = page.getViewport({ scale: Math.min(2.2, 1700 / base.width) })
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.ceil(viewport.width)
-  canvas.height = Math.ceil(viewport.height)
-  const context = canvas.getContext('2d')
-  if (!context) throw new Error('ページ画像を作成できませんでした')
-  await page.render({ canvasContext: context, viewport }).promise
-  const image = canvas.toDataURL('image/jpeg', 0.82)
-  canvas.width = 0
-  canvas.height = 0
-  return image
-}
 
 function averageVector(page: BookPageIndex): number[] | null {
   const vectors = page.passages.map(passage => passage.vector).filter((vector): vector is number[] => !!vector)
@@ -59,16 +41,7 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
   const readPage = useCallback(async (number: number): Promise<BookPageIndex> => {
     if (!pdfDoc) throw new Error('PDFを読み込み中です')
     const pdfPage = await pdfDoc.getPage(number)
-    let text = pageText((await pdfPage.getTextContent()).items)
-    let source: BookPageIndex['source'] = 'pdf-text'
-    if (text.length < 80) {
-      text = await recognizeBookPage(await pageImage(pdfPage))
-      source = text ? 'ocr' : 'empty'
-    }
-    const page: BookPageIndex = {
-      id: `${pdfId}:${number}`, pdfId, pageNumber: number, text, source,
-      passages: splitBookText(text), updatedAt: Date.now(),
-    }
+    const page = await readBookPageText(pdfId, number, pdfPage)
     await saveBookPage(page)
     return page
   }, [pdfDoc, pdfId])
@@ -146,9 +119,12 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
     return {
       passages: retrieveBookPassages(latest, query, vector, currentPage,
         includeLaterPages ? numPages : currentPage),
-      indexedPages: latest.length,
+      indexedPages: latest.filter(page => page.text.trim()).length,
     }
   }, [pdfId, numPages, pdfDoc, readPage])
 
-  return { pages, phase, progress, embeddingProgress, error, startIndexing, stopIndexing, searchBook }
+  const textPageCount = pages.filter(page => page.text.trim()).length
+  const missingTextPageCount = pages.length - textPageCount
+  return { pages, phase, progress, textPageCount, missingTextPageCount,
+    embeddingProgress, error, startIndexing, stopIndexing, searchBook }
 }

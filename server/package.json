@@ -7,7 +7,7 @@
     "typecheck": "tsc --noEmit",
     "build": "npm run typecheck && esbuild src/index.ts --bundle --platform=node --target=node20 --format=esm --packages=external --outfile=dist/index.js",
     "start": "node dist/index.js",
-    "test": "npm run build && tsx --test tests/book-reference-media.test.ts tests/runtime-paths.test.ts tests/server-smoke.test.ts"
+    "test": "npm run build && tsx --test tests/book-reference-media.test.ts tests/book-index-cost.test.ts tests/runtime-paths.test.ts tests/server-smoke.test.ts"
   },
   "engines": {
     "node": ">=20"

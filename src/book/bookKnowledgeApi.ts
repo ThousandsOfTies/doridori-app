@@ -23,11 +23,6 @@ async function postBookApi<T>(path: string, body: unknown): Promise<T> {
   throw new Error('APIへの接続を再試行しましたが失敗しました')
 }
 
-export const recognizeBookPage = async (imageData: string): Promise<string> => {
-  const result = await postBookApi<{ text: string }>('ocr', { imageData })
-  return result.text
-}
-
 export const embedBookTexts = async (texts: string[]): Promise<number[][]> => {
   const result = await postBookApi<{ vectors: number[][] }>('embed', { texts })
   return result.vectors
