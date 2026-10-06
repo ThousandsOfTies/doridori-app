@@ -105,6 +105,7 @@ function App() {
           onUpdate={handleUpdate}
           studyTabLabel="Study"
           maxPDFFileSizeMB={512}
+          checkPDFTextOnImport
           renderPDFThumbnail={record => <SavedBookCoverThumbnail record={record} />}
         />
       ) : currentView === 'viewer' && selectedPDF ? (
@@ -121,7 +122,7 @@ function App() {
           pdfRecord={selectedPDF}
           pdfId={selectedPDF.id}
           onBack={handleBackToAdmin}
-          renderAdditionalSettings={({ pdfDoc, numPages }) => <BookIndexSettings pdfId={selectedPDF.id} pdfDoc={pdfDoc} numPages={numPages} />}
+          renderAdditionalSettings={({ pdfDoc, numPages }) => <BookIndexSettings pdfId={selectedPDF.id} pdfDoc={pdfDoc} numPages={numPages} textInspection={selectedPDF.textInspection} />}
         />
       ) : (
         <div>No PDF selected</div>

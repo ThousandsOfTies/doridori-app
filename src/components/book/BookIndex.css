@@ -1,5 +1,6 @@
 .book-index-dot { --book-index-color: #e1e5e9; display: inline-block; box-sizing: border-box; flex: 0 0 16px; width: 16px; height: 16px; padding: 0; border: 2px solid white; border-radius: 50%; background: var(--book-index-color); box-shadow: 0 0 0 1px #8a989c30; vertical-align: middle; }
-.book-index-dot.no-text, .book-index-dot.unavailable { --book-index-color: #f2c8c7; }
+.book-index-dot.failed { --book-index-color: #f2c8c7; }
+.book-index-dot.transparent { background: transparent; border-color: transparent; box-shadow: none; }
 .book-index-dot.partial { --book-index-color: #f7e3a8; }
 .book-index-dot.complete { --book-index-color: #c4e5cf; }
 button.book-index-dot { cursor: pointer; }

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { IDBFactory } from 'fake-indexeddb'
 import { loadBookIndexSummary, loadBookPages, saveBookIndexSummary, saveBookPage, type BookPageIndex } from '../src/book/bookIndex'
-import { summarizeBookIndex } from '../src/book/bookIndexStatus'
+import { bookIndexDotState, summarizeBookIndex, withBookIndexAttempt, withPDFTextInspection } from '../src/book/bookIndexStatus'
 import { loadOrRecoverBookIndexSummary } from '../src/book/bookIndexStatusLoader'
 
 globalThis.indexedDB = new IDBFactory()
@@ -33,6 +33,58 @@ test('duplicate, invalid and other-book pages cannot make an index appear comple
   const summary = summarizeBookIndex('book', pages, 2)
   assert.equal(summary.state, 'partial')
   assert.equal(summary.checkedPages, 1)
+})
+
+test('only a complete no-text inspection establishes absence before indexing, and actual text wins', () => {
+  const none = summarizeBookIndex('book', [], 0)
+  const absent = { status: 'absent' as const, checkedPages: 3, totalPages: 3 }
+  assert.equal(withPDFTextInspection(none, absent).state, 'no-text')
+  assert.equal(withPDFTextInspection(none, absent).checkedPages, 3)
+  assert.equal(withPDFTextInspection(none, { ...absent, status: 'unknown' }).state, 'none')
+  assert.equal(withPDFTextInspection(none, { ...absent, status: 'present' }).state, 'none')
+  assert.equal(withPDFTextInspection(none, { ...absent, checkedPages: 1 }).state, 'none')
+  assert.equal(withPDFTextInspection(summarizeBookIndex('book', [], 4), absent).state, 'none')
+  assert.equal(withPDFTextInspection(summarizeBookIndex('book', [page('book', 1)], 3), absent).state, 'partial')
+})
+
+test('dots represent known text and index progress; absent or unconfirmed text keeps a transparent slot', () => {
+  const present = { status: 'present' as const, checkedPages: 2, totalPages: 3 }
+  const absent = { status: 'absent' as const, checkedPages: 3, totalPages: 3 }
+  const none = summarizeBookIndex('book', [], 3)
+  const partial = summarizeBookIndex('book', [page('book', 2)], 3)
+  const complete = summarizeBookIndex('book', [page('book', 1, ''), page('book', 2, '本文', true), page('book', 3, '')], 3)
+  assert.equal(bookIndexDotState(none, present), 'none')
+  assert.equal(bookIndexDotState(withBookIndexAttempt(none, present, false, true), present), 'partial')
+  assert.equal(bookIndexDotState(partial), 'partial')
+  assert.equal(bookIndexDotState(complete), 'complete')
+  assert.equal(bookIndexDotState(withBookIndexAttempt(partial, present, true), present), 'failed')
+  assert.equal(bookIndexDotState(none, present, true), 'failed')
+  assert.equal(bookIndexDotState(withPDFTextInspection(none, absent), absent), 'transparent')
+  assert.equal(bookIndexDotState(withBookIndexAttempt(none, absent, true), absent, true), 'transparent')
+  assert.equal(bookIndexDotState(none, { ...absent, status: 'unknown' }), 'transparent')
+  assert.equal(bookIndexDotState(null), 'transparent')
+  // Text from an older saved index is sufficient even without import metadata.
+  assert.equal(bookIndexDotState(partial, absent), 'partial')
+})
+
+test('failed attempts remain red after reopening; cancellation stays yellow and a successful retry becomes green', async () => {
+  const pdfId = 'retry-book'
+  const present = { status: 'present' as const, checkedPages: 1, totalPages: 1 }
+  const saved = page(pdfId, 1)
+  await saveBookPage(saved)
+  const partial = summarizeBookIndex(pdfId, [saved], 1)
+  const failed = withBookIndexAttempt(partial, present, true)
+  await saveBookIndexSummary(failed)
+  const reopened = await loadOrRecoverBookIndexSummary(pdfId, async () => { throw new Error('Cached failure must be retained') })
+  assert.equal(bookIndexDotState(reopened, present), 'failed')
+  assert.deepEqual(await loadBookPages(pdfId), [saved])
+  assert.equal(bookIndexDotState(withBookIndexAttempt(partial, present), present), 'partial')
+  await saveBookIndexSummary(withBookIndexAttempt(partial, present, false, true))
+  assert.equal(bookIndexDotState(await loadBookIndexSummary(pdfId), present), 'partial')
+  saved.passages[0].vector = [1, 0]
+  await saveBookPage(saved)
+  await saveBookIndexSummary(withBookIndexAttempt(summarizeBookIndex(pdfId, [saved], 1), present))
+  assert.equal(bookIndexDotState(await loadBookIndexSummary(pdfId), present), 'complete')
 })
 
 test('legacy page records are retained; recovery reads the PDF count once and caches only status metadata', async () => {

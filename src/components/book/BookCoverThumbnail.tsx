@@ -3,6 +3,7 @@ import { FiFileText } from 'react-icons/fi'
 import type { PDFFileRecord } from '@home-teacher/common/utils/indexedDB'
 import { BOOK_INDEX_CHANGED_EVENT } from '../../book/bookIndex'
 import type { BookIndexSummary } from '../../book/bookIndexStatus'
+import { withPDFTextInspection } from '../../book/bookIndexStatus'
 import { getSavedBookIndexSummary } from '../../book/bookIndexStatusLoader'
 import { BookIndexDot } from './BookIndexDot'
 
@@ -18,7 +19,8 @@ export function BookCoverThumbnail({ record, summary, size = 'list', onStatusCli
     <span className="book-cover-image">
       {record.thumbnail ? <img src={record.thumbnail} alt={record.fileName} /> :
         <span className="book-cover-placeholder" role="img" aria-label={record.fileName}><FiFileText /></span>}
-      <BookIndexDot summary={summary} unavailable={unavailable} onClick={onStatusClick} expanded={expanded} />
+      <BookIndexDot summary={summary && withPDFTextInspection(summary, record.textInspection)} textInspection={record.textInspection}
+        unavailable={unavailable} onClick={onStatusClick} expanded={expanded} />
     </span>
   </span>
 }

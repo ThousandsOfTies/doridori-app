@@ -9,7 +9,7 @@
     "test": "npm run test:grading-source && npm run test:pdf-range && npm run test:book-index && npm run test:reference-media && npm run test:deployment && npm run test:server && npm run test:server-packaging",
     "test:server-packaging": "node --test tests/server-packaging.test.mjs",
     "test:deployment": "node --test tests/shared-api-deployment.test.mjs",
-    "test:book-index": "tsx --test tests/book-index.test.ts tests/book-agent.test.ts tests/book-index-status.test.ts",
+    "test:book-index": "tsx --test tests/book-index.test.ts tests/book-agent.test.ts tests/book-index-status.test.ts tests/pdf-text-inspection.test.ts",
     "test:grading-source": "node --test tests/grading-source.test.cjs",
     "test:pdf-range": "tsx --test tests/pdf-range.test.ts",
     "prepare:server": "node scripts/prepare-cloud-run.mjs",

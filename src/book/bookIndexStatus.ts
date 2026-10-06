@@ -1,6 +1,7 @@
 import type { BookPageIndex } from './bookIndex'
+import type { PDFTextInspection } from '@home-teacher/common/utils/pdfTextInspection'
 
-export type BookIndexState = 'none' | 'partial' | 'complete' | 'no-text'
+export type BookIndexState = 'none' | 'partial' | 'complete' | 'no-text' | 'failed'
 
 export interface BookIndexSummary {
   pdfId: string
@@ -32,6 +33,32 @@ export function bookIndexLabel(summary: BookIndexSummary | null): string {
   if (!summary) return '索引の状態を確認中'
   if (summary.state === 'none') return '索引未作成'
   if (summary.state === 'no-text') return '文字情報がありません'
+  if (summary.state === 'failed') return '索引作成に失敗しました。続きから再開できます'
   if (summary.state === 'complete') return `索引作成済み：本文 ${summary.textPages}/${summary.totalPages}ページ`
   return `索引は途中：本文 ${summary.textPages}${summary.totalPages ? `/${summary.totalPages}` : ''}ページ、意味検索 ${summary.embeddedPassages}/${summary.totalPassages}箇所`
+}
+
+export function withPDFTextInspection(summary: BookIndexSummary, inspection?: PDFTextInspection): BookIndexSummary {
+  // Trust only a successful whole-book check. Actual indexed text takes precedence
+  // over import metadata, and an unknown/partial check never means "no text".
+  if (inspection?.status !== 'absent' || !Number.isInteger(inspection.totalPages) || inspection.totalPages <= 0 ||
+    inspection.checkedPages !== inspection.totalPages || summary.textPages || summary.totalPassages ||
+    summary.totalPages && summary.totalPages !== inspection.totalPages) return summary
+  return { ...summary, state: 'no-text', checkedPages: inspection.checkedPages, totalPages: inspection.totalPages }
+}
+
+export function hasBookText(summary: BookIndexSummary | null, inspection?: PDFTextInspection): boolean {
+  return !!summary?.textPages || summary?.state !== 'no-text' && inspection?.status === 'present'
+}
+
+export function withBookIndexAttempt(summary: BookIndexSummary, inspection?: PDFTextInspection, failed = false, running = false): BookIndexSummary {
+  const result = withPDFTextInspection(summary, inspection)
+  if (!hasBookText(result, inspection)) return result
+  return failed ? { ...result, state: 'failed' } : running ? { ...result, state: 'partial' } : result
+}
+
+export function bookIndexDotState(summary: BookIndexSummary | null, inspection?: PDFTextInspection, unavailable = false): string {
+  if (!hasBookText(summary, inspection)) return 'transparent'
+  if (unavailable || summary?.state === 'failed') return 'failed'
+  return summary?.state === 'complete' ? 'complete' : summary?.state === 'partial' ? 'partial' : 'none'
 }

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { embedBookTexts } from './bookKnowledgeApi'
-import { BookPageIndex, loadBookPages, retrieveBookPassages, saveBookPage, saveBookIndexSummary } from './bookIndex'
-import { summarizeBookIndex } from './bookIndexStatus'
+import { BookPageIndex, loadBookPages, loadBookIndexSummary, retrieveBookPassages, saveBookPage, saveBookIndexSummary } from './bookIndex'
+import { summarizeBookIndex, withBookIndexAttempt } from './bookIndexStatus'
+import type { PDFTextInspection } from '@home-teacher/common/utils/pdfTextInspection'
 import { readBookPageText } from './bookPageText'
 import { resolveBookContext } from './bookContextTools'
 import type { BookContextRequest } from '../../shared/bookAgentProtocol'
@@ -17,9 +18,11 @@ function averageVector(page: BookPageIndex): number[] | null {
   return length ? average.map(value => value / length) : null
 }
 
-export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, numPages: number) {
+export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, numPages: number, textInspection?: PDFTextInspection) {
   const [pages, setPages] = useState<BookPageIndex[]>([])
   const [loadedPdfId, setLoadedPdfId] = useState<string | null>(null)
+  const [loadedPageCount, setLoadedPageCount] = useState(-1)
+  const [hasIndexFailure, setHasIndexFailure] = useState(false)
   const [phase, setPhase] = useState<IndexPhase>('idle')
   const [progress, setProgress] = useState(0)
   const [embeddingProgress, setEmbeddingProgress] = useState({ done: 0, total: 0 })
@@ -30,23 +33,28 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
   useEffect(() => {
     let active = true
     cancelRef.current = true
-    loadBookPages(pdfId).then(saved => {
+    Promise.all([loadBookPages(pdfId), loadBookIndexSummary(pdfId)]).then(([saved, cached]) => {
       if (!active) return
       setPages(saved)
       setLoadedPdfId(pdfId)
+      setLoadedPageCount(numPages)
+      setHasIndexFailure(cached?.state === 'failed')
+      setError(cached?.state === 'failed' ? '前回の索引作成に失敗しました。保存済みの部分から再開できます。' : null)
       setProgress(saved.length)
-      const summary = summarizeBookIndex(pdfId, saved, numPages)
+      const summary = withBookIndexAttempt(summarizeBookIndex(pdfId, saved, numPages), textInspection, cached?.state === 'failed')
       setPhase(summary.state === 'complete' || summary.state === 'no-text'
         ? 'complete' : 'idle')
     }).catch(error => { if (active) setError(String(error)) })
     return () => { active = false; cancelRef.current = true }
-  }, [pdfId, numPages])
+  }, [pdfId, numPages, textInspection])
 
-  const summary = useMemo(() => summarizeBookIndex(pdfId, pages, numPages), [pdfId, pages, numPages])
+  const loaded = loadedPdfId === pdfId && loadedPageCount === numPages
+  const summary = useMemo(() => withBookIndexAttempt(summarizeBookIndex(pdfId, pages, numPages), textInspection,
+    hasIndexFailure, ['reading', 'embedding', 'connecting'].includes(phase)), [pdfId, pages, numPages, textInspection, hasIndexFailure, phase])
   useEffect(() => {
-    if (loadedPdfId !== pdfId || !numPages) return
+    if (!loaded || !numPages) return
     saveBookIndexSummary(summary).catch(reason => setError(`索引の状態を保存できませんでした: ${String(reason)}`))
-  }, [summary, loadedPdfId, pdfId, numPages])
+  }, [summary, loaded, numPages])
 
   const stopIndexing = useCallback(() => { cancelRef.current = true }, [])
 
@@ -59,10 +67,12 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
   }, [pdfDoc, pdfId])
 
   const startIndexing = useCallback(async () => {
-    if (!pdfDoc || !numPages || runningRef.current) return
+    if (!pdfDoc || !numPages || !loaded || runningRef.current) return
     runningRef.current = true
     cancelRef.current = false
     setError(null)
+    setHasIndexFailure(false)
+    let attemptFailed = false
     try {
       const saved = await loadBookPages(pdfId)
       const byPage = new Map(saved.map(page => [page.pageNumber, page]))
@@ -110,16 +120,18 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
       setPages(indexed.sort((a, b) => a.pageNumber - b.pageNumber))
       setPhase('complete')
     } catch (reason) {
+      attemptFailed = true
+      setHasIndexFailure(true)
       setError(reason instanceof Error ? reason.message : String(reason))
       setPhase('stopped')
     } finally {
       // An in-flight embedding batch may finish after the settings view closes.
       // Refresh persisted status even when React no longer runs this hook's effects.
-      try { await saveBookIndexSummary(summarizeBookIndex(pdfId, await loadBookPages(pdfId), numPages)) }
+      try { await saveBookIndexSummary(withBookIndexAttempt(summarizeBookIndex(pdfId, await loadBookPages(pdfId), numPages), textInspection, attemptFailed)) }
       catch (reason) { setError(`索引の状態を保存できませんでした: ${String(reason)}`) }
       runningRef.current = false
     }
-  }, [pdfDoc, pdfId, numPages, readPage])
+  }, [pdfDoc, pdfId, numPages, readPage, textInspection, loaded])
 
   const searchBook = useCallback(async (query: string, currentPage: number, includeLaterPages: boolean) => {
     const latest = await loadBookPages(pdfId)
@@ -158,6 +170,6 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
 
   const textPageCount = pages.filter(page => page.text.trim()).length
   const missingTextPageCount = pages.length - textPageCount
-  return { pages, phase, progress, textPageCount, missingTextPageCount, summary,
+  return { pages, phase, progress, textPageCount, missingTextPageCount, summary, loaded,
     embeddingProgress, error, startIndexing, stopIndexing, answerContextRequest }
 }

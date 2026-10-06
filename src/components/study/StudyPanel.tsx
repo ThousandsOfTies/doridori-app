@@ -175,7 +175,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
       console.error(err)
     }
   })
-  const bookIndex = useBookIndex(pdfId, pdfDoc, numPages)
+  const bookIndex = useBookIndex(pdfId, pdfDoc, numPages, pdfRecord.textInspection)
   const [showBookReferenceOptions, setShowBookReferenceOptions] = useState(false)
   const [includeLaterPages, setIncludeLaterPages] = useState(false)
 
