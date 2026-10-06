@@ -5,6 +5,8 @@ import 'katex/dist/katex.min.css'
 import type { ReactNode } from 'react'
 import BookReferenceMedia from './BookReferenceMedia'
 import type { ReferenceMediaResult } from '../../book/bookReferenceMedia'
+import BookContextHistory from './BookContextHistory'
+import type { BookContextTrace } from '../../../shared/bookAgentProtocol'
 
 interface BookAnswerProps {
   text: string
@@ -16,9 +18,10 @@ interface BookAnswerProps {
   onMediaResolved?: (media: ReferenceMediaResult) => void
   studyMarkers?: ReactNode
   anchorToBody?: boolean
+  contextRequests?: BookContextTrace[]
 }
 
-export default function BookAnswer({ text, referencePages, onOpenPage, question, model, referenceMedia, onMediaResolved, studyMarkers, anchorToBody }: BookAnswerProps) {
+export default function BookAnswer({ text, referencePages, onOpenPage, question, model, referenceMedia, onMediaResolved, studyMarkers, anchorToBody, contextRequests }: BookAnswerProps) {
   // Keep older answers' geometry intact so their saved follow-up regions still line up.
   const hasReferenceMedia = question !== undefined || referenceMedia !== undefined
   return (
@@ -45,6 +48,7 @@ export default function BookAnswer({ text, referencePages, onOpenPage, question,
           ))}
         </div>
       )}
+      {contextRequests && <BookContextHistory entries={contextRequests} onOpenPage={onOpenPage} />}
     </div>
   )
 }

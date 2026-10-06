@@ -151,6 +151,18 @@
 .book-answer-references { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-top: 1px solid #d4e3f3; margin-top: 20px; padding-top: 12px; font-size: 13px; }
 .book-answer-references button { border: 1px solid #b8d9f6; color: #126bb1; background: white; border-radius: 16px; padding: 4px 10px; cursor: pointer; }
 .book-answer-references button:hover { background: #e4f3ff; }
+.book-context-history { margin-top: 18px; border-top: 1px solid #d4e3f3; padding-top: 12px; font-size: 13px; line-height: 1.65; }
+.book-context-history summary, .book-context-history button { position: relative; z-index: 10000; cursor: pointer; }
+.book-context-history > summary { color: #126bb1; font-weight: 600; }
+.book-context-history > p, .book-context-purpose { color: #61748a; }
+.book-context-history ol { padding-left: 22px; }
+.book-context-history li { margin: 12px 0; overflow-wrap: anywhere; }
+.book-context-history li > p { margin: 5px 0; }
+.book-context-passage { margin: 8px 0; padding: 8px 10px; border: 1px solid #d4e3f3; border-radius: 8px; background: white; }
+.book-context-passage > p { white-space: pre-wrap; margin: 8px 0; }
+.book-context-passage button { border: 1px solid #b8d9f6; color: #126bb1; background: white; border-radius: 14px; padding: 4px 10px; margin-top: 8px; }
+.book-context-note { color: #805519; }
+.book-context-history summary:focus-visible, .book-context-history button:focus-visible { outline: 3px solid #2490e8; outline-offset: 2px; }
 .book-reference-media { min-width: 0; border-top: 1px solid #d4e3f3; padding-top: 18px; }
 .book-media-heading { display: flex; align-items: center; gap: 8px; color: #126bb1; }
 .book-media-heading > span { font-size: 24px; line-height: 1; }

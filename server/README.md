@@ -4,6 +4,11 @@ CopiCopiと同じく、ソースを `src/`、設定と依存をこの `server/`�
 入口は `src/index.ts`、本への質問処理は `src/bookKnowledgeRoutes.ts`。
 本の索引は `/api/book/embed` に本文テキストだけを送る。全ページ画像のAI文字起こしは提供せず、旧 `/api/book/ocr` は410を返してAIを呼ばない。
 画像だけのPDFはPDF24などで事前OCRする。選択画像についての質問 `/api/book/ask` と、手書き質問の読み取り `/api/book/read-question` は利用できる。
+現行のDoriDoriは `src/bookAgent.ts` の `/api/book/ask-agent` を使用する。初回に質問と `clientCapabilities` を送り、AIのFunction Callingによる `search_book` / `read_book_pages` の要求をブラウザへ返す。
+ブラウザは要求に応じて本文を取得し、同じ質問・画像と `continuation` / `toolResults` をこのAPIへ送り直す。旧 `/api/book/ask` は互換用に維持する。
+本文取得は最大2往復、各往復で最大2要求、各要求で最大3件・各2400文字。先のページの許可は継続中も検証する。
+継続トークンはGEMINI_API_KEYから用途別に導いた鍵で認証付き暗号化し、10分で失効する。Geminiのthought signatureを改変せず保持し、Cloud Runの別インスタンスでも継続できる。APIキーの変更時は進行中の質問をやり直す。
+通信型と上限は `../shared/bookAgentProtocol.ts` にあり、デプロイ用の許可リストにも含める。キーや本文をトークンの外へ露出させず、本文をサーバーログへ保存しない。
 本の回答に添える参考図の検索は `src/bookReferenceMedia.ts` の `/api/book/reference-media` で扱う。
 Wikimedia CommonsのAPIから出典・作者・ライセンス付きの資料を取得し、Geminiで関連性を選ぶ。追加の検索APIキーは不要。
 参考資料の検索は回答APIから独立し、検索失敗は `status: unavailable` として返す。

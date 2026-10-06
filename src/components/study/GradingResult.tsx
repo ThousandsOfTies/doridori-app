@@ -62,7 +62,8 @@ const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName
               referencePages={referencePages} onOpenPage={onOpenReferencePage}
               question={bookResult?.referenceQuestion} model={modelName || undefined}
               referenceMedia={savedMedia} onMediaResolved={onReferenceMediaResolved}
-              studyMarkers={anchorToBody ? markers : undefined} anchorToBody={anchorToBody} />
+              studyMarkers={anchorToBody ? markers : undefined} anchorToBody={anchorToBody}
+              contextRequests={bookResult?.contextRequests} />
           ) : result && validProblems.length > 0 ? (
             <div className="problems-list">
               {validProblems.map((problem, index) => (

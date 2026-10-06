@@ -204,6 +204,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   const isSelectingRef = useRef(false)
   const selectionStartRef = useRef<{ x: number, y: number } | null>(null)
   const [isGrading, setIsGrading] = useState(false)
+  const [bookAgentStatus, setBookAgentStatus] = useState('')
 
   // Tool State
   const [isDrawingMode, setIsDrawingMode] = useState(false)
@@ -763,7 +764,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
   const handleGradingCaptureStart = (e: React.MouseEvent) => {
     if (e.button !== 0) return
     if (e.target instanceof Element && e.target.closest(
-      'button, a, input, textarea, select, [contenteditable="true"], dialog, .book-reference-media',
+      'button, a, input, textarea, select, summary, [contenteditable="true"], dialog, .book-reference-media, .book-context-history',
     )) return
     if (getStudyTraceAtPoint(e.clientX, e.clientY)) return
     const panel = gradingPanelRef.current
@@ -1025,10 +1026,11 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
     pendingDrawingWritesRef.current.set(page, JSON.stringify(newPaths))
   }
 
-  // 本の選択箇所についての質問。本文索引から根拠を探して回答する。
+  // 本の選択箇所について質問し、AIが要求した本文をブラウザで取得する。
   const confirmAndGrade = async (compositeImage: string, sourcePageNumbers: number[], typedQuestion?: string) => {
     if (traceUndo.busy) return
     setIsGrading(true)
+    setBookAgentStatus('質問を確認しています…')
     setGradingError(null)
     const answerPanel = panelStack[activePanelIndex]
     const traceId = answerPanel?.type === 'answer' ? answerPanel.traceId : undefined
@@ -1066,24 +1068,22 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       })
       const currentPage = sourcePageNumbers[0] || pageA
       const question = typedQuestion?.trim() || await readBookQuestion(croppedImageData)
-      const found = await bookIndex.searchBook(question, currentPage, includeLaterPages)
-      const contexts = found.passages.map(item => ({ pageNumber: item.pageNumber, text: item.text.slice(0, 2400) }))
       const preceding = panelStack[activePanelIndex - 1]
       const previousAnswer = preceding?.type === 'grading' ? preceding.result.overallComment : undefined
       const startTime = Date.now()
       const response = await askBookQuestion({
-        questionImageData: croppedImageData, question, contexts, currentPage,
-        indexedPages: found.indexedPages, totalPages: numPages,
+        questionImageData: croppedImageData, question, currentPage,
+        indexedPages: bookIndex.textPageCount, totalPages: numPages,
         includeLaterPages,
-        previousAnswer, model: selectedModel !== 'default' ? selectedModel : undefined,
+        previousAnswer: previousAnswer?.slice(0, 6000), model: selectedModel !== 'default' ? selectedModel : undefined,
+        clientCapabilities: ['search_book', 'read_book_pages'],
+      }, request => bookIndex.answerContextRequest(request, currentPage, includeLaterPages), progress => {
+        setBookAgentStatus(progress.phase === 'searching'
+          ? `先生が本文を確認: ${progress.request?.reason.slice(0, 100) || '関連する箇所を検索しています'}`
+          : '先生が回答を考えています…')
       })
       const endTime = Date.now()
       const clientResponseTimeSeconds = parseFloat(((endTime - startTime) / 1000).toFixed(1))
-
-      if (!response.success) {
-        setGradingError(response.error || '質問への回答に失敗しました')
-        throw new Error(response.error || '質問への回答に失敗しました')
-      }
 
       setGradingError(null)
 
@@ -1118,6 +1118,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       setGradingError(e instanceof Error ? e.message : String(e))
     } finally {
       setIsGrading(false)
+      setBookAgentStatus('')
     }
   }
 
@@ -1607,6 +1608,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack }: StudyPanelProps) => {
       <BookIndexPanel bookIndex={bookIndex} numPages={numPages} canReadPDF={!!pdfDoc}
         isOpen={showBookIndex} onToggle={() => setShowBookIndex(value => !value)}
         includeLaterPages={includeLaterPages} onIncludeLaterPagesChange={setIncludeLaterPages} />
+      {isGrading && bookAgentStatus && <div className="book-agent-status" role="status">{bookAgentStatus}</div>}
       {/* Main Content Area: PDF Panes */}
       <div
         ref={splitContainerRef}

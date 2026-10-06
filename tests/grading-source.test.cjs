@@ -185,7 +185,7 @@ test('question panels retain captured pages despite later PDF navigation', async
     const panels = [], requestedPages = [];
     const noop = () => {};
     const run = handler('confirmAndGrade', {
-        setIsGrading: noop, setGradingError: noop, addStatusMessage: noop,
+        setIsGrading: noop, setGradingError: noop, setBookAgentStatus: noop, addStatusMessage: noop,
         panelStack: [{ type: 'answer', sourcePageNumbers: [5] }], activePanelIndex: 0,
         crypto: { randomUUID: () => 'test' },
         compressImageDataUrl: async value => value,
@@ -195,14 +195,15 @@ test('question panels retain captured pages despite later PDF navigation', async
         },
         selectedModel: 'default',
         readBookQuestion: async () => 'この箇所の意味は？',
-        bookIndex: { searchBook: async (_, page) => {
+        bookIndex: { textPageCount: 3, answerContextRequest: async (_, page) => {
             requestedPages.push(page);
-            return { passages: [{ pageNumber: page, text: '本文' }], indexedPages: 3 };
+            return { id: 'ai-search', contexts: [{ pageNumber: page, text: '本文' }], indexedPages: 3 };
         } },
-        askBookQuestion: async () => ({
-            success: true,
-            result: { pageType: 'book-question', problems: [], overallComment: '説明' },
-        }),
+        askBookQuestion: async (body, resolveContext) => {
+            assert.equal('contexts' in body, false);
+            await resolveContext({ id: 'ai-search', name: 'search_book', query: '確認', reason: '本文を確認' });
+            return { success: true, result: { pageType: 'book-question', problems: [], overallComment: '説明' } };
+        },
         pushPanel: value => panels.push(value),
         pdfId: 'book', pdfRecord: { fileName: 'book.pdf' }, pageA: 99, pageB: 100,
         includeLaterPages: false, numPages: 100, console,
@@ -380,7 +381,7 @@ test('horizontal movement opens an adjacent panel or its sole marker and does no
 test('typed questions are sent directly without handwriting recognition', async () => {
     let asked;
     const run = handler('confirmAndGrade', {
-        setIsGrading() {}, setGradingError() {}, addStatusMessage() {},
+        setIsGrading() {}, setGradingError() {}, setBookAgentStatus() {}, addStatusMessage() {},
         panelStack: [{ type: 'answer', sourcePageNumbers: [4] }],
         activePanelIndex: 0, compressImageDataUrl: async value => value,
         Image: class {
@@ -390,7 +391,7 @@ test('typed questions are sent directly without handwriting recognition', async 
         crypto: { randomUUID: () => 'result' },
         selectedModel: 'default', includeLaterPages: false, numPages: 10, pageA: 4,
         readBookQuestion: async () => { throw new Error('handwriting recognition should not run'); },
-        bookIndex: { searchBook: async () => ({ passages: [], indexedPages: 0 }) },
+        bookIndex: { textPageCount: 0, answerContextRequest: async () => { throw new Error('AI has not requested context'); } },
         askBookQuestion: async body => {
             asked = body;
             return { success: true, result: { pageType: 'book-question', problems: [] } };
@@ -400,6 +401,8 @@ test('typed questions are sent directly without handwriting recognition', async 
     await run('image', [4], '著者はなぜそう考えた？');
     assert.equal(asked.question, '著者はなぜそう考えた？');
     assert.equal(asked.currentPage, 4);
+    assert.equal('contexts' in asked, false);
+    assert.deepEqual(Array.from(asked.clientCapabilities), ['search_book', 'read_book_pages']);
 });
 
 test('answer selection is stored relative to the answer card', () => {
@@ -755,7 +758,7 @@ test('asking again from an earlier question replaces the later saved branch', as
     const panels = [];
     const noop = () => {};
     const run = handler('confirmAndGrade', {
-        setIsGrading: noop, setGradingError: noop, addStatusMessage: noop,
+        setIsGrading: noop, setGradingError: noop, setBookAgentStatus: noop, addStatusMessage: noop,
         panelStack: [{ type: 'answer', traceId: 'trace', stepId: 'answer-original', sourcePageNumbers: [2] }],
         activePanelIndex: 0,
         answerPanelRef: { current: { getDrawingBlob: async () => null } },
@@ -767,7 +770,7 @@ test('asking again from an earlier question replaces the later saved branch', as
         },
         selectedModel: 'default', includeLaterPages: false, numPages: 10, pageA: 1,
         readBookQuestion: async () => 'なぜですか？',
-        bookIndex: { searchBook: async () => ({ passages: [], indexedPages: 0 }) },
+        bookIndex: { textPageCount: 0, answerContextRequest: async () => { throw new Error('AI has not requested context'); } },
         askBookQuestion: async () => ({ success: true, result: { pageType: 'book-question', problems: [] } }),
         appendPDFStudyStep: async (...args) => appended.push(args),
         getPDFStudyTrace: async () => ({ id: 'trace', steps: [{ id: 'answer-original', type: 'answer' }] }),

@@ -1,5 +1,6 @@
-import type { GradeResponse } from '@home-teacher/common/services/api'
-import { createReferenceMediaLoader, type BookQuestionResult } from './bookReferenceMedia'
+import { createReferenceMediaLoader } from './bookReferenceMedia'
+import { runBookAgent, type BookAgentProgress } from './bookAgent'
+import type { BookAgentQuestion, BookAgentStep, BookContextRequest, BookContextResult } from '../../shared/bookAgentProtocol'
 
 const productionApiUrl = 'https://hometeacher-api-736494768812.asia-northeast1.run.app'
 const apiBaseUrl = import.meta.env.VITE_API_URL ||
@@ -33,25 +34,9 @@ export const readBookQuestion = async (imageData: string): Promise<string> => {
   return result.question
 }
 
-export interface BookContext {
-  pageNumber: number
-  text: string
-}
-
-export interface BookQuestionResponse extends GradeResponse {
-  result: BookQuestionResult
-}
-
 export const findBookReferenceMedia = createReferenceMediaLoader(body => postBookApi('reference-media', body))
 
-export const askBookQuestion = (body: {
-  questionImageData: string
-  question: string
-  contexts: BookContext[]
-  currentPage: number
-  indexedPages: number
-  totalPages: number
-  includeLaterPages: boolean
-  previousAnswer?: string
-  model?: string
-}): Promise<BookQuestionResponse> => postBookApi('ask', body)
+export const askBookQuestion = (body: BookAgentQuestion,
+  resolveContext: (request: BookContextRequest) => Promise<BookContextResult>,
+  onProgress?: (progress: BookAgentProgress) => void,
+) => runBookAgent(body, turn => postBookApi<BookAgentStep>('ask-agent', turn), resolveContext, onProgress)

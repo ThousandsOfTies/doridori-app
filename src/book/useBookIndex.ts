@@ -3,6 +3,8 @@ import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { embedBookTexts } from './bookKnowledgeApi'
 import { BookPageIndex, loadBookPages, retrieveBookPassages, saveBookPage } from './bookIndex'
 import { readBookPageText } from './bookPageText'
+import { resolveBookContext } from './bookContextTools'
+import type { BookContextRequest } from '../../shared/bookAgentProtocol'
 
 export type IndexPhase = 'idle' | 'reading' | 'embedding' | 'connecting' | 'complete' | 'stopped'
 
@@ -123,8 +125,24 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
     }
   }, [pdfId, numPages, pdfDoc, readPage])
 
+  const answerContextRequest = useCallback(async (request: BookContextRequest, currentPage: number, includeLaterPages: boolean) => {
+    const saved = await loadBookPages(pdfId)
+    const byPage = new Map(saved.map(page => [page.pageNumber, page]))
+    return resolveBookContext(request, {
+      currentPage, totalPages: numPages, includeLaterPages,
+      search: query => searchBook(query, currentPage, includeLaterPages),
+      readPage: async number => {
+        const page = byPage.get(number) || await readPage(number)
+        byPage.set(number, page)
+        setPages([...byPage.values()].sort((a, b) => a.pageNumber - b.pageNumber))
+        return page
+      },
+      indexedPages: () => [...byPage.values()].filter(page => page.text.trim()).length,
+    })
+  }, [pdfId, numPages, searchBook, readPage])
+
   const textPageCount = pages.filter(page => page.text.trim()).length
   const missingTextPageCount = pages.length - textPageCount
   return { pages, phase, progress, textPageCount, missingTextPageCount,
-    embeddingProgress, error, startIndexing, stopIndexing, searchBook }
+    embeddingProgress, error, startIndexing, stopIndexing, answerContextRequest }
 }

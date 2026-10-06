@@ -2,6 +2,7 @@
 import type { Express } from 'express'
 import { GoogleGenAI, ThinkingLevel } from '@google/genai'
 import { registerBookReferenceMediaRoute } from './bookReferenceMedia'
+import { registerBookAgentRoute } from './bookAgent'
 
 const IMAGE_PATTERN = /^data:(image\/(?:png|jpeg));base64,([A-Za-z0-9+/=]+)$/
 
@@ -21,6 +22,7 @@ function lowThinking(model: string) {
 
 export function registerBookKnowledgeRoutes(app: Express, ai: GoogleGenAI, defaultModel: string): void {
   registerBookReferenceMediaRoute(app, ai, defaultModel)
+  registerBookAgentRoute(app, ai, defaultModel)
   // Old clients must not generate per-page OCR charges for an entire book.
   app.post('/api/book/ocr', (_req, res) => {
     res.status(410).json({ error: '本の画像ページのAI文字起こしは停止しています。アプリを更新するか、PDF24などでOCRしたPDFを取り込んでください。' })

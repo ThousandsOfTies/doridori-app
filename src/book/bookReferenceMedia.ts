@@ -1,4 +1,5 @@
 import type { GradingResponseResult } from '@home-teacher/common/services/api'
+import type { BookContextTrace } from '../../shared/bookAgentProtocol'
 
 export interface ReferenceMedia {
   id: string
@@ -31,6 +32,7 @@ export interface BookQuestionResult extends GradingResponseResult {
   referenceQuestion?: string
   referenceMedia?: ReferenceMediaResult
   referenceRegionAnchor?: 'answer-body'
+  contextRequests?: BookContextTrace[]
 }
 
 function allowedUrl(value: unknown, kind: 'image' | 'source' | 'license'): value is string {

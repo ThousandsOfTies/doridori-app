@@ -5,6 +5,7 @@ COPY app/server/package.json app/server/package-lock.json ./
 RUN npm ci
 COPY app/server/src ./src
 COPY app/server/tsconfig.json ./
+COPY app/shared /workspace/app/shared
 COPY home-teacher-common /workspace/home-teacher-common
 RUN npm run build
 RUN npm prune --omit=dev

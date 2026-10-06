@@ -10,7 +10,8 @@ const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const npmCli = process.env.npm_execpath || path.join(path.dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')
 const files = [
   'server/Dockerfile', 'server/package.json', 'server/package-lock.json', 'server/tsconfig.json',
-  'server/src/index.ts', 'server/src/bookKnowledgeRoutes.ts', 'server/src/bookReferenceMedia.ts', 'server/src/runtimePaths.ts',
+  'server/src/index.ts', 'server/src/bookKnowledgeRoutes.ts', 'server/src/bookAgent.ts', 'server/src/bookReferenceMedia.ts', 'server/src/runtimePaths.ts',
+  'shared/bookAgentProtocol.ts', 'shared/package.json',
 ]
 
 function listFiles(root, relative = '') {
@@ -48,8 +49,8 @@ test('prepared Cloud Run sources exclude secrets and build independently', { tim
   const output = path.join(app, '.cloud-run')
   assert.deepEqual(listFiles(output), [
     '.gcloudignore', 'Dockerfile', 'app/server/package-lock.json', 'app/server/package.json',
-    'app/server/src/bookKnowledgeRoutes.ts', 'app/server/src/bookReferenceMedia.ts', 'app/server/src/index.ts', 'app/server/src/runtimePaths.ts',
-    'app/server/tsconfig.json', 'home-teacher-common/src/constants/grading.ts',
+    'app/server/src/bookAgent.ts', 'app/server/src/bookKnowledgeRoutes.ts', 'app/server/src/bookReferenceMedia.ts', 'app/server/src/index.ts', 'app/server/src/runtimePaths.ts',
+    'app/server/tsconfig.json', 'app/shared/bookAgentProtocol.ts', 'app/shared/package.json', 'home-teacher-common/src/constants/grading.ts',
   ])
   const preparedServer = path.join(output, 'app/server')
   symlinkSync(path.join(appRoot, 'server/node_modules'), path.join(preparedServer, 'node_modules'),
