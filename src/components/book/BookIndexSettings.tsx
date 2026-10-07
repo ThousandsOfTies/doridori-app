@@ -12,7 +12,14 @@ export function BookIndexSettings({ pdfId, pdfDoc, numPages, textInspection }: {
   const done = ['complete', 'no-text'].includes(bookIndex.summary.state)
   return <details className="book-index-settings">
     <summary><BookIndexDot summary={numPages ? bookIndex.summary : null} textInspection={textInspection} /><strong>本の索引</strong>
-      <span>{bookIndexLabel(numPages ? bookIndex.summary : null)}</span></summary>
+      <span className="book-index-summary-status" title={bookIndexLabel(numPages ? bookIndex.summary : null)}>{bookIndexLabel(numPages ? bookIndex.summary : null)}</span>
+      <svg className="book-index-toggle" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="1.5" strokeLinecap="round" aria-hidden="true" focusable="false">
+        <rect x="3" y="3" width="18" height="18" rx="3" />
+        <path d="M7 12h10" />
+        <path className="book-index-toggle-plus" d="M12 7v10" />
+      </svg>
+    </summary>
     <section className="book-index-settings-body" aria-label="本の索引の設定">
       <p>PDFに入っている文字から索引を作ります。意味検索のため本文をAIへ送信するので、本文の量に応じて使用量が発生します。本の画像をAIで文字起こしする処理は行いません。</p>
       {textInspection?.status === 'present' && <p>登録時の確認：文字情報があります。画像だけのページが含まれる場合もあります。</p>}

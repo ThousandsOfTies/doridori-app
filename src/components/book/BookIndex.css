@@ -21,11 +21,13 @@ button.book-index-dot:focus-visible { outline: 2px solid #267bbb; outline-offset
 .book-cover-breadcrumb { display: inline-flex; align-items: center; }
 .toolbar .book-settings-button { flex-shrink: 0; padding: 0; width: 34px; color: #657888; }
 .book-index-settings { flex: 0 0 auto; background: white; color: #243746; border-bottom: 1px solid #d9e2e9; font-size: 13px; }
-.book-index-settings > summary { display: flex; align-items: center; gap: 12px; padding: 9px 20px; cursor: pointer; list-style: none; }
+.book-index-settings > summary { display: flex; align-items: center; gap: 12px; box-sizing: border-box; height: 46px; padding: 9px 20px; cursor: pointer; list-style: none; }
 .book-index-settings > summary::-webkit-details-marker { display: none; }
-.book-index-settings > summary::after { content: '⌄'; margin-left: auto; font-size: 20px; }
-.book-index-settings[open] > summary::after { content: '⌃'; }
-.book-index-settings > summary > span:last-of-type { color: #657888; }
+.book-index-settings > summary > strong { flex-shrink: 0; white-space: nowrap; }
+.book-index-summary-status { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #657888; }
+.book-index-toggle { display: block; flex: 0 0 28px; width: 28px; height: 28px; color: #657888; }
+.book-index-settings[open] .book-index-toggle-plus { display: none; }
+.book-index-settings > summary:focus-visible { outline: 2px solid #267bbb; outline-offset: -2px; }
 .book-index-settings-body { padding: 0 20px 14px; max-height: 40vh; overflow: auto; }
 .book-index-settings-body p, .book-reference-options p { margin: 8px 0; line-height: 1.6; }
 .book-index-progress { font-weight: 600; }
@@ -42,4 +44,4 @@ button.book-index-dot:focus-visible { outline: 2px solid #267bbb; outline-offset
 .book-reference-heading button { border: 0; background: transparent; color: #657888; font-size: 22px; cursor: pointer; }
 .book-index-option { display: flex; gap: 8px; align-items: center; margin: 14px 0; }
 .book-reference-settings-link { width: 100%; }
-@media (max-width: 600px) { .book-index-settings > summary { gap: 10px; padding: 8px 12px; flex-wrap: wrap; } .book-index-settings > summary > span:last-of-type { font-size: 11px; } .book-index-settings-body { padding: 0 12px 12px; } }
+@media (max-width: 600px) { .book-index-settings > summary { gap: 10px; padding: 8px 12px; } .book-index-summary-status { font-size: 11px; } .book-index-settings-body { padding: 0 12px 12px; } }
