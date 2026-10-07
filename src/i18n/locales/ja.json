@@ -104,7 +104,9 @@
     "passage": "PDF p.{{page}}の本文（{{count}}文字）",
     "openPage": "PDF p.{{page}}を開く ↗",
     "truncated": "送信量を抑えるため、本文の一部を送っています。",
-    "empty": "該当する本文を取得できませんでした。"
+    "empty": "該当する本文を取得できませんでした。",
+    "deniedPage": "PDF p.{{page}}は参照を許可されていません。参照可能なのは1～{{max}}ページです。",
+    "pageReadFailed": "PDF p.{{page}}の文字情報を取得できませんでした。"
   },
   "media": {
     "label": "理解を助ける参考資料",
@@ -125,5 +127,111 @@
     "dialog": "参考画像の拡大",
     "closeImage": "拡大画像を閉じる",
     "close": "閉じる ×"
+  },
+  "app": {
+    "loading": "Loading...",
+    "noPDF": "No PDF selected",
+    "studyTab": "Study",
+    "description": "子供向け学習支援アプリ"
+  },
+  "answer": {
+    "unknownPage": "不明",
+    "enjoy": "Enjoy!"
+  },
+  "voice": {
+    "unsupported": "このブラウザでは音声入力を利用できません。",
+    "noSpeech": "声を検出できませんでした。もう一度お試しください。",
+    "permission": "マイクの使用を許可してください。",
+    "microphoneFailed": "マイクを使用できません。接続を確認してください。",
+    "networkFailed": "ブラウザの音声認識に接続できません。別のブラウザで開くか、通信環境を確認してください。",
+    "failed": "音声入力に失敗しました。もう一度お試しください。",
+    "startFailed": "音声入力を開始できませんでした。",
+    "premium": "音声入力はPremiumで利用できます",
+    "unsupportedLabel": "このブラウザは音声入力に対応していません",
+    "stop": "音声入力を停止",
+    "start": "音声入力を開始",
+    "input": "テキスト入力",
+    "starting": "マイクを準備中…",
+    "stopping": "文字を確定中…",
+    "listening": "聞き取り中…"
+  },
+  "errors": {
+    "contextInvalid": "AIからの本文要求が正しくないか、確認回数が上限を超えました",
+    "contextRead": "本文を取得できませんでした",
+    "contextLimit": "本文の確認回数が上限を超えました",
+    "pageCount": "PDFのページ数を確認できませんでした",
+    "apiRetry": "APIへの接続を再試行しましたが失敗しました",
+    "databaseName": "保存先のDB名がありません",
+    "pageRender": "PDFページを描画できません",
+    "pageOpen": "PDFページを開けません",
+    "questionImageOpen": "質問画像を開けません",
+    "answerImageOpen": "回答画像を開けませんでした",
+    "selectionImageOpen": "選択画像を開けません",
+    "noContext": "索引に関連する本文が見つかりません。必要ならページ番号を指定して確認してください。",
+    "noImageOCR": "文字のないページの画像OCRは行いません。",
+    "imageTooSmall": "画像が小さすぎます",
+    "imageLoad": "画像を読み込めません",
+    "pdfLoading": "PDFは読み込み中です"
+  },
+  "pages": {
+    "commerce": {
+      "documentTitle": "特定商取引法に基づく表記 - DoriDori",
+      "back": "← DoriDoriに戻る",
+      "title": "特定商取引法に基づく表記",
+      "lastUpdated": "最終更新日: 2026年3月24日",
+      "sellerLabel": "販売事業者名",
+      "seller": "ゆるふわアプリ工房",
+      "operatorLabel": "運営責任者",
+      "addressLabel": "所在地",
+      "phoneLabel": "電話番号",
+      "emailLabel": "メールアドレス",
+      "priceLabel": "販売価格",
+      "price": "月額 500円（税込）",
+      "additionalCostLabel": "販売価格以外の必要費用",
+      "additionalCost": "インターネット接続料金（お客様のご負担）",
+      "paymentLabel": "支払方法",
+      "payment": "クレジットカード決済（Visa、Mastercard、American Express、JCB）",
+      "billingLabel": "支払時期",
+      "billing": "お申し込み時に初回決済。以降、毎月同日に自動更新・自動決済",
+      "availabilityLabel": "サービス提供時期",
+      "availability": "決済完了後、即時ご利用いただけます",
+      "cancellationLabel": "解約方法",
+      "cancellation": "アプリ内の設定ページからいつでも解約可能。解約後は当月末まで引き続きご利用いただけます。",
+      "refundLabel": "返金について",
+      "refund": "デジタルコンテンツの性質上、原則として返金はいたしかねます。ただし、弊社のシステム障害等により継続的にサービスをご利用いただけなかった場合は、個別にご対応いたします。",
+      "operator": "ゆるふわアプリ工房 代表",
+      "operatorNote": "※氏名は請求があり次第、遅滞なく開示いたします（",
+      "form": "お問い合わせフォーム",
+      "closeParenthesis": "）",
+      "address": "東京都府中市",
+      "addressNote": "※詳細住所は請求があり次第、遅滞なく開示いたします（",
+      "phone": "電話に代わる連絡手段として、下記お問い合わせフォームをご利用ください。",
+      "phoneNote": "※電話番号は請求があり次第、遅滞なく開示いたします"
+    },
+    "timeout": {
+      "title": "Timeout"
+    },
+    "manage": {
+      "documentTitle": "SNS選択 - DoriDori",
+      "choose": "SNSを選択",
+      "initialLimit": "制限時間: --分",
+      "countdown": "カウントダウン中",
+      "measuring": "利用時間を計測しています",
+      "warning": "通知とバイブレーションで警告します",
+      "instruction": "📱 SNSタブを閉じて\n🔄 このアプリを再起動してください",
+      "databaseOpen": "IndexedDBを開けませんでした",
+      "historySave": "SNS利用履歴の保存に失敗しました",
+      "limit": "制限時間: {{minutes}}分",
+      "popupBlocked": "ポップアップがブロックされました。\nブラウザの設定でポップアップを許可してください。",
+      "countdownTitle": "{{name}} - カウントダウン",
+      "timeUp": "閲覧時間終了",
+      "finished": "{{minutes}}分の利用時間が終了しました",
+      "warningTitle": "【警告】時間切れ！",
+      "warningIconTitle": "⚠️ 時間切れ！",
+      "notificationTitle": "⏰ {{name}} の時間切れ！",
+      "notificationBody": "{{minutes}}分の利用時間が終了しました。\nSNSタブを閉じて、アプリに戻ってください。",
+      "reminderTitle": "⚠️ まだ {{name}} を見ていますか？",
+      "reminderBody": "時間切れです。SNSタブを閉じてください。"
+    }
   }
 }

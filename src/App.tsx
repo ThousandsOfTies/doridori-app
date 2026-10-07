@@ -1,3 +1,4 @@
+import { useDoriTranslation } from './i18n'
 import { useState, useEffect } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import AdminPanel from '@home-teacher/common/components/admin/AdminPanel'
@@ -12,6 +13,8 @@ import { BookIndexSettings } from './components/book/BookIndexSettings'
 type AppView = 'admin' | 'viewer' | 'editor'
 
 function App() {
+  const { t } = useDoriTranslation()
+
   const [currentView, setCurrentView] = useState<AppView>('admin')
   const [selectedPDF, setSelectedPDF] = useState<PDFFileRecord | null>(null)
 
@@ -91,7 +94,7 @@ function App() {
       height: '100vh',
       fontSize: '1.5rem',
       color: '#3498db'
-    }}>Loading...</div>
+    }}>{t('app.loading')}</div>
   }
 
   return (
@@ -103,7 +106,7 @@ function App() {
           onEditPDF={handleEditPDF}
           hasUpdate={needRefresh}
           onUpdate={handleUpdate}
-          studyTabLabel="Study"
+          studyTabLabel={t('app.studyTab')}
           maxPDFFileSizeMB={512}
           checkPDFTextOnImport
           renderPDFThumbnail={record => <SavedBookCoverThumbnail record={record} />}
@@ -125,7 +128,7 @@ function App() {
           renderAdditionalSettings={({ pdfDoc, numPages }) => <BookIndexSettings pdfId={selectedPDF.id} pdfDoc={pdfDoc} numPages={numPages} textInspection={selectedPDF.textInspection} />}
         />
       ) : (
-        <div>No PDF selected</div>
+        <div>{t('app.noPDF')}</div>
       )}
     </div>
   )

@@ -1,3 +1,4 @@
+import { localizeBookError } from '../../i18n/errorMessages'
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -1061,7 +1062,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
           if (img.width < 50 || img.height < 50) {
             setGradingError(td('study.imageTooSmall'))
             setIsGrading(false)
-            reject(new Error('Image too small'))
+            reject(new Error(td('errors.imageTooSmall')))
           } else {
             resolve(undefined)
           }
@@ -1069,7 +1070,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
         img.onerror = () => {
           setGradingError(td('study.imageLoadFailed'))
           setIsGrading(false)
-          reject(new Error('Image load error'))
+          reject(new Error(td('errors.imageLoad')))
         }
       })
       const currentPage = sourcePageNumbers[0] || pageA
@@ -2086,7 +2087,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
             maxWidth: '400px',
             textAlign: 'center'
           }}>
-            ❌ {gradingError}
+            ❌ {localizeBookError(gradingError, td)}
           </div>
         )}
       </div>

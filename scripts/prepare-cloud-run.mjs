@@ -18,6 +18,8 @@ const files = [
   ['server/src/bookReferenceMedia.ts', 'app/server/src/bookReferenceMedia.ts'],
   ['server/src/runtimePaths.ts', 'app/server/src/runtimePaths.ts'],
   ['../home-teacher-common/src/constants/grading.ts', 'home-teacher-common/src/constants/grading.ts'],
+  ['../home-teacher-common/src/i18n/locales/ja.json', 'home-teacher-common/src/i18n/locales/ja.json'],
+  ['../home-teacher-common/src/i18n/locales/en.json', 'home-teacher-common/src/i18n/locales/en.json'],
 ]
 
 // Read all inputs first so an incomplete checkout fails before replacing the bundle.

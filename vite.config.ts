@@ -47,6 +47,16 @@ export default defineConfig(({ mode }) => {
       viteStaticCopy({
         targets: [
           {
+            src: 'src/i18n/locales/ja.json',
+            dest: 'locales/ja',
+            rename: 'translation.json'
+          },
+          {
+            src: 'src/i18n/locales/en.json',
+            dest: 'locales/en',
+            rename: 'translation.json'
+          },
+          {
             src: 'node_modules/pdfjs-dist/build/pdf.worker.min.mjs',
             dest: '',
             rename: 'pdf.worker.min.js'
@@ -77,7 +87,7 @@ export default defineConfig(({ mode }) => {
           skipWaiting: false,
           clientsClaim: false,
           globIgnores: ['**/opencv*.js'],
-          globPatterns: ['**/*.{js,css,html,png,svg,woff,woff2,ttf}'],
+          globPatterns: ['**/*.{js,css,html,json,png,svg,woff,woff2,ttf}'],
           maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // 15MB 念のため増やす
           runtimeCaching: [
             {

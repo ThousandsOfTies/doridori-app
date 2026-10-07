@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Timeout</title>
+  <title data-i18n="pages.timeout.title"></title>
   <style>
     body {
       margin: 0;
@@ -22,6 +22,10 @@
   </style>
 </head>
 <body>
-  <h1>Timeout</h1>
+  <h1 data-i18n="pages.timeout.title"></h1>
+  <script type="module">
+    import { loadPageTranslations } from "./page-i18n.js";
+    await loadPageTranslations();
+  </script>
 </body>
 </html>

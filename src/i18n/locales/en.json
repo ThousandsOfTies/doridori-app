@@ -104,7 +104,9 @@
     "passage": "Text from PDF p.{{page}} ({{count}} characters)",
     "openPage": "Open PDF p.{{page}} ↗",
     "truncated": "Only part of the passage was sent to limit the amount of text transmitted.",
-    "empty": "No matching text could be retrieved."
+    "empty": "No matching text could be retrieved.",
+    "deniedPage": "Access to PDF p.{{page}} is not allowed. You can read pages 1–{{max}}.",
+    "pageReadFailed": "Could not retrieve text from PDF p.{{page}}."
   },
   "media": {
     "label": "Visual references to help you understand",
@@ -125,5 +127,111 @@
     "dialog": "Enlarged reference image",
     "closeImage": "Close enlarged image",
     "close": "Close ×"
+  },
+  "app": {
+    "loading": "Loading…",
+    "noPDF": "No PDF selected",
+    "studyTab": "Study",
+    "description": "A learning support app for children"
+  },
+  "answer": {
+    "unknownPage": "Unknown",
+    "enjoy": "Enjoy!"
+  },
+  "voice": {
+    "unsupported": "Speech recognition is unavailable in this browser.",
+    "noSpeech": "No speech was detected. Please try again.",
+    "permission": "Please allow microphone access.",
+    "microphoneFailed": "Microphone access failed. Check the device.",
+    "networkFailed": "The browser speech service could not connect. Try another browser or check the network.",
+    "failed": "Speech recognition failed. Please try again.",
+    "startFailed": "Could not start speech recognition.",
+    "premium": "Voice input requires Premium",
+    "unsupportedLabel": "Speech recognition is unavailable in this browser",
+    "stop": "Stop voice input",
+    "start": "Start voice input",
+    "input": "Text input",
+    "starting": "Starting microphone…",
+    "stopping": "Finalizing…",
+    "listening": "Listening…"
+  },
+  "errors": {
+    "contextInvalid": "The AI text request is invalid or the request limit was exceeded",
+    "contextRead": "Could not retrieve the book text",
+    "contextLimit": "The book text request limit was exceeded",
+    "pageCount": "Could not determine the PDF page count",
+    "apiRetry": "Could not connect to the API after retrying",
+    "databaseName": "The storage database name is missing",
+    "pageRender": "Could not render the PDF page",
+    "pageOpen": "Could not open the PDF page",
+    "questionImageOpen": "Could not open the question image",
+    "answerImageOpen": "Could not open the answer image",
+    "selectionImageOpen": "Could not open the selected image",
+    "noContext": "No related text was found in the index. Request specific page numbers if needed.",
+    "noImageOCR": "Image OCR is not performed on pages without text.",
+    "imageTooSmall": "Image too small",
+    "imageLoad": "Image load error",
+    "pdfLoading": "The PDF is still loading."
+  },
+  "pages": {
+    "commerce": {
+      "documentTitle": "Commercial disclosure — DoriDori",
+      "back": "← Back to DoriDori",
+      "title": "Commercial disclosure",
+      "lastUpdated": "Last updated: March 24, 2026",
+      "sellerLabel": "Seller",
+      "seller": "Yurufuwa App Studio",
+      "operatorLabel": "Person responsible for operation",
+      "addressLabel": "Location",
+      "phoneLabel": "Phone number",
+      "emailLabel": "Email address",
+      "priceLabel": "Price",
+      "price": "JPY 500 per month (tax included)",
+      "additionalCostLabel": "Additional costs",
+      "additionalCost": "Internet connection charges (paid by the customer)",
+      "paymentLabel": "Payment method",
+      "payment": "Credit card (Visa, Mastercard, American Express, JCB)",
+      "billingLabel": "Billing schedule",
+      "billing": "First payment upon subscription. Renewal and payment occur automatically on the same day each month",
+      "availabilityLabel": "Service availability",
+      "availability": "Available immediately after payment is completed",
+      "cancellationLabel": "Cancellation",
+      "cancellation": "You can cancel at any time from the app’s settings page. After cancellation, you can continue using the service until the end of the current month.",
+      "refundLabel": "Refunds",
+      "refund": "Due to the nature of digital content, refunds are generally unavailable. However, if you were continuously unable to use the service due to a system failure or similar issue on our side, we will handle your case individually.",
+      "operator": "Representative of Yurufuwa App Studio",
+      "operatorNote": "The name will be disclosed promptly upon request (",
+      "form": "Contact form",
+      "closeParenthesis": ")",
+      "address": "Fuchu, Tokyo, Japan",
+      "addressNote": "The full address will be disclosed promptly upon request (",
+      "phone": "Please use the contact form below as an alternative to a phone call.",
+      "phoneNote": "The phone number will be disclosed promptly upon request"
+    },
+    "timeout": {
+      "title": "Timeout"
+    },
+    "manage": {
+      "documentTitle": "Choose social media — DoriDori",
+      "choose": "Choose social media",
+      "initialLimit": "Time limit: -- minutes",
+      "countdown": "Countdown",
+      "measuring": "Measuring your time",
+      "warning": "Notifications and vibration will alert you",
+      "instruction": "📱 Close the social media tab\n🔄 Restart this app",
+      "databaseOpen": "Could not open IndexedDB",
+      "historySave": "Could not save social media usage history",
+      "limit": "Time limit: {{minutes}} minutes",
+      "popupBlocked": "The popup was blocked.\nPlease allow popups in your browser settings.",
+      "countdownTitle": "{{name}} — Countdown",
+      "timeUp": "Time is up",
+      "finished": "Your {{minutes}} minutes are over",
+      "warningTitle": "[Warning] Time is up!",
+      "warningIconTitle": "⚠️ Time is up!",
+      "notificationTitle": "⏰ Time is up for {{name}}!",
+      "notificationBody": "Your {{minutes}} minutes are over.\nClose the social media tab and return to the app.",
+      "reminderTitle": "⚠️ Still viewing {{name}}?",
+      "reminderBody": "Time is up. Please close the social media tab."
+    }
   }
 }

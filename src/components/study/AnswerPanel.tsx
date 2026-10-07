@@ -212,11 +212,11 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
             pageCanvas.width = Math.ceil(viewport.width)
             pageCanvas.height = Math.ceil(viewport.height)
             const context = pageCanvas.getContext('2d')
-            if (!context) throw new Error('PDFページを描画できません')
+            if (!context) throw new Error(t('errors.pageRender'))
             await page.render({ canvasContext: context, viewport }).promise
             await new Promise<void>((resolve, reject) => {
               img.onload = () => resolve()
-              img.onerror = () => reject(new Error('PDFページを開けません'))
+              img.onerror = () => reject(new Error(t('errors.pageOpen')))
               img.src = pageCanvas.toDataURL('image/png')
             })
             renderedPDF = true
@@ -232,7 +232,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
       if (!renderedPDF) {
         await new Promise<void>((resolve, reject) => {
           img.onload = () => resolve()
-          img.onerror = () => reject(new Error('質問画像を開けません'))
+          img.onerror = () => reject(new Error(t('errors.questionImageOpen')))
           img.src = questionImage
         })
       }
@@ -244,7 +244,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
           const saved = new Image()
           await new Promise<void>((resolve, reject) => {
             saved.onload = () => resolve()
-            saved.onerror = () => reject(new Error('回答画像を開けませんでした'))
+            saved.onerror = () => reject(new Error(t('errors.answerImageOpen')))
             saved.src = url
           })
           if (cancelled || !drawCanvasRef.current) return
@@ -402,7 +402,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
       const selected = new Image()
       await new Promise<void>((resolve, reject) => {
         selected.onload = () => resolve()
-        selected.onerror = () => reject(new Error('選択画像を開けません'))
+        selected.onerror = () => reject(new Error(t('errors.selectionImageOpen')))
         selected.src = questionImage
       })
       out.width = Math.max(selected.naturalWidth, writing.width)

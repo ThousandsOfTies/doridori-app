@@ -1,3 +1,4 @@
+import messages from '../i18n/locales/ja.json'
 import { createReferenceMediaLoader } from './bookReferenceMedia'
 import { runBookAgent, type BookAgentProgress } from './bookAgent'
 import type { BookAgentQuestion, BookAgentStep, BookContextRequest, BookContextResult } from '../../shared/bookAgentProtocol'
@@ -21,7 +22,7 @@ async function postBookApi<T>(path: string, body: unknown): Promise<T> {
     if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`)
     return data as T
   }
-  throw new Error('APIへの接続を再試行しましたが失敗しました')
+  throw new Error(messages.errors.apiRetry)
 }
 
 export const embedBookTexts = async (texts: string[]): Promise<number[][]> => {

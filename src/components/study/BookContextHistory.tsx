@@ -1,3 +1,4 @@
+import { localizeBookError } from '../../i18n/errorMessages'
 import type { BookContextTrace } from '../../../shared/bookAgentProtocol'
 import { useDoriTranslation } from '../../i18n'
 
@@ -25,7 +26,7 @@ export default function BookContextHistory({ entries, onOpenPage }: {
                 {context.truncated && <small>{t('context.truncated')}</small>}
               </details>
             ))}
-            {entry.result.error && <p className="book-context-note">{entry.result.error}</p>}
+            {entry.result.error && <p className="book-context-note">{localizeBookError(entry.result.error, t)}</p>}
             {!entry.result.contexts.length && !entry.result.error && <p className="book-context-note">{t('context.empty')}</p>}
           </li>
         ))}

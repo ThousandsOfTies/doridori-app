@@ -35,9 +35,11 @@ test('prepared Cloud Run sources exclude secrets and build independently', { tim
     mkdirSync(path.dirname(path.join(app, file)), { recursive: true })
     copyFileSync(path.join(appRoot, file), path.join(app, file))
   }
-  const commonTarget = path.join(fixture, 'repos/home-teacher-common/src/constants/grading.ts')
-  mkdirSync(path.dirname(commonTarget), { recursive: true })
-  copyFileSync(path.resolve(appRoot, '../home-teacher-common/src/constants/grading.ts'), commonTarget)
+  for (const file of ['src/constants/grading.ts', 'src/i18n/locales/ja.json', 'src/i18n/locales/en.json']) {
+    const target = path.join(fixture, 'repos/home-teacher-common', file)
+    mkdirSync(path.dirname(target), { recursive: true })
+    copyFileSync(path.resolve(appRoot, '../home-teacher-common', file), target)
+  }
   for (const file of ['.env', 'server/.env', 'server/credentials.json', 'server/tests/private.ts']) {
     mkdirSync(path.dirname(path.join(app, file)), { recursive: true })
     writeFileSync(path.join(app, file), 'must not be uploaded')
@@ -51,6 +53,7 @@ test('prepared Cloud Run sources exclude secrets and build independently', { tim
     '.gcloudignore', 'Dockerfile', 'app/server/package-lock.json', 'app/server/package.json',
     'app/server/src/bookAgent.ts', 'app/server/src/bookKnowledgeRoutes.ts', 'app/server/src/bookReferenceMedia.ts', 'app/server/src/index.ts', 'app/server/src/runtimePaths.ts',
     'app/server/tsconfig.json', 'app/shared/bookAgentProtocol.ts', 'app/shared/package.json', 'home-teacher-common/src/constants/grading.ts',
+    'home-teacher-common/src/i18n/locales/en.json', 'home-teacher-common/src/i18n/locales/ja.json',
   ])
   const preparedServer = path.join(output, 'app/server')
   symlinkSync(path.join(appRoot, 'server/node_modules'), path.join(preparedServer, 'node_modules'),

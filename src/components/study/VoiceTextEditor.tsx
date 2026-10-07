@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
 import { FiMic, FiMicOff } from 'react-icons/fi'
-import { useTranslation } from 'react-i18next'
+import { useDoriTranslation } from '../../i18n'
 import { useAuth } from '@home-teacher/common/contexts/AuthContext'
 import { getAppSettings } from '@home-teacher/common/utils/indexedDB'
 import './VoiceTextEditor.css'
@@ -63,7 +63,7 @@ export default function VoiceTextEditor({
   initialText = '', placeholder, className = '', style, textStyle, onCommit, onCancel, onDraftChange
 }: VoiceTextEditorProps) {
   const { userData } = useAuth()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useDoriTranslation()
   const japanese = i18n.language.startsWith('ja')
   const isLocalApp = ['localhost', '127.0.0.1'].includes(window.location.hostname)
   const [localPremium, setLocalPremium] = useState(false)
@@ -73,7 +73,7 @@ export default function VoiceTextEditor({
   const [draft, setDraft] = useState(initialText)
   const [interim, setInterim] = useState('')
   const [phase, setPhase] = useState<VoicePhase>('idle')
-  const [error, setError] = useState('')
+  const [errorKey, setError] = useState('')
   const draftRef = useRef(initialText)
   const interimRef = useRef('')
   const finishedRef = useRef(false)
@@ -130,7 +130,7 @@ export default function VoiceTextEditor({
     if (!voiceAvailable || phase !== 'idle') return
     const Recognition = getSpeechRecognition()
     if (!Recognition) {
-      setError(japanese ? 'このブラウザでは音声入力を利用できません。' : 'Speech recognition is unavailable in this browser.')
+      setError('voice.unsupported')
       return
     }
 
@@ -175,7 +175,7 @@ export default function VoiceTextEditor({
     recognition.onerror = event => {
       if (run !== runRef.current) return
       if (event.error === 'no-speech') {
-        setError(japanese ? '声を検出できませんでした。もう一度お試しください。' : 'No speech was detected. Please try again.')
+        setError('voice.noSpeech')
         return
       }
       if (event.error === 'aborted' && stoppingRef.current) return
@@ -183,12 +183,12 @@ export default function VoiceTextEditor({
       disposeVoice()
       setPhase('idle')
       const message = event.error === 'not-allowed' || event.error === 'service-not-allowed'
-        ? (japanese ? 'マイクの使用を許可してください。' : 'Please allow microphone access.')
+        ? 'voice.permission'
         : event.error === 'audio-capture'
-          ? (japanese ? 'マイクを使用できません。接続を確認してください。' : 'Microphone access failed. Check the device.')
+          ? 'voice.microphoneFailed'
           : event.error === 'network'
-            ? (japanese ? 'ブラウザの音声認識に接続できません。別のブラウザで開くか、通信環境を確認してください。' : 'The browser speech service could not connect. Try another browser or check the network.')
-            : (japanese ? '音声入力に失敗しました。もう一度お試しください。' : 'Speech recognition failed. Please try again.')
+            ? 'voice.networkFailed'
+            : 'voice.failed'
       setError(message)
     }
     recognition.onend = () => {
@@ -203,7 +203,7 @@ export default function VoiceTextEditor({
     } catch {
       disposeVoice()
       setPhase('idle')
-      setError(japanese ? '音声入力を開始できませんでした。' : 'Could not start speech recognition.')
+      setError('voice.startFailed')
     }
   }
 
@@ -243,12 +243,12 @@ export default function VoiceTextEditor({
   useEffect(() => { onDraftChange?.(shownText) }, [shownText, onDraftChange])
   const recording = phase !== 'idle'
   const micLabel = !voiceAvailable
-    ? (japanese ? '音声入力はPremiumで利用できます' : 'Voice input requires Premium')
+    ? (t('voice.premium'))
     : !browserSupported
-      ? (japanese ? 'このブラウザは音声入力に対応していません' : 'Speech recognition is unavailable in this browser')
+      ? (t('voice.unsupportedLabel'))
       : recording
-        ? (japanese ? '音声入力を停止' : 'Stop voice input')
-        : (japanese ? '音声入力を開始' : 'Start voice input')
+        ? (t('voice.stop'))
+        : (t('voice.start'))
 
   return (
     <div
@@ -260,7 +260,7 @@ export default function VoiceTextEditor({
     >
       <textarea
         autoFocus
-        aria-label={japanese ? 'テキスト入力' : 'Text input'}
+        aria-label={t('voice.input')}
         placeholder={placeholder}
         value={shownText}
         readOnly={recording}
@@ -284,11 +284,11 @@ export default function VoiceTextEditor({
         {recording ? <FiMicOff size={18} /> : <FiMic size={18} />}
       </button>
       {recording && <span className="voice-text-status" role="status">
-        {phase === 'starting' ? (japanese ? 'マイクを準備中…' : 'Starting microphone…')
-          : phase === 'stopping' ? (japanese ? '文字を確定中…' : 'Finalizing…')
-            : (japanese ? '聞き取り中…' : 'Listening…')}
+        {phase === 'starting' ? (t('voice.starting'))
+          : phase === 'stopping' ? (t('voice.stopping'))
+            : (t('voice.listening'))}
       </span>}
-      {error && <span className="voice-text-error" role="alert">{error}</span>}
+      {errorKey && <span className="voice-text-error" role="alert">{t(errorKey)}</span>}
     </div>
   )
 }

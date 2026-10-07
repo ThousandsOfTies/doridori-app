@@ -1,3 +1,4 @@
+import messages from '../i18n/locales/ja.json'
 import type { PDFStudyTraceRecord } from '@home-teacher/common/utils/indexedDB'
 import type { BookQuestionResult, ReferenceMediaResult } from './bookReferenceMedia'
 
@@ -5,7 +6,7 @@ import type { BookQuestionResult, ReferenceMediaResult } from './bookReferenceMe
 export async function saveBookReferenceMedia(
   dbName: string, traceId: string, stepId: string, answer: string, media: ReferenceMediaResult,
 ): Promise<BookQuestionResult | null> {
-  if (!dbName?.trim()) throw new Error('保存先のDB名がありません')
+  if (!dbName?.trim()) throw new Error(messages.errors.databaseName)
   const db = await new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(dbName)
     // A reference lookup must not create a new database after its PDF was removed.

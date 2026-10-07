@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SNS選択 - DoriDori</title>
+  <title data-i18n="pages.manage.documentTitle"></title>
   <style>
     body {
       margin: 0;
@@ -143,27 +143,27 @@
     <!-- SNS選択画面 -->
     <div id="snsSelection">
       <div class="icon">📱</div>
-      <h1>SNSを選択</h1>
-      <p id="timeLimit">制限時間: --分</p>
+      <h1 data-i18n="pages.manage.choose"></h1>
+      <p id="timeLimit" data-i18n="pages.manage.initialLimit"></p>
       <div class="sns-grid" id="snsGrid"></div>
     </div>
 
     <!-- カウントダウン画面 -->
     <div id="countdownView">
       <div class="icon" id="icon">⏰</div>
-      <h1 id="title">カウントダウン中</h1>
+      <h1 id="title" data-i18n="pages.manage.countdown"></h1>
       <div class="sns-name" id="snsName">SNS</div>
-      <p id="timeLimitText">利用時間を計測しています</p>
+      <p id="timeLimitText" data-i18n="pages.manage.measuring"></p>
       <div id="countdown" style="font-size: 64px; font-weight: bold; margin: 30px 0; color: #ffd700;">--:--</div>
-      <div class="instruction" id="instruction" style="display: none;">
-        📱 SNSタブを閉じて<br>
-        🔄 このアプリを再起動してください
-      </div>
-      <p class="small" id="warningMessage" style="display: none;">通知とバイブレーションで警告します</p>
+      <div class="instruction" id="instruction" data-i18n-lines="pages.manage.instruction" style="display: none;"></div>
+      <p class="small" id="warningMessage" style="display: none;" data-i18n="pages.manage.warning"></p>
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { loadPageTranslations } from "./page-i18n.js";
+    const t = await loadPageTranslations();
+
     // IndexedDB関連関数
     const DB_NAME = 'DoriDoriDB';
     const SNS_USAGE_HISTORY_STORE_NAME = 'snsUsageHistory';
@@ -171,7 +171,7 @@
     function openDB() {
       return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME);
-        request.onerror = () => reject(new Error('IndexedDBを開けませんでした'));
+        request.onerror = () => reject(new Error(t('pages.manage.databaseOpen')));
         request.onsuccess = () => resolve(request.result);
       });
     }
@@ -196,7 +196,7 @@
 
         request.onerror = () => {
           console.error('❌ SNS利用履歴の保存に失敗:', request.error);
-          reject(new Error('SNS利用履歴の保存に失敗しました'));
+          reject(new Error(t('pages.manage.historySave')));
         };
       });
     }
@@ -210,7 +210,7 @@
 
     console.log('📱 URLパラメータ:', { timeLimitMinutes, snsLinksJson, returnUrl });
 
-    document.getElementById('timeLimit').textContent = `制限時間: ${timeLimitMinutes}分`;
+    document.getElementById('timeLimit').textContent = t('pages.manage.limit', { minutes: timeLimitMinutes });
 
     // SNSリンクをパース
     let snsLinks = [];
@@ -273,7 +273,7 @@
       const snsWindow = window.open(snsLink.url, '_blank');
 
       if (!snsWindow) {
-        alert(`ポップアップがブロックされました。\nブラウザの設定でポップアップを許可してください。`);
+        alert(t('pages.manage.popupBlocked'));
         return;
       }
 
@@ -282,9 +282,9 @@
       document.getElementById('countdownView').style.display = 'block';
 
       // タイトルを変更
-      document.title = `${snsLink.name} - カウントダウン`;
+      document.title = t('pages.manage.countdownTitle', { name: snsLink.name });
       document.getElementById('snsName').textContent = snsLink.name;
-      document.getElementById('timeLimitText').textContent = `制限時間: ${timeLimitMinutes}分`;
+      document.getElementById('timeLimitText').textContent = t('pages.manage.limit', { minutes: timeLimitMinutes });
 
       // カウントダウンタイマー開始
       startCountdown(startTime);
@@ -315,10 +315,10 @@
           // 時間切れ
           countdownElement.textContent = '00:00';
           countdownElement.style.color = '#ff4444';
-          titleElement.textContent = '閲覧時間終了';
+          titleElement.textContent = t('pages.manage.timeUp');
           instructionElement.style.display = 'block';
           warningMessageElement.style.display = 'block';
-          document.getElementById('timeLimitText').textContent = `${timeLimitMinutes}分の利用時間が終了しました`;
+          document.getElementById('timeLimitText').textContent = t('pages.manage.finished', { minutes: timeLimitMinutes });
 
           // 視覚的な警告
           document.body.classList.add('warning-flash');
@@ -327,8 +327,8 @@
           // タブタイトルを点滅
           titleFlashInterval = setInterval(() => {
             document.title = document.title.startsWith('⚠️')
-              ? '【警告】時間切れ！'
-              : '⚠️ 時間切れ！';
+              ? t('pages.manage.warningTitle')
+              : t('pages.manage.warningIconTitle');
           }, 1000);
 
           // 通知を送信
@@ -382,8 +382,8 @@
       }
 
       if (Notification.permission === 'granted') {
-        const notification = new Notification(`⏰ ${snsName} の時間切れ！`, {
-          body: `${timeLimitMinutes}分の利用時間が終了しました。\nSNSタブを閉じて、アプリに戻ってください。`,
+        const notification = new Notification(t('pages.manage.notificationTitle', { name: snsName }), {
+          body: t('pages.manage.notificationBody', { minutes: timeLimitMinutes }),
           icon: '/pwa-192x192.png',
           badge: '/pwa-192x192.png',
           vibrate: [200, 100, 200, 100, 200],
@@ -400,8 +400,8 @@
         // 5秒ごとに通知を再送（バックグラウンドでも通知）
         notificationIntervalId = setInterval(() => {
           if (Notification.permission === 'granted') {
-            new Notification(`⚠️ まだ ${snsName} を見ていますか？`, {
-              body: '時間切れです。SNSタブを閉じてください。',
+            new Notification(t('pages.manage.reminderTitle', { name: snsName }), {
+              body: t('pages.manage.reminderBody'),
               icon: '/pwa-192x192.png',
               vibrate: [300, 100, 300],
               tag: 'time-limit',

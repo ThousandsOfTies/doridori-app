@@ -8,7 +8,7 @@ import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 const serverRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const commonFile = path.resolve(serverRoot, '../../home-teacher-common/src/constants/grading.ts')
+const commonRoot = path.resolve(serverRoot, '../../home-teacher-common')
 
 async function unusedPort(): Promise<number> {
   const server = createServer()
@@ -24,10 +24,12 @@ for (const mode of ['source', 'compiled']) {
     const isolatedServer = path.join(fixture, 'repos/app/server')
     mkdirSync(path.join(isolatedServer, 'src'), { recursive: true })
     mkdirSync(path.join(isolatedServer, 'dist'))
-    const commonTarget = path.join(fixture, 'repos/home-teacher-common/src/constants')
-    mkdirSync(commonTarget, { recursive: true })
-    copyFileSync(commonFile, path.join(commonTarget, 'grading.ts'))
-    copyFileSync(path.resolve(serverRoot, '../../home-teacher-common/package.json'),
+    for (const file of ['src/constants/grading.ts', 'src/i18n/locales/ja.json', 'src/i18n/locales/en.json']) {
+      const target = path.join(fixture, 'repos/home-teacher-common', file)
+      mkdirSync(path.dirname(target), { recursive: true })
+      copyFileSync(path.join(commonRoot, file), target)
+    }
+    copyFileSync(path.join(commonRoot, 'package.json'),
       path.join(fixture, 'repos/home-teacher-common/package.json'))
     copyFileSync(path.join(serverRoot, 'package.json'), path.join(isolatedServer, 'package.json'))
     copyFileSync(path.join(serverRoot, 'tsconfig.json'), path.join(isolatedServer, 'tsconfig.json'))

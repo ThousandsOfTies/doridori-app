@@ -1,3 +1,4 @@
+import { useDoriTranslation } from '../../i18n'
 import { useTranslation } from 'react-i18next'
 import { useMemo, useRef, type ReactNode, type RefObject } from 'react'
 import { GradingResponseResult } from '@home-teacher/common/services/api'
@@ -21,6 +22,7 @@ interface GradingResultProps {
 
 const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName, responseTime, pdfId, onOpenReferencePage, onReferenceMediaResolved, studyMarkers }: GradingResultProps) => {
   const viewportRef = useRef<HTMLDivElement>(null)
+  const { t: doriT } = useDoriTranslation()
   const { t } = useTranslation()
   const isBookQuestion = result?.pageType === 'book-question'
   const bookResult = result as BookQuestionResult | null
@@ -113,7 +115,7 @@ const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName
                         {t('gradingResult.sourceDb')}
                         {problem.dbMatchedAnswer && (
                           <span style={{ display: 'block', marginTop: '4px', fontSize: '11px' }}>
-                            {t('gradingResult.problemPage')}: {problem.dbMatchedAnswer.problemPageNumber ?? '不明'},
+                            {t('gradingResult.problemPage')}: {problem.dbMatchedAnswer.problemPageNumber ?? doriT('answer.unknownPage')},
                             {t('gradingResult.registeredAnswer')}: {problem.dbMatchedAnswer.correctAnswer}
                           </span>
                         )}
@@ -140,7 +142,7 @@ const GradingResult = ({ result, snsLinks = [], timeLimitMinutes = 30, modelName
 
           {!isBookQuestion && snsLinks.length > 0 && (
             <div className="sns-links-section">
-              <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '12px', textAlign: 'center' }}>Enjoy!</h3>
+              <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '12px', textAlign: 'center' }}>{doriT('answer.enjoy')}</h3>
               <button
                 onClick={openSNSSelectionPage}
                 style={{

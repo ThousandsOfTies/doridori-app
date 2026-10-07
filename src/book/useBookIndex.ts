@@ -1,3 +1,5 @@
+import { localizeBookError } from '../i18n/errorMessages'
+import en from '../i18n/locales/en.json'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { embedBookTexts } from './bookKnowledgeApi'
@@ -64,7 +66,7 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
   const stopIndexing = useCallback(() => { cancelRef.current = true }, [])
 
   const readPage = useCallback(async (number: number): Promise<BookPageIndex> => {
-    if (!pdfDoc) throw new PDFNotReadyError('The PDF is still loading.')
+    if (!pdfDoc) throw new PDFNotReadyError(en.errors.pdfLoading)
     const pdfPage = await pdfDoc.getPage(number)
     const page = await readBookPageText(pdfId, number, pdfPage)
     await saveBookPage(page)
@@ -177,6 +179,6 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
   const textPageCount = pages.filter(page => page.text.trim()).length
   const missingTextPageCount = pages.length - textPageCount
   return { pages, phase, progress, textPageCount, missingTextPageCount, summary, loaded,
-    embeddingProgress, error: error ? t(`index.error.${error.kind}`, { detail: error.detail }) : null,
+    embeddingProgress, error: error ? t(`index.error.${error.kind}`, { detail: error.detail ? localizeBookError(error.detail, t) : '' }) : null,
     startIndexing, stopIndexing, answerContextRequest }
 }

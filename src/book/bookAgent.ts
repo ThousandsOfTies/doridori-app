@@ -1,3 +1,4 @@
+import messages from '../i18n/locales/ja.json'
 import { BOOK_AGENT_LIMITS, isBookContextRequest, type BookAgentAnswer, type BookAgentQuestion,
   type BookAgentStep, type BookAgentTurn, type BookContextRequest, type BookContextResult,
   type BookContextTrace } from '../../shared/bookAgentProtocol'
@@ -27,7 +28,7 @@ export async function runBookAgent(
       !step.requests.every(isBookContextRequest) ||
       step.requests.some(request => !question.clientCapabilities.includes(request.name)) ||
       new Set(step.requests.map(request => request.id)).size !== step.requests.length) {
-      throw new Error('AIからの本文要求が正しくないか、確認回数が上限を超えました')
+      throw new Error(messages.errors.contextInvalid)
     }
     toolResults = []
     for (const request of step.requests) {
@@ -36,12 +37,12 @@ export async function runBookAgent(
       try { result = await resolveContext(request) }
       catch (error) {
         result = { id: request.id, contexts: [], indexedPages: question.indexedPages,
-          error: (error instanceof Error ? error.message : '本文を取得できませんでした').slice(0, 300) }
+          error: (error instanceof Error ? error.message : messages.errors.contextRead).slice(0, 300) }
       }
       trace.push({ round: step.round, request, result })
       toolResults.push(result)
     }
     continuation = step.continuation
   }
-  throw new Error('本文の確認回数が上限を超えました')
+  throw new Error(messages.errors.contextLimit)
 }

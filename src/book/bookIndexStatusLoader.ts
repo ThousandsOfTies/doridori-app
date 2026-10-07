@@ -1,3 +1,4 @@
+import messages from '../i18n/locales/ja.json'
 import type { PDFFileRecord } from '@home-teacher/common/utils/indexedDB'
 import { loadBookIndexSummary, loadBookPages, saveBookIndexSummary } from './bookIndex'
 import { summarizeBookIndex, type BookIndexSummary } from './bookIndexStatus'
@@ -41,7 +42,7 @@ export function getSavedBookIndexSummary(record: PDFFileRecord): Promise<BookInd
     let timeout: ReturnType<typeof setTimeout>
     try {
       const document = await Promise.race([loading.promise, failure, new Promise<never>((_, reject) => {
-        timeout = setTimeout(() => reject(new Error('PDFのページ数を確認できませんでした')), 30000)
+        timeout = setTimeout(() => reject(new Error(messages.errors.pageCount)), 30000)
       })])
       return document.numPages
     } finally { clearTimeout(timeout!); range?.abort(); await loading.destroy() }

@@ -1,3 +1,4 @@
+import messages from '../i18n/locales/ja.json'
 import { BOOK_AGENT_LIMITS, type BookContextRequest, type BookContextResult } from '../../shared/bookAgentProtocol'
 import type { BookPageIndex, RetrievedPassage } from './bookIndex'
 
@@ -20,7 +21,7 @@ export async function resolveBookContext(request: BookContextRequest, tools: Boo
         text: passage.text.slice(0, BOOK_AGENT_LIMITS.contextCharacters),
         truncated: passage.text.length > BOOK_AGENT_LIMITS.contextCharacters }))
     return { id: request.id, contexts, indexedPages: found.indexedPages,
-      ...(contexts.length ? {} : { error: '索引に関連する本文が見つかりません。必要ならページ番号を指定して確認してください。' }) }
+      ...(contexts.length ? {} : { error: messages.errors.noContext }) }
   }
   const contexts: BookContextResult['contexts'] = []
   const missingPages: number[] = []
@@ -28,7 +29,7 @@ export async function resolveBookContext(request: BookContextRequest, tools: Boo
   const requested = [...new Set(request.pageNumbers)].slice(0, BOOK_AGENT_LIMITS.contextsPerRequest)
   for (const number of requested) {
     if (number < 1 || number > maxPage) {
-      errors.push(`PDF p.${number}は参照を許可されていません。参照可能なのは1～${maxPage}ページです。`)
+      errors.push(messages.context.deniedPage.replace('{{page}}', String(number)).replace('{{max}}', String(maxPage)))
       continue
     }
     try {
@@ -41,10 +42,10 @@ export async function resolveBookContext(request: BookContextRequest, tools: Boo
         truncated: page.text.length > BOOK_AGENT_LIMITS.contextCharacters })
     } catch {
       missingPages.push(number)
-      errors.push(`PDF p.${number}の文字情報を取得できませんでした。`)
+      errors.push(messages.context.pageReadFailed.replace('{{page}}', String(number)))
     }
   }
-  if (missingPages.length) errors.push('文字のないページの画像OCRは行いません。')
+  if (missingPages.length) errors.push(messages.errors.noImageOCR)
   return { id: request.id, contexts, missingPages, indexedPages: tools.indexedPages(),
     ...(errors.length ? { error: errors.join(' ').slice(0, 300) } : {}) }
 }
