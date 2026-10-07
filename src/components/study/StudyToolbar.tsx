@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FiHome, FiSettings, FiHelpCircle, FiLoader, FiType, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
 import { BiEraser, BiSelection } from 'react-icons/bi';
+import { useDoriTranslation } from '../../i18n';
 
 export type TextDirection = 'horizontal' | 'vertical-rl' | 'vertical-lr';
 
@@ -98,6 +99,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     defaultModelName,
 }) => {
     const { t } = useTranslation();
+    const { t: td } = useDoriTranslation();
 
     // Popups visibility state
     const [showTextPopup, setShowTextPopup] = useState(false);
@@ -157,12 +159,12 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
             {/* 戻るボタン */}
             {onBack && (
                 <>
-                    <button onClick={onBack} title="ホームに戻る" style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                    <button onClick={onBack} title={td('toolbar.home')} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                         <FiHome size={20} />
                     </button>
 
                     {onOpenSettings && <button type="button" onClick={onOpenSettings}
-                        aria-label="PDFの設定を開く" title="PDFの設定を開く" className="book-settings-button">
+                        aria-label={td('reference.openSettings')} title={td('reference.openSettings')} className="book-settings-button">
                         <FiSettings size={20} />
                     </button>}
 
@@ -212,11 +214,9 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                             type="button"
                             className={`study-trace-visibility-button${showStudyMarkers ? ' active' : ''}`}
                             onClick={onToggleStudyMarkers}
-                            aria-label="範囲選択の履歴を表示"
+                            aria-label={td('toolbar.showMarkers')}
                             aria-pressed={showStudyMarkers}
-                            title={showStudyMarkers
-                                ? '選択跡の表示 ON（クリックで非表示）'
-                                : '選択跡の表示 OFF（クリックで表示）'}
+                            title={td(showStudyMarkers ? 'toolbar.markersOn' : 'toolbar.markersOff')}
                         >
                             {showStudyMarkers ? <FiEye size={20} /> : <FiEyeOff size={20} />}
                         </button>
@@ -228,7 +228,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         <button
                             onClick={handlePenClick}
                             className={isDrawingMode ? 'active' : ''}
-                            title={isDrawingMode ? 'ペンモード ON（クリックで設定）' : 'ペンモード OFF'}
+                            title={td(isDrawingMode ? 'toolbar.penOn' : 'toolbar.penOff')}
                         >
                             <FiEdit2 size={20} color={isDrawingMode ? penColor : 'currentColor'} />
                         </button>
@@ -237,7 +237,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         {isDrawingMode && showPenPopup && (
                             <div className="tool-popup">
                                 <div className="popup-row">
-                                    <label>色:</label>
+                                    <label>{td('toolbar.color')}</label>
                                     <input
                                         type="color"
                                         value={penColor}
@@ -246,7 +246,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                     />
                                 </div>
                                 <div className="popup-row">
-                                    <label>太さ:</label>
+                                    <label>{td('toolbar.width')}</label>
                                     <input
                                         type="range"
                                         min="1"
@@ -263,7 +263,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
 
                         {showPenGuidance && (
                             <div className="pen-guidance" role="status">
-                                {t('pdfGuide.penHint')}
+                                {td('toolbar.penHint')}
                             </div>
                         )}
                     </div>
@@ -273,7 +273,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         <button
                             onClick={handleEraserClick}
                             className={isEraserMode ? 'active' : ''}
-                            title={isEraserMode ? '消しゴムモード ON（クリックで設定）' : '消しゴムモード OFF'}
+                            title={td(isEraserMode ? 'toolbar.eraserOn' : 'toolbar.eraserOff')}
                         >
                             <BiEraser size={20} className="icon-scale-13" />
                         </button>
@@ -282,7 +282,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         {isEraserMode && showEraserPopup && (
                             <div className="tool-popup">
                                 <div className="popup-row">
-                                    <label>サイズ:</label>
+                                    <label>{td('toolbar.size')}</label>
                                     <input
                                         type="range"
                                         min="0"
@@ -304,7 +304,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         <button
                             onClick={handleTextClick}
                             className={isTextMode ? 'active' : ''}
-                            title={isTextMode ? 'テキストモード ON（クリックで設定）' : 'テキストモード OFF'}
+                            title={td(isTextMode ? 'toolbar.textOn' : 'toolbar.textOff')}
                         >
                             <FiType size={20} />
                         </button>
@@ -313,7 +313,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         {isTextMode && showTextPopup && (
                             <div className="tool-popup" style={{ minWidth: '180px' }}>
                                 <div className="popup-row">
-                                    <label>サイズ:</label>
+                                    <label>{td('toolbar.size')}</label>
                                     <input
                                         type="range"
                                         min="10"
@@ -325,19 +325,19 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                     <span>{textFontSize}px</span>
                                 </div>
                                 <div className="popup-row">
-                                    <label>方向:</label>
+                                    <label>{td('toolbar.direction')}</label>
                                     <select
                                         value={textDirection}
                                         onChange={(e) => setTextDirection(e.target.value as TextDirection)}
                                         style={{ padding: '4px', borderRadius: '4px' }}
                                     >
-                                        <option value="horizontal">横書き (Z型)</option>
-                                        <option value="vertical-rl">縦書き右始 (N型)</option>
-                                        <option value="vertical-lr">縦書き左始</option>
+                                        <option value="horizontal">{td('toolbar.horizontal')}</option>
+                                        <option value="vertical-rl">{td('toolbar.verticalRL')}</option>
+                                        <option value="vertical-lr">{td('toolbar.verticalLR')}</option>
                                     </select>
                                 </div>
                                 <div className="popup-row">
-                                    <label>色:</label>
+                                    <label>{td('toolbar.color')}</label>
                                     <input
                                         type="color"
                                         value={penColor}
@@ -357,7 +357,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                             {/* Split View Toggle (Moved to Tool Group) */}
                             <button
                                 onClick={toggleSplitView}
-                                title={isSplitView ? 'シングルビューに戻す' : '2画面表示 (Split View)'}
+                                title={td(isSplitView ? 'toolbar.singleView' : 'toolbar.splitView')}
                                 className={isSplitView ? 'active' : ''}
                             >
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -370,7 +370,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                             <button
                                 className={`tab-switcher-btn ${!isSplitView ? 'active' : ''}`}
                                 onClick={toggleActiveTab}
-                                title={isSplitView ? "シングルビューへ切替" : "A/B 切替"}
+                                title={td(isSplitView ? 'toolbar.singleView' : 'toolbar.switchPane')}
                                 style={{
                                     minWidth: '45px',
                                 }}
@@ -425,8 +425,8 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                 onClick={onGrade}
                                 disabled={isGrading}
                                 className="btn-submit"
-                                title="先生に質問する"
-                                aria-label="先生に質問する"
+                                title={td('toolbar.ask')}
+                                aria-label={td('toolbar.ask')}
                                 style={{
                                     cursor: isGrading ? 'wait' : 'pointer',
                                     opacity: isGrading ? 0.6 : 1,
@@ -444,7 +444,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                 onClick={isSelectionMode ? cancelSelection : startGrading}
                                 className={isSelectionMode ? 'active' : ''}
                                 disabled={isGrading}
-                                title={isSelectionMode ? t('gradingConfirmation.cancel') : t('pdfGuide.rangeSelection')}
+                                title={isSelectionMode ? t('gradingConfirmation.cancel') : td('toolbar.select')}
                             >
                                 {isGrading ? <FiLoader size={20} className="animate-spin" /> : <BiSelection size={20} className="icon-scale-13" />}
                             </button>

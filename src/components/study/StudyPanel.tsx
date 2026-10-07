@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useDoriTranslation } from '../../i18n'
 import { DEFAULT_MODEL_ID } from '@home-teacher/common/constants/grading'
 import { GradingResponseResult, getAvailableModels, ModelInfo } from '@home-teacher/common/services/api'
 import GradingResult from './GradingResult'
@@ -109,6 +110,7 @@ type PanelData =
 
 const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProps) => {
   const { t } = useTranslation()
+  const { t: td } = useDoriTranslation()
   // Refs
   const paneARef = useRef<PDFPaneHandle>(null)
   const paneBRef = useRef<PDFPaneHandle>(null)
@@ -206,7 +208,9 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
   const isSelectingRef = useRef(false)
   const selectionStartRef = useRef<{ x: number, y: number } | null>(null)
   const [isGrading, setIsGrading] = useState(false)
-  const [bookAgentStatus, setBookAgentStatus] = useState('')
+  const [bookAgentStatus, setBookAgentStatus] = useState<{
+    phase: 'reading-question' | 'asking' | 'searching'; reason?: string
+  } | null>(null)
 
   // Tool State
   const [isDrawingMode, setIsDrawingMode] = useState(false)
@@ -346,8 +350,8 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
   const getPanelLabel = (panel: PanelData): string => {
     switch (panel.type) {
       case 'pdf': return 'PDF'
-      case 'answer': return '質問記入'
-      case 'grading': return panel.result.pageType === 'book-question' ? '先生の回答' : '採点結果'
+      case 'answer': return td('study.question')
+      case 'grading': return panel.result.pageType === 'book-question' ? td('study.answer') : t('gradingResult.title')
     }
   }
 
@@ -404,17 +408,17 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
       const visited = new Set<string>()
       let currentId: string | undefined = traceId
       while (currentId) {
-        if (visited.has(currentId)) throw new Error('質問履歴の接続が不正です')
+        if (visited.has(currentId)) throw new Error(td('study.invalidHistory'))
         visited.add(currentId)
         const trace = await getPDFStudyTrace(currentId) as BookStudyTrace | null
-        if (!trace || trace.pdfId !== pdfId) throw new Error('質問の記録が見つかりません')
+        if (!trace || trace.pdfId !== pdfId) throw new Error(td('study.missingHistory'))
         ancestry.unshift(trace)
         currentId = trace.parentTraceId
       }
       const panels: PanelData[] = [{ type: 'pdf' }]
       const appendPanels = async (trace: BookStudyTrace, throughStepId?: string, stopAtBranches = false) => {
         let end = throughStepId ? trace.steps.findIndex(step => step.id === throughStepId) : trace.steps.length - 1
-        if (end < 0) throw new Error('質問履歴の接続が不正です')
+        if (end < 0) throw new Error(td('study.invalidHistory'))
         if (stopAtBranches) {
           const branchIndex = trace.steps.findIndex(step => step.type === 'grading' && step.result &&
             studyTraces.filter(child => child.parentTraceId === trace.id && child.parentStepId === step.id).length > 1)
@@ -435,7 +439,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
             getPDFStudyAsset(trace.id, step.id, 'question'),
             getPDFStudyAsset(trace.id, step.id, 'drawing'),
           ])
-          if (!question) throw new Error('質問画像が見つかりません')
+          if (!question) throw new Error(td('study.missingQuestionImage'))
           const oldQuestionText = bookStep.questionText
           const initialTexts = step.answerTexts ?? (oldQuestionText?.trim() ? [{
             id: `legacy_${step.id}`, x: 80, y: 80, text: oldQuestionText,
@@ -469,7 +473,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
           child.parentStepId === (last.type === 'grading' ? last.stepId : undefined))
         if (children.length !== 1 || visited.has(children[0].id)) break
         const child = await getPDFStudyTrace(children[0].id) as BookStudyTrace | null
-        if (!child || child.pdfId !== pdfId) throw new Error('続きの質問が見つかりません')
+        if (!child || child.pdfId !== pdfId) throw new Error(td('study.missingFollowUp'))
         tip = child
         visited.add(tip.id)
         await appendPanels(tip, undefined, true)
@@ -828,10 +832,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
       const panel = gradingPanelRef.current
       const bodyAnchor = panel.querySelector('[data-book-answer-anchor]') as HTMLElement | null
       const resultInner = bodyAnchor || panel.querySelector('.result-inner') as HTMLElement | null
-      if (!resultInner) throw new Error('回答の表示領域が見つかりません')
+      if (!resultInner) throw new Error(td('study.missingAnswerArea'))
       const resultBounds = resultInner.getBoundingClientRect()
       const geometry = getResultCaptureGeometry(captureRect, panel.getBoundingClientRect(), resultBounds)
-      if (!geometry) throw new Error('回答の内側を選択してください')
+      if (!geometry) throw new Error(td('study.selectInsideAnswer'))
       const resultContent = panel.querySelector('.result-content') as HTMLElement | null
       const pageScrollTop = bodyAnchor && resultContent
         ? Math.max(0, resultContent.getBoundingClientRect().top - resultBounds.top)
@@ -1032,7 +1036,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
   const confirmAndGrade = async (compositeImage: string, sourcePageNumbers: number[], typedQuestion?: string) => {
     if (traceUndo.busy) return
     setIsGrading(true)
-    setBookAgentStatus('質問を確認しています…')
+    setBookAgentStatus({ phase: 'reading-question' })
     setGradingError(null)
     const answerPanel = panelStack[activePanelIndex]
     const traceId = answerPanel?.type === 'answer' ? answerPanel.traceId : undefined
@@ -1055,7 +1059,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
       await new Promise((resolve, reject) => {
         img.onload = () => {
           if (img.width < 50 || img.height < 50) {
-            setGradingError('選択範囲が小さすぎます。もう少し大きく選択してください。')
+            setGradingError(td('study.imageTooSmall'))
             setIsGrading(false)
             reject(new Error('Image too small'))
           } else {
@@ -1063,7 +1067,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
           }
         }
         img.onerror = () => {
-          setGradingError('画像の読み込みに失敗しました。')
+          setGradingError(td('study.imageLoadFailed'))
           setIsGrading(false)
           reject(new Error('Image load error'))
         }
@@ -1080,9 +1084,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
         previousAnswer: previousAnswer?.slice(0, 6000), model: selectedModel !== 'default' ? selectedModel : undefined,
         clientCapabilities: ['search_book', 'read_book_pages'],
       }, request => bookIndex.answerContextRequest(request, currentPage, includeLaterPages), progress => {
-        setBookAgentStatus(progress.phase === 'searching'
-          ? `先生が本文を確認: ${progress.request?.reason.slice(0, 100) || '関連する箇所を検索しています'}`
-          : '先生が回答を考えています…')
+        setBookAgentStatus({ phase: progress.phase, reason: progress.request?.reason.slice(0, 100) })
       })
       const endTime = Date.now()
       const clientResponseTimeSeconds = parseFloat(((endTime - startTime) / 1000).toFixed(1))
@@ -1120,7 +1122,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
       setGradingError(e instanceof Error ? e.message : String(e))
     } finally {
       setIsGrading(false)
-      setBookAgentStatus('')
+      setBookAgentStatus(null)
     }
   }
 
@@ -1576,7 +1578,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
                 marginBottom: '16px',
                 margin: '0 auto'
               }} />
-              <p>PDFを読み込み中...</p>
+              <p>{td('study.loadingPDF')}</p>
               <style>{`
                 @keyframes spin {
                   0% { transform: rotate(0deg); }
@@ -1586,7 +1588,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '20px' }}>
-              <p style={{ color: '#e74c3c', marginBottom: '16px', fontWeight: 'bold' }}>PDFの読み込みに失敗しました</p>
+              <p style={{ color: '#e74c3c', marginBottom: '16px', fontWeight: 'bold' }}>{td('study.failedPDF')}</p>
               <p style={{ fontSize: '12px', color: '#666', marginBottom: '20px', maxWidth: '300px', wordBreak: 'break-all' }}>{pdfError}</p>
               <button
                 onClick={() => setRetryCount(c => c + 1)}
@@ -1601,13 +1603,17 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
                   boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
                 }}
               >
-                再読み込み
+                {td('study.retry')}
               </button>
             </div>
           )}
         </div>
       )}
-      {isGrading && bookAgentStatus && <div className="book-agent-status" role="status">{bookAgentStatus}</div>}
+      {isGrading && bookAgentStatus && <div className="book-agent-status" role="status">{
+        bookAgentStatus.phase === 'reading-question' ? td('study.checkingQuestion') :
+          bookAgentStatus.phase === 'searching' ? td('study.searching', { reason: bookAgentStatus.reason || td('study.searchReason') }) :
+            td('study.thinking')
+      }</div>}
       {/* Main Content Area: PDF Panes */}
       <div
         ref={splitContainerRef}
@@ -1845,7 +1851,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
                   initialText: annotation.text
                 })
               }}
-              title={isClickable ? 'クリックで編集（テキストを消して確定で削除）' : ''}
+              title={isClickable ? td('study.editText') : ''}
             >
               {annotation.text}
             </div>
@@ -2012,7 +2018,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
           <PanelForwardButton
             canGoForward={canGoForward}
             disabled={panelNavigationBusy || isNavigating}
-            label="次の画面へ"
+            label={td('study.next')}
             onNext={() => navigatePanel(1)}
           />
         </div>

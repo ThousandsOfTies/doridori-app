@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { IDBFactory } from 'fake-indexeddb'
+import { createInstance } from 'i18next'
+import en from '../src/i18n/locales/en.json'
+import ja from '../src/i18n/locales/ja.json'
 import { loadBookIndexSummary, loadBookPages, saveBookIndexSummary, saveBookPage, type BookPageIndex } from '../src/book/bookIndex'
-import { bookIndexDotState, summarizeBookIndex, withBookIndexAttempt, withPDFTextInspection } from '../src/book/bookIndexStatus'
+import { bookIndexLabel, bookIndexDotState, summarizeBookIndex, withBookIndexAttempt, withPDFTextInspection } from '../src/book/bookIndexStatus'
 import { loadOrRecoverBookIndexSummary } from '../src/book/bookIndexStatusLoader'
 
 globalThis.indexedDB = new IDBFactory()
@@ -12,6 +15,24 @@ function page(pdfId: string, pageNumber: number, text = '本文', embedded = fal
     source: text ? 'pdf-text' : 'empty', passages: text ? [{ start: 0, end: text.length,
       ...(embedded ? { vector: [1, 0] } : {}) }] : [], updatedAt: 1 }
 }
+
+test('language switching preserves index state and counts, including legacy unknown page totals', async () => {
+  const i18n = createInstance()
+  await i18n.init({ lng: 'en', defaultNS: 'doridori', interpolation: { escapeValue: false },
+    resources: { en: { doridori: en }, ja: { doridori: ja } } })
+  const t = i18n.getFixedT(null, 'doridori')
+  const summary = summarizeBookIndex('book', [page('book', 1, '本文', true)], 3)
+  const saved = structuredClone(summary)
+  assert.equal(bookIndexLabel(summary, t), 'Index incomplete: text pages 1/3, search passages 1/1')
+  assert.equal(bookIndexLabel({ ...summary, totalPages: 0 }, t), 'Index incomplete: text pages 1, search passages 1/1')
+  assert.equal(bookIndexLabel(null, t), 'Checking index status')
+  assert.match(bookIndexLabel({ ...summary, state: 'failed' }, t), /resume/)
+  await i18n.changeLanguage('ja')
+  assert.equal(bookIndexLabel(summary, t), '索引は途中：本文 1/3ページ、意味検索 1/1箇所')
+  assert.deepEqual(summary, saved)
+  await i18n.changeLanguage('en')
+  assert.match(bookIndexLabel({ ...summary, state: 'complete' }, t), /1\/3 text pages/)
+})
 
 test('completion requires actual page count and embeddings, while empty covers do not prevent completion', () => {
   assert.equal(summarizeBookIndex('book', [], 3).state, 'none')

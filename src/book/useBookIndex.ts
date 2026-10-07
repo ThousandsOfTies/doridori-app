@@ -7,8 +7,11 @@ import type { PDFTextInspection } from '@home-teacher/common/utils/pdfTextInspec
 import { readBookPageText } from './bookPageText'
 import { resolveBookContext } from './bookContextTools'
 import type { BookContextRequest } from '../../shared/bookAgentProtocol'
+import { useDoriTranslation } from '../i18n'
 
 export type IndexPhase = 'idle' | 'reading' | 'embedding' | 'connecting' | 'complete' | 'stopped'
+type IndexError = { kind: 'previousFailure' | 'load' | 'save' | 'indexing' | 'pdfLoading'; detail?: string }
+class PDFNotReadyError extends Error {}
 
 function averageVector(page: BookPageIndex): number[] | null {
   const vectors = page.passages.map(passage => passage.vector).filter((vector): vector is number[] => !!vector)
@@ -19,6 +22,7 @@ function averageVector(page: BookPageIndex): number[] | null {
 }
 
 export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, numPages: number, textInspection?: PDFTextInspection) {
+  const { t } = useDoriTranslation()
   const [pages, setPages] = useState<BookPageIndex[]>([])
   const [loadedPdfId, setLoadedPdfId] = useState<string | null>(null)
   const [loadedPageCount, setLoadedPageCount] = useState(-1)
@@ -26,7 +30,8 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
   const [phase, setPhase] = useState<IndexPhase>('idle')
   const [progress, setProgress] = useState(0)
   const [embeddingProgress, setEmbeddingProgress] = useState({ done: 0, total: 0 })
-  const [error, setError] = useState<string | null>(null)
+  // Store the cause rather than translated wording so language changes only update the UI.
+  const [error, setError] = useState<IndexError | null>(null)
   const cancelRef = useRef(false)
   const runningRef = useRef(false)
 
@@ -39,12 +44,12 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
       setLoadedPdfId(pdfId)
       setLoadedPageCount(numPages)
       setHasIndexFailure(cached?.state === 'failed')
-      setError(cached?.state === 'failed' ? '前回の索引作成に失敗しました。保存済みの部分から再開できます。' : null)
+      setError(cached?.state === 'failed' ? { kind: 'previousFailure' } : null)
       setProgress(saved.length)
       const summary = withBookIndexAttempt(summarizeBookIndex(pdfId, saved, numPages), textInspection, cached?.state === 'failed')
       setPhase(summary.state === 'complete' || summary.state === 'no-text'
         ? 'complete' : 'idle')
-    }).catch(error => { if (active) setError(String(error)) })
+    }).catch(reason => { if (active) setError({ kind: 'load', detail: String(reason) }) })
     return () => { active = false; cancelRef.current = true }
   }, [pdfId, numPages, textInspection])
 
@@ -53,13 +58,13 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
     hasIndexFailure, ['reading', 'embedding', 'connecting'].includes(phase)), [pdfId, pages, numPages, textInspection, hasIndexFailure, phase])
   useEffect(() => {
     if (!loaded || !numPages) return
-    saveBookIndexSummary(summary).catch(reason => setError(`索引の状態を保存できませんでした: ${String(reason)}`))
+    saveBookIndexSummary(summary).catch(reason => setError({ kind: 'save', detail: String(reason) }))
   }, [summary, loaded, numPages])
 
   const stopIndexing = useCallback(() => { cancelRef.current = true }, [])
 
   const readPage = useCallback(async (number: number): Promise<BookPageIndex> => {
-    if (!pdfDoc) throw new Error('PDFを読み込み中です')
+    if (!pdfDoc) throw new PDFNotReadyError('The PDF is still loading.')
     const pdfPage = await pdfDoc.getPage(number)
     const page = await readBookPageText(pdfId, number, pdfPage)
     await saveBookPage(page)
@@ -122,13 +127,14 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
     } catch (reason) {
       attemptFailed = true
       setHasIndexFailure(true)
-      setError(reason instanceof Error ? reason.message : String(reason))
+      setError(reason instanceof PDFNotReadyError ? { kind: 'pdfLoading' } :
+        { kind: 'indexing', detail: reason instanceof Error ? reason.message : String(reason) })
       setPhase('stopped')
     } finally {
       // An in-flight embedding batch may finish after the settings view closes.
       // Refresh persisted status even when React no longer runs this hook's effects.
       try { await saveBookIndexSummary(withBookIndexAttempt(summarizeBookIndex(pdfId, await loadBookPages(pdfId), numPages), textInspection, attemptFailed)) }
-      catch (reason) { setError(`索引の状態を保存できませんでした: ${String(reason)}`) }
+      catch (reason) { setError({ kind: 'save', detail: String(reason) }) }
       runningRef.current = false
     }
   }, [pdfDoc, pdfId, numPages, readPage, textInspection, loaded])
@@ -171,5 +177,6 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
   const textPageCount = pages.filter(page => page.text.trim()).length
   const missingTextPageCount = pages.length - textPageCount
   return { pages, phase, progress, textPageCount, missingTextPageCount, summary, loaded,
-    embeddingProgress, error, startIndexing, stopIndexing, answerContextRequest }
+    embeddingProgress, error: error ? t(`index.error.${error.kind}`, { detail: error.detail }) : null,
+    startIndexing, stopIndexing, answerContextRequest }
 }

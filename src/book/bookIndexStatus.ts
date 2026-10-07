@@ -1,5 +1,6 @@
 import type { BookPageIndex } from './bookIndex'
 import type { PDFTextInspection } from '@home-teacher/common/utils/pdfTextInspection'
+import type { TFunction } from 'i18next'
 
 export type BookIndexState = 'none' | 'partial' | 'complete' | 'no-text' | 'failed'
 
@@ -29,13 +30,14 @@ export function summarizeBookIndex(pdfId: string, pages: BookPageIndex[], totalP
     totalPassages: passages.length, embeddedPassages }
 }
 
-export function bookIndexLabel(summary: BookIndexSummary | null): string {
-  if (!summary) return '索引の状態を確認中'
-  if (summary.state === 'none') return '索引未作成'
-  if (summary.state === 'no-text') return '文字情報がありません'
-  if (summary.state === 'failed') return '索引作成に失敗しました。続きから再開できます'
-  if (summary.state === 'complete') return `索引作成済み：本文 ${summary.textPages}/${summary.totalPages}ページ`
-  return `索引は途中：本文 ${summary.textPages}${summary.totalPages ? `/${summary.totalPages}` : ''}ページ、意味検索 ${summary.embeddedPassages}/${summary.totalPassages}箇所`
+export function bookIndexLabel(summary: BookIndexSummary | null, t: TFunction<'doridori'>): string {
+  if (!summary) return t('index.status.checking')
+  if (summary.state === 'none') return t('index.status.none')
+  if (summary.state === 'no-text') return t('index.status.noText')
+  if (summary.state === 'failed') return t('index.status.failed')
+  if (summary.state === 'complete') return t('index.status.complete', { ...summary })
+  return t('index.status.partial', { ...summary,
+    textPageCount: `${summary.textPages}${summary.totalPages ? `/${summary.totalPages}` : ''}` })
 }
 
 export function withPDFTextInspection(summary: BookIndexSummary, inspection?: PDFTextInspection): BookIndexSummary {

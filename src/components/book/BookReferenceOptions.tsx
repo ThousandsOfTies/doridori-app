@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { BookIndexSummary } from '../../book/bookIndexStatus'
 import { bookIndexLabel } from '../../book/bookIndexStatus'
+import { useDoriTranslation } from '../../i18n'
 
 export function BookReferenceOptions({ summary, onClose, onOpenSettings, includeLaterPages, onIncludeLaterPagesChange }: {
   summary: BookIndexSummary
@@ -9,6 +10,7 @@ export function BookReferenceOptions({ summary, onClose, onOpenSettings, include
   includeLaterPages: boolean
   onIncludeLaterPagesChange: (value: boolean) => void
 }) {
+  const { t } = useDoriTranslation()
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const outside = (event: PointerEvent) => {
@@ -20,11 +22,11 @@ export function BookReferenceOptions({ summary, onClose, onOpenSettings, include
     document.addEventListener('keydown', escape)
     return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape) }
   }, [onClose])
-  return <div ref={ref} className="book-reference-options" role="dialog" aria-label="本の参照設定">
-    <div className="book-reference-heading"><strong>{bookIndexLabel(summary)}</strong><button type="button" onClick={onClose} aria-label="参照設定を閉じる">×</button></div>
-    <p>索引の作成・再開はPDFの設定画面から行えます。</p>
+  return <div ref={ref} className="book-reference-options" role="dialog" aria-label={t('reference.settings')}>
+    <div className="book-reference-heading"><strong>{bookIndexLabel(summary, t)}</strong><button type="button" onClick={onClose} aria-label={t('reference.close')}>×</button></div>
+    <p>{t('reference.indexHint')}</p>
     <label className="book-index-option"><input type="checkbox" checked={includeLaterPages}
-      onChange={event => onIncludeLaterPagesChange(event.target.checked)} />今より先のページも参照する</label>
-    {onOpenSettings && <button type="button" className="book-reference-settings-link" onClick={onOpenSettings}>PDFの設定を開く</button>}
+      onChange={event => onIncludeLaterPagesChange(event.target.checked)} />{t('reference.includeLaterPages')}</label>
+    {onOpenSettings && <button type="button" className="book-reference-settings-link" onClick={onOpenSettings}>{t('reference.openSettings')}</button>}
   </div>
 }

@@ -94,6 +94,7 @@ test('older teacher answers retain their layout while new answers include refere
     }).outputText;
     vm.runInNewContext(compiled, { exports: module.exports, require: name => {
         if (name === 'react/jsx-runtime') return require(name);
+        if (name === '../../i18n') return { useDoriTranslation: () => ({ t: key => key }) };
         return name === './BookReferenceMedia' ? referenceComponent : () => null;
     } });
     const find = (element, predicate) => {

@@ -7,6 +7,7 @@ import BookReferenceMedia from './BookReferenceMedia'
 import type { ReferenceMediaResult } from '../../book/bookReferenceMedia'
 import BookContextHistory from './BookContextHistory'
 import type { BookContextTrace } from '../../../shared/bookAgentProtocol'
+import { useDoriTranslation } from '../../i18n'
 
 interface BookAnswerProps {
   text: string
@@ -22,11 +23,12 @@ interface BookAnswerProps {
 }
 
 export default function BookAnswer({ text, referencePages, onOpenPage, question, model, referenceMedia, onMediaResolved, studyMarkers, anchorToBody, contextRequests }: BookAnswerProps) {
+  const { t } = useDoriTranslation()
   // Keep older answers' geometry intact so their saved follow-up regions still line up.
   const hasReferenceMedia = question !== undefined || referenceMedia !== undefined
   return (
     <div className="book-answer">
-      <div className="book-answer-heading">先生の回答</div>
+      <div className="book-answer-heading">{t('study.answer')}</div>
       <div className={`book-answer-layout${hasReferenceMedia ? ' book-answer-with-media' : ''}`}>
         <div className="book-answer-body" data-book-answer-anchor={anchorToBody || undefined}>
           <div className="book-answer-text">
@@ -41,10 +43,10 @@ export default function BookAnswer({ text, referencePages, onOpenPage, question,
       </div>
       {referencePages.length > 0 && (
         <div className="book-answer-references">
-          <span>参照したPDFページ</span>
+          <span>{t('reference.pages')}</span>
           {referencePages.map(page => (
             <button key={page} type="button" onClick={() => onOpenPage?.(page)}
-              title={`PDF ${page}ページへ移動`}>p.{page} ↗</button>
+              title={t('reference.openPage', { page })}>p.{page} ↗</button>
           ))}
         </div>
       )}

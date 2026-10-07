@@ -4,6 +4,7 @@ import type { PDFStudyAnswerState, PDFStudyRegion } from '@home-teacher/common/u
 import { ICON_SVG } from '../../constants/icons'
 import VoiceTextEditor from './VoiceTextEditor'
 import './AnswerPanel.css'
+import { useDoriTranslation } from '../../i18n'
 
 export interface AnswerPanelHandle {
   getCompositeImage: () => Promise<string | null>
@@ -66,6 +67,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   textDirection,
   onCanUndoChange,
 }, ref) => {
+  const { t } = useDoriTranslation()
   // bgCanvas: question image + writing area background (never modified by user)
   const bgCanvasRef = useRef<HTMLCanvasElement>(null)
   // drawCanvas: transparent overlay for pen strokes only
@@ -170,14 +172,14 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
       if (writingBoundsRef.current) {
         ctx.fillStyle = '#245474'
         ctx.font = 'bold 22px sans-serif'
-        ctx.fillText('この箇所について質問', writingBoundsRef.current.x, TOP_MARGIN + 28)
+        ctx.fillText(t('study.questionAboutSelection'), writingBoundsRef.current.x, TOP_MARGIN + 28)
         const writing = writingBoundsRef.current
         ctx.strokeStyle = '#c9d9e5'
         ctx.lineWidth = 2
         ctx.strokeRect(writing.x, writing.y, writing.width, writing.height)
         ctx.fillStyle = '#7f96a7'
         ctx.font = '16px sans-serif'
-        ctx.fillText('ここに質問を書いてください', writing.x + 20, writing.y + 34)
+        ctx.fillText(t('study.writeHere'), writing.x + 20, writing.y + 34)
       }
     }
 
