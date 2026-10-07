@@ -1,19 +1,13 @@
+import { StudyToolbarNavigation, type BreadcrumbItem } from '@home-teacher/common/components/study/StudyToolbarNavigation'
+import { StudyEraserTool, StudyTextTool, type TextDirection } from '@home-teacher/common/components/study/StudyToolSettings'
+import { useStudyToolPopups } from '@home-teacher/common/hooks/useStudyToolPopups'
+export type { BreadcrumbItem } from '@home-teacher/common/components/study/StudyToolbarNavigation'
+export type { TextDirection } from '@home-teacher/common/components/study/StudyToolSettings'
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiHome, FiSettings, FiHelpCircle, FiLoader, FiType, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
-import { BiEraser, BiSelection } from 'react-icons/bi';
+import { FiSettings, FiHelpCircle, FiLoader, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
+import { BiSelection } from 'react-icons/bi';
 import { useDoriTranslation } from '../../i18n';
-
-export type TextDirection = 'horizontal' | 'vertical-rl' | 'vertical-lr';
-
-const ERASER_SIZE_OPTIONS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100] as const;
-
-export interface BreadcrumbItem {
-    label: string;
-    content?: React.ReactNode;
-    onClick: () => void;
-    isCurrent?: boolean;
-}
 
 interface StudyToolbarProps {
     onBack?: () => void;
@@ -104,9 +98,6 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     const { t: td } = useDoriTranslation();
 
     // Popups visibility state
-    const [showTextPopup, setShowTextPopup] = useState(false);
-    const [showPenPopup, setShowPenPopup] = useState(false);
-    const [showEraserPopup, setShowEraserPopup] = useState(false);
     const [showPenGuidance, setShowPenGuidance] = useState(false);
     const penGuidanceTimerRef = useRef<number | undefined>();
 
@@ -114,153 +105,49 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
         return () => window.clearTimeout(penGuidanceTimerRef.current);
     }, []);
 
-    // Wrappers to toggle popups and modes
-    const handleTextClick = () => {
-        if (isTextMode) {
-            setShowTextPopup(!showTextPopup);
-        } else {
-            toggleTextMode();
-            setShowTextPopup(false);
-            setShowPenPopup(false);
-            setShowEraserPopup(false);
-        }
-    };
-
-    const handlePenClick = () => {
-        if (isDrawingMode) {
-            setShowPenPopup(!showPenPopup);
-        } else {
-            toggleDrawingMode();
-            setShowPenPopup(false);
-            setShowEraserPopup(false);
-            setShowTextPopup(false);
-
-            if (!onGrade) {
-                setShowPenGuidance(true);
-                window.clearTimeout(penGuidanceTimerRef.current);
-                penGuidanceTimerRef.current = window.setTimeout(() => {
-                    setShowPenGuidance(false);
-                }, 6500);
-            }
-        }
-    };
-
-    const handleEraserClick = () => {
-        if (isEraserMode) {
-            setShowEraserPopup(!showEraserPopup);
-        } else {
-            toggleEraserMode();
-            setShowEraserPopup(false);
-            setShowPenPopup(false);
-            setShowTextPopup(false);
-        }
-    };
+    const {
+        showTextPopup, showPenPopup, showEraserPopup,
+        handleTextClick, handlePenClick, handleEraserClick,
+    } = useStudyToolPopups({
+        text: { active: isTextMode, toggle: toggleTextMode },
+        pen: {
+            active: isDrawingMode,
+            toggle: () => {
+                toggleDrawingMode();
+                if (!onGrade) {
+                    setShowPenGuidance(true);
+                    window.clearTimeout(penGuidanceTimerRef.current);
+                    penGuidanceTimerRef.current = window.setTimeout(() => {
+                        setShowPenGuidance(false);
+                    }, 6500);
+                }
+            },
+        },
+        eraser: { active: isEraserMode, toggle: toggleEraserMode },
+    });
 
     return (
         <div className="toolbar">
-            {/* 戻るボタン */}
-            {onBack && (
-                <button onClick={onBack} title={td('toolbar.home')} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                    <FiHome size={20} />
-                </button>
-            )}
-
-            {/* 左側の表示切替 */}
-            {onBack && <div className="divider" aria-hidden="true" />}
-            <div className="toolbar-view-controls">
-                <button
-                    className={`tab-switcher-btn ${pageViewControlsEnabled && !isSplitView ? 'active' : ''}`}
-                    onClick={toggleActiveTab}
-                    disabled={!pageViewControlsEnabled}
-                    title={td(isSplitView ? 'toolbar.singleView' : 'toolbar.switchPane')}
-                    style={{
-                        minWidth: '45px',
-                    }}
-                >
-                    {/* A Indicator */}
-                    <span
-                        style={{
-                            fontWeight: activeTab === 'A' ? 'bold' : 'normal',
-                            textDecoration: activeTab === 'A' ? 'underline' : 'none',
-                            color: activeTab === 'A' ? '#4CAF50' : 'inherit',
-                            fontSize: '0.85rem'
-                        }}
-                    >
-                        A
-                    </span>
-
-                    <span style={{ margin: '0 4px', color: '#ccc', fontSize: '0.85rem' }}>/</span>
-
-
-                    {/* B Indicator */}
-                    <span
-                        style={{
-                            fontWeight: activeTab === 'B' ? 'bold' : 'normal',
-                            textDecoration: activeTab === 'B' ? 'underline' : 'none',
-                            color: activeTab === 'B' ? '#4CAF50' : 'inherit',
-                            fontSize: '0.85rem'
-                        }}
-                    >
-                        B
-                    </span>
-                </button>
-                <button
-                    onClick={toggleSplitView}
-                    disabled={!pageViewControlsEnabled}
-                    title={td(isSplitView ? 'toolbar.singleView' : 'toolbar.splitView')}
-                    className={`split-view-btn ${pageViewControlsEnabled && isSplitView ? 'active' : ''}`}
-                >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="2" y="4" width="9" height="16" rx="1" stroke="currentColor" strokeWidth="1" fill={isSplitView ? "white" : "none"} />
-                        <rect x="13" y="4" width="9" height="16" rx="1" stroke="currentColor" strokeWidth="1" fill={isSplitView ? "white" : "none"} />
-                    </svg>
-                </button>
-            </div>
-            <div className="divider" aria-hidden="true" />
-
-            {onBack && (
-                <>
-                    {onOpenSettings && <button type="button" onClick={onOpenSettings}
-                        aria-label={td('reference.openSettings')} title={td('reference.openSettings')} className="book-settings-button">
-                        <FiSettings size={20} />
-                    </button>}
-
-                    {/* パンくず */}
-                    {breadcrumbs && breadcrumbs.length > 0 && (
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: '2px',
-                            flexWrap: 'nowrap', overflowX: 'auto', minWidth: 0,
-                            scrollbarWidth: 'none', msOverflowStyle: 'none',
-                            marginLeft: '0', padding: '6px 0'
-                        }}>
-                            {breadcrumbs.map((crumb, i) => (
-                                <React.Fragment key={i}>
-                                    {i > 0 && <span style={{ color: '#bbb', fontSize: '13px', flexShrink: 0 }}>›</span>}
-                                    <span
-                                        className={crumb.content ? 'book-cover-breadcrumb' : undefined}
-                                        onClick={crumb.isCurrent ? undefined : crumb.onClick}
-                                        style={{
-                                            fontSize: '13px',
-                                            color: crumb.isCurrent ? '#333' : '#2c7be5',
-                                            fontWeight: 600,
-                                            cursor: crumb.isCurrent ? 'default' : 'pointer',
-                                            padding: crumb.content ? '0 6px' : '3px 6px',
-                                            borderRadius: '10px',
-                                            whiteSpace: 'nowrap',
-                                            flexShrink: 0,
-                                        }}
-                                    >
-                                        {crumb.content ?? crumb.label}
-                                    </span>
-                                </React.Fragment>
-                            ))}
-                        </div>
-                    )}
-
-                </>
-            )}
-
-
+            <StudyToolbarNavigation
+                onBack={onBack}
+                breadcrumbs={breadcrumbs}
+                pageViewControlsEnabled={pageViewControlsEnabled}
+                isSplitView={isSplitView}
+                toggleSplitView={toggleSplitView}
+                activeTab={activeTab}
+                toggleActiveTab={toggleActiveTab}
+                labels={{
+                    home: td('toolbar.home'),
+                    switchPane: td(isSplitView ? 'toolbar.singleView' : 'toolbar.switchPane'),
+                    splitView: td(isSplitView ? 'toolbar.singleView' : 'toolbar.splitView'),
+                }}
+                breadcrumbStyle={{ padding: '6px 0' }}
+                contentBreadcrumbClassName="book-cover-breadcrumb"
+                beforeBreadcrumbs={onOpenSettings && <button type="button" onClick={onOpenSettings}
+                    aria-label={td('reference.openSettings')} title={td('reference.openSettings')} className="book-settings-button">
+                    <FiSettings size={20} />
+                </button>}
+            />
 
             {/* 右寄せコンテナ */}
             <div className="toolbar-tools">
@@ -325,87 +212,34 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                         )}
                     </div>
 
-                    {/* 消しゴムツール */}
-                    <div style={{ position: 'relative' }}>
-                        <button
-                            onClick={handleEraserClick}
-                            className={isEraserMode ? 'active' : ''}
-                            title={td(isEraserMode ? 'toolbar.eraserOn' : 'toolbar.eraserOff')}
-                        >
-                            <BiEraser size={20} className="icon-scale-13" />
-                        </button>
-
-                        {/* 消しゴム設定ポップアップ */}
-                        {isEraserMode && showEraserPopup && (
-                            <div className="tool-popup">
-                                <div className="popup-row">
-                                    <label>{td('toolbar.size')}</label>
-                                    <input
-                                        type="range"
-                                        min="0"
-                                        max={ERASER_SIZE_OPTIONS.length - 1}
-                                        step="1"
-                                        value={Math.max(0, ERASER_SIZE_OPTIONS.indexOf(eraserSize as typeof ERASER_SIZE_OPTIONS[number]))}
-                                        onChange={(e) => setEraserSize(ERASER_SIZE_OPTIONS[Number(e.target.value)])}
-                                        style={{ width: '100px' }}
-                                        aria-valuetext={`${eraserSize}px`}
-                                    />
-                                    <span>{eraserSize}px</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* テキスト入力ツール */}
-                    <div style={{ position: 'relative' }}>
-                        <button
-                            onClick={handleTextClick}
-                            className={isTextMode ? 'active' : ''}
-                            title={td(isTextMode ? 'toolbar.textOn' : 'toolbar.textOff')}
-                        >
-                            <FiType size={20} />
-                        </button>
-
-                        {/* テキスト設定ポップアップ */}
-                        {isTextMode && showTextPopup && (
-                            <div className="tool-popup" style={{ minWidth: '180px' }}>
-                                <div className="popup-row">
-                                    <label>{td('toolbar.size')}</label>
-                                    <input
-                                        type="range"
-                                        min="10"
-                                        max="32"
-                                        value={textFontSize}
-                                        onChange={(e) => setTextFontSize(Number(e.target.value))}
-                                        style={{ width: '80px' }}
-                                    />
-                                    <span>{textFontSize}px</span>
-                                </div>
-                                <div className="popup-row">
-                                    <label>{td('toolbar.direction')}</label>
-                                    <select
-                                        value={textDirection}
-                                        onChange={(e) => setTextDirection(e.target.value as TextDirection)}
-                                        style={{ padding: '4px', borderRadius: '4px' }}
-                                    >
-                                        <option value="horizontal">{td('toolbar.horizontal')}</option>
-                                        <option value="vertical-rl">{td('toolbar.verticalRL')}</option>
-                                        <option value="vertical-lr">{td('toolbar.verticalLR')}</option>
-                                    </select>
-                                </div>
-                                <div className="popup-row">
-                                    <label>{td('toolbar.color')}</label>
-                                    <input
-                                        type="color"
-                                        value={penColor}
-                                        onChange={(e) => setPenColor(e.target.value)}
-                                        className="color-swatch-input"
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
+                    <StudyEraserTool
+                        active={isEraserMode}
+                        popupVisible={showEraserPopup}
+                        onClick={handleEraserClick}
+                        title={td(isEraserMode ? 'toolbar.eraserOn' : 'toolbar.eraserOff')}
+                        size={eraserSize}
+                        setSize={setEraserSize}
+                        sizeLabel={td('toolbar.size')}
+                    />
+                    <StudyTextTool
+                        active={isTextMode}
+                        popupVisible={showTextPopup}
+                        onClick={handleTextClick}
+                        title={td(isTextMode ? 'toolbar.textOn' : 'toolbar.textOff')}
+                        fontSize={textFontSize}
+                        setFontSize={setTextFontSize}
+                        direction={textDirection}
+                        setDirection={setTextDirection}
+                        color={penColor}
+                        setColor={setPenColor}
+                        labels={{
+                            size: td('toolbar.size'), direction: td('toolbar.direction'),
+                            horizontal: td('toolbar.horizontal'),
+                            verticalRight: td('toolbar.verticalRL'), verticalLeft: td('toolbar.verticalLR'),
+                            color: td('toolbar.color'),
+                        }}
+                        colorInputClassName="color-swatch-input"
+                    />
 
                     {/* Context-specific buttons */}
                     {onGrade ? (
