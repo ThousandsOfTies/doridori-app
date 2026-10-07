@@ -1,3 +1,8 @@
+import { useStudyPDFPages } from '@home-teacher/common/hooks/useStudyPDFPages'
+import { useStudySplitResize } from '@home-teacher/common/hooks/useStudySplitResize'
+import { useStudyTextAnnotations, useStudyDrawingState } from '@home-teacher/common/hooks/useStudyPageAnnotations'
+import { useStudyPanelStack } from '@home-teacher/common/hooks/useStudyPanelStack'
+import { useStudyOverlayTouch } from '@home-teacher/common/hooks/useStudyOverlayTouch'
 import { localizeBookError } from '../../i18n/errorMessages'
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
@@ -7,11 +12,11 @@ import { DEFAULT_MODEL_ID } from '@home-teacher/common/constants/grading'
 import { GradingResponseResult, getAvailableModels, ModelInfo } from '@home-teacher/common/services/api'
 import GradingResult from './GradingResult'
 import AnswerPanel, { AnswerPanelHandle } from './AnswerPanel'
-import { flushDrawingSaves, getAllDrawings, getAllTextAnnotations, updatePDFRecord, getAllSNSLinks, SNSLinkRecord, PDFFileRecord, scheduleDrawingSave, saveTextAnnotation, PDFStudyRegion, PDFStudyTraceRecord, PDFStudyStep, PDFStudyAnswerState, createPDFStudyTrace, appendPDFStudyStep, getPDFStudyTrace, getPDFStudyTracesByPdfId, getPDFStudyAsset, savePDFStudyDrawing, savePDFStudyAnswerTexts, dataUrlToBlob, blobToDataUrl } from '@home-teacher/common/utils/indexedDB'
+import { getAllSNSLinks, SNSLinkRecord, PDFFileRecord, PDFStudyRegion, PDFStudyTraceRecord, PDFStudyStep, PDFStudyAnswerState, createPDFStudyTrace, appendPDFStudyStep, getPDFStudyTrace, getPDFStudyTracesByPdfId, getPDFStudyAsset, savePDFStudyDrawing, savePDFStudyAnswerTexts, dataUrlToBlob, blobToDataUrl } from '@home-teacher/common/utils/indexedDB'
 import { DrawingPath } from '@thousands-of-ties/drawing-common'
 import { PDFPane, PDFPaneHandle } from '@home-teacher/common/components/study/PDFPane'
 import { StudyToolbar } from './StudyToolbar'
-import { usePDFRenderer } from '@home-teacher/common/hooks/pdf/usePDFRenderer'
+
 import { useWheelPanelNavigation } from '@home-teacher/common/hooks/useWheelPanelNavigation'
 import { PanelForwardButton } from '@home-teacher/common/components/study/PanelForwardButton'
 import { StudyRegionMarker } from '@home-teacher/common/components/study/StudyRegionMarker'
@@ -142,42 +147,15 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
   const toggleStudyMarkers = () => setShowStudyMarkers(visible => !visible)
 
   // Split Ratio
-  const [splitRatio, setSplitRatio] = useState(() => {
-    const saved = localStorage.getItem(SPLIT_RATIO_STORAGE_KEY)
-    const parsed = saved === null ? NaN : Number(saved)
-    return Number.isFinite(parsed) ? Math.max(0.2, Math.min(0.8, parsed)) : 0.5
-  })
-  const [isResizing, setIsResizing] = useState(false)
+  const { splitRatio, isResizing, handleResizeStart } = useStudySplitResize(SPLIT_RATIO_STORAGE_KEY,
+    () => splitContainerRef.current)
+
   const splitContainerRef = useRef<HTMLDivElement>(null)
 
   // Page State
-  const [pageA, setPageA] = useState(pdfRecord.lastPageNumberA || 1)
-  const [pageB, setPageB] = useState(pdfRecord.lastPageNumberB || 1)
+  const { pageA, pageB, setPageA, setPageB, pdfDoc, numPages, isLoading, pdfError,
+    handlePageAChange, handlePageBChange, setRetryCount } = useStudyPDFPages(pdfRecord, pdfId)
 
-  // PDF Retry
-  const [retryCount, setRetryCount] = useState(0)
-
-  // PDF Document Loading
-  const { pdfDoc, numPages, isLoading, error: pdfError } = usePDFRenderer(pdfRecord, {
-    retryTrigger: retryCount,
-    onLoadSuccess: (pages) => {
-      // PDF Loaded
-      // ページ番号の整合性チェック（総ページ数を超えていたら1に戻す）
-      if (pageA > pages) {
-        console.warn(`⚠️ ページ番号補正: A面 ${pageA} -> 1 (総ページ数: ${pages})`)
-        setPageA(1)
-        updatePDFRecord(pdfRecord.id, { lastPageNumberA: 1 }).catch(() => { })
-      }
-      if (pageB > pages) {
-        console.warn(`⚠️ ページ番号補正: B面 ${pageB} -> 1 (総ページ数: ${pages})`)
-        setPageB(1)
-        updatePDFRecord(pdfRecord.id, { lastPageNumberB: 1 }).catch(() => { })
-      }
-    },
-    onLoadError: (err) => {
-      console.error(err)
-    }
-  })
   const bookIndex = useBookIndex(pdfId, pdfDoc, numPages, pdfRecord.textInspection)
   const [showBookReferenceOptions, setShowBookReferenceOptions] = useState(false)
   const [includeLaterPages, setIncludeLaterPages] = useState(false)
@@ -233,7 +211,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
     existingId?: string
     initialText?: string
   } | null>(null)
-  const [textAnnotations, setTextAnnotations] = useState<Map<number, TextAnnotation[]>>(new Map())
+  const { textAnnotations, setTextAnnotations, persistTextAnnotations } = useStudyTextAnnotations<TextAnnotation>(pdfId)
 
   // SNS State
   const [snsLinks, setSnsLinks] = useState<SNSLinkRecord[]>([])
@@ -253,79 +231,14 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
   }, [])
 
   // Drawing State
-  const [drawingPaths, setDrawingPaths] = useState<Map<number, DrawingPath[]>>(new Map())
-  const pendingDrawingWritesRef = useRef(new Map<number, string>())
+  const { drawingPaths, setDrawingPaths, pendingDrawingWritesRef } = useStudyDrawingState(pdfId)
 
-  useEffect(() => {
-    pendingDrawingWritesRef.current.forEach((data, page) => scheduleDrawingSave(pdfId, page, data))
-    pendingDrawingWritesRef.current.clear()
-  }, [drawingPaths, pdfId])
-
-  useEffect(() => {
-    const flushPendingDrawings = () => {
-      pendingDrawingWritesRef.current.forEach((data, page) => scheduleDrawingSave(pdfId, page, data))
-      pendingDrawingWritesRef.current.clear()
-      void flushDrawingSaves(pdfId)
-    }
-    window.addEventListener('pagehide', flushPendingDrawings)
-    return () => {
-      window.removeEventListener('pagehide', flushPendingDrawings)
-      flushPendingDrawings()
-    }
-  }, [pdfId])
   const EMPTY_PATHS: DrawingPath[] = useMemo(() => [], [])
   const drawingPathsA = useMemo(() => drawingPaths.get(pageA) ?? EMPTY_PATHS, [drawingPaths, pageA, EMPTY_PATHS])
 
-  // Load Drawings Effect
-  useEffect(() => {
-    const loadDrawings = async () => {
-      try {
-        const drawings = await getAllDrawings(pdfId)
-
-        const newMap = new Map<number, DrawingPath[]>()
-        for (const [pageStr, pathsJson] of Object.entries(drawings)) {
-          const page = parseInt(pageStr, 10)
-          const paths = JSON.parse(pathsJson) as DrawingPath[]
-          if (paths.length > 0) {
-            newMap.set(page, paths)
-          }
-        }
-
-        if (newMap.size > 0) {
-          setDrawingPaths(newMap)
-        }
-      } catch (e) {
-        console.error('Failed to load drawings:', e)
-      }
-    }
-    loadDrawings()
-  }, [pdfId])
-
-  // Load Text Annotations Effect
-  useEffect(() => {
-    const loadTextAnnotations = async () => {
-      try {
-        const savedAnnotations = await getAllTextAnnotations(pdfId)
-        const newMap = new Map<number, TextAnnotation[]>()
-        for (const [pageStr, annotationsJson] of Object.entries(savedAnnotations)) {
-          const page = parseInt(pageStr, 10)
-          const annotations = JSON.parse(annotationsJson as string) as TextAnnotation[]
-          if (annotations.length > 0) {
-            newMap.set(page, annotations)
-          }
-        }
-        if (newMap.size === 0) return
-        setTextAnnotations(newMap)
-      } catch (e) {
-      }
-    }
-    loadTextAnnotations()
-  }, [pdfId])
-
-
   // Panel stack state
-  const [panelStack, setPanelStack] = useState<PanelData[]>([{ type: 'pdf' }])
-  const [activePanelIndex, setActivePanelIndex] = useState(0)
+  const { panelStack, setPanelStack, activePanelIndex, setActivePanelIndex, pushPanel } = useStudyPanelStack<PanelData>({ type: 'pdf' })
+
   const [studyTraces, setStudyTraces] = useState<BookStudyTrace[]>([])
   const [isHoveringStudyTrace, setIsHoveringStudyTrace] = useState(false)
   const undoTrace = useMemo(() => {
@@ -354,11 +267,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
       case 'answer': return td('study.question')
       case 'grading': return panel.result.pageType === 'book-question' ? td('study.answer') : t('gradingResult.title')
     }
-  }
-
-  const pushPanel = (panel: PanelData) => {
-    setPanelStack(prev => [...prev.slice(0, activePanelIndex + 1), panel])
-    setActivePanelIndex(prev => prev + 1)
   }
 
   const handleReferenceMediaResolved = async (panel: Extract<PanelData, { type: 'grading' }>, media: ReferenceMediaResult) => {
@@ -562,14 +470,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
   }
 
   /* 共通: オーバーレイでピンチズームを直接処理 */
-  const overlayGestureRef = useRef<{
-    type: 'selection' | 'pinch'
-    targetPane: 'A' | 'B'
-    startZoom: number
-    startPan: { x: number, y: number }
-    startDist: number
-    startCenter: { x: number, y: number }
-  } | null>(null)
 
   // タッチ位置からターゲットペインを判定
   const getTargetPane = (touchX: number): 'A' | 'B' => {
@@ -591,107 +491,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
     return pane === 'A' ? paneARef : paneBRef
   }
 
-  const handleOverlayTouchStart = (e: React.TouchEvent, onSingleTouch?: (x: number, y: number) => void) => {
-    const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return
-
-    if (e.touches.length >= 2) {
-      // 2本指: ピンチズーム開始
-      e.preventDefault()
-      const t1 = e.touches[0]
-      const t2 = e.touches[1]
-      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY)
-      const center = {
-        x: (t1.clientX + t2.clientX) / 2,
-        y: (t1.clientY + t2.clientY) / 2
-      }
-
-      // タッチ中心からターゲットペインを判定
-      const targetPane = getTargetPane(center.x)
-      const paneRef = getTargetPaneRef(targetPane)
-
-      // 現在のズーム/パン状態を取得
-      const currentZoom = paneRef.current?.getZoom() ?? 1
-      const currentPan = paneRef.current?.getPanOffset() ?? { x: 0, y: 0 }
-
-      overlayGestureRef.current = {
-        type: 'pinch',
-        targetPane,
-        startZoom: currentZoom,
-        startPan: { ...currentPan },
-        startDist: dist,
-        startCenter: center
-      }
-
-      // 選択をキャンセル
-      isSelectingRef.current = false
-      selectionStartRef.current = null
-      return
-    }
-
-    if (e.touches.length !== 1) return
-
-    // 1本指: 選択開始 or カスタム処理
-    overlayGestureRef.current = null
-    if (onSingleTouch) {
-      const x = e.touches[0].clientX - rect.left
-      const y = e.touches[0].clientY - rect.top
-      onSingleTouch(x, y)
-    }
-  }
-
-  const handleOverlayTouchMove = (e: React.TouchEvent, onSingleTouchMove?: (x: number, y: number) => void) => {
-    if (e.touches.length >= 2 && overlayGestureRef.current?.type === 'pinch') {
-      // ピンチズーム処理
-      e.preventDefault()
-      const t1 = e.touches[0]
-      const t2 = e.touches[1]
-      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY)
-      const center = {
-        x: (t1.clientX + t2.clientX) / 2,
-        y: (t1.clientY + t2.clientY) / 2
-      }
-
-      const { targetPane, startZoom, startPan, startDist, startCenter } = overlayGestureRef.current
-      const paneRef = getTargetPaneRef(targetPane)
-      const paneRect = paneRef.current?.getContainerRect()
-      if (!paneRect) return
-
-      // 新しいズームレベルを計算
-      const scale = dist / startDist
-      const newZoom = Math.min(Math.max(startZoom * scale, 0.1), 5.0)
-
-      // ピンチ中心を基準にパン調整
-      const startCenterRelX = startCenter.x - paneRect.left
-      const startCenterRelY = startCenter.y - paneRect.top
-      const contentX = (startCenterRelX - startPan.x) / startZoom
-      const contentY = (startCenterRelY - startPan.y) / startZoom
-      const centerRelX = center.x - paneRect.left
-      const centerRelY = center.y - paneRect.top
-      const newPanX = centerRelX - (contentX * newZoom)
-      const newPanY = centerRelY - (contentY * newZoom)
-
-      // 対象のPDFPaneに適用
-      paneRef.current?.setZoomValue(newZoom)
-      paneRef.current?.setPanOffsetValue({ x: newPanX, y: newPanY })
-      return
-    }
-
-    if (e.touches.length === 1 && onSingleTouchMove) {
-      const rect = containerRef.current?.getBoundingClientRect()
-      if (!rect) return
-      const x = e.touches[0].clientX - rect.left
-      const y = e.touches[0].clientY - rect.top
-      onSingleTouchMove(x, y)
-    }
-  }
-
-  const handleOverlayTouchEnd = (e: React.TouchEvent, onTouchEnd?: () => void) => {
-    if (e.touches.length === 0) {
-      overlayGestureRef.current = null
-      if (onTouchEnd) onTouchEnd()
-    }
-  }
+  const { handleOverlayTouchStart, handleOverlayTouchMove, handleOverlayTouchEnd } = useStudyOverlayTouch({
+    containerRef, getTargetPane, getPane: pane => getTargetPaneRef(pane).current,
+    cancelSelection: () => { isSelectingRef.current = false; selectionStartRef.current = null },
+  })
 
   /* Selection Mode Touch Handlers */
   const handleTouchSelectionStart = (e: React.TouchEvent) => {
@@ -985,8 +788,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
     } : null
   }
 
-
-
   // パス追加ハンドラ
   const handlePathAdd = (page: number, newPath: DrawingPath) => {
     setDrawingPaths(prev => {
@@ -1206,12 +1007,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
     })
   }
 
-  const persistTextAnnotations = (pageNum: number, annotations: TextAnnotation[]) => {
-    void saveTextAnnotation(pdfId, pageNum, JSON.stringify(annotations)).catch(error => {
-      console.error('テキストの保存に失敗しました:', error)
-    })
-  }
-
   // テキスト確定（編集・新規追加・削除を統合）
   const confirmText = (text: string) => {
     if (!editingText) return
@@ -1299,7 +1094,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
 
   // ステータスメッセージ
 
-
   // 分割表示の切り替え / A面B面の入れ替え
   const toggleSplitView = () => {
     if (isSplitView) {
@@ -1314,93 +1108,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
     }
   }
 
-  // ページ変更ハンドラ
-  const handlePageAChange = (p: number) => {
-    if (p < 1 || p > numPages) return
-    void flushDrawingSaves(pdfId, pageA)
-    setPageA(p)
-  }
-  const handlePageBChange = (p: number) => {
-    if (p < 1 || p > numPages) return
-    void flushDrawingSaves(pdfId, pageB)
-    setPageB(p)
-  }
-
-  // ページ番号の永続化（デバウンス付き）
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const updates: Partial<{ lastPageNumberA: number; lastPageNumberB: number }> = {}
-
-      if (pageA > 0 && pageA !== pdfRecord.lastPageNumberA) {
-        updates.lastPageNumberA = pageA
-      }
-      if (pageB > 0 && pageB !== pdfRecord.lastPageNumberB) {
-        updates.lastPageNumberB = pageB
-      }
-
-      if (Object.keys(updates).length > 0) {
-        updatePDFRecord(pdfRecord.id, updates).catch(err => {
-        })
-      }
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [pageA, pageB, pdfRecord.id, pdfRecord.lastPageNumberA, pdfRecord.lastPageNumberB])
-
   // 矩形選択モードをキャンセル
   const handleCancelSelection = () => {
     setSelectionRect(null)
   }
-
-  // リサイズハンドラ
-  const handleResizeStart = (e: React.MouseEvent | React.TouchEvent) => {
-    setIsResizing(true)
-  }
-
-  useEffect(() => {
-    if (!isResizing) return
-
-    const handleMove = (clientX: number) => {
-      if (!splitContainerRef.current) return
-      const rect = splitContainerRef.current.getBoundingClientRect()
-      const newRatio = (clientX - rect.left) / rect.width
-      const clampedRatio = Math.max(0.2, Math.min(0.8, newRatio))
-      setSplitRatio(clampedRatio)
-    }
-
-    const handleMouseMove = (e: MouseEvent) => {
-      e.preventDefault()
-      handleMove(e.clientX)
-    }
-
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault() // Prevent scrolling
-      handleMove(e.touches[0].clientX)
-    }
-
-    const handleEnd = (clientX: number) => {
-      if (!splitContainerRef.current) return
-      const rect = splitContainerRef.current.getBoundingClientRect()
-      const finalRatio = (clientX - rect.left) / rect.width
-      const clampedRatio = Math.max(0.2, Math.min(0.8, finalRatio))
-      localStorage.setItem(SPLIT_RATIO_STORAGE_KEY, clampedRatio.toString())
-      setIsResizing(false)
-    }
-
-    const handleMouseUp = (e: MouseEvent) => handleEnd(e.clientX)
-    const handleTouchEnd = (e: TouchEvent) => handleEnd(e.changedTouches[0].clientX)
-
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-    document.addEventListener('touchmove', handleTouchMove, { passive: false })
-    document.addEventListener('touchend', handleTouchEnd)
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      document.removeEventListener('touchmove', handleTouchMove)
-      document.removeEventListener('touchend', handleTouchEnd)
-    }
-  }, [isResizing])
 
   // Ctrl+Z Undo - アクティブなページの最後の描画を削除
   const handleUndo = () => {

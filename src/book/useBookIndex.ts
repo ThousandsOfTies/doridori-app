@@ -10,18 +10,11 @@ import { readBookPageText } from './bookPageText'
 import { resolveBookContext } from './bookContextTools'
 import type { BookContextRequest } from '../../shared/bookAgentProtocol'
 import { useDoriTranslation } from '../i18n'
+import { buildBookIndex, type IndexPhase } from './buildBookIndex'
 
-export type IndexPhase = 'idle' | 'reading' | 'embedding' | 'connecting' | 'complete' | 'stopped'
+export type { IndexPhase } from './buildBookIndex'
 type IndexError = { kind: 'previousFailure' | 'load' | 'save' | 'indexing' | 'pdfLoading'; detail?: string }
 class PDFNotReadyError extends Error {}
-
-function averageVector(page: BookPageIndex): number[] | null {
-  const vectors = page.passages.map(passage => passage.vector).filter((vector): vector is number[] => !!vector)
-  if (!vectors.length) return null
-  const average = vectors[0].map((_, i) => vectors.reduce((sum, vector) => sum + vector[i], 0) / vectors.length)
-  const length = Math.hypot(...average)
-  return length ? average.map(value => value / length) : null
-}
 
 export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, numPages: number, textInspection?: PDFTextInspection) {
   const { t } = useDoriTranslation()
@@ -34,12 +27,14 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
   const [embeddingProgress, setEmbeddingProgress] = useState({ done: 0, total: 0 })
   // Store the cause rather than translated wording so language changes only update the UI.
   const [error, setError] = useState<IndexError | null>(null)
-  const cancelRef = useRef(false)
+  const indexingAbortRef = useRef<AbortController | null>(null)
+  const activePdfRef = useRef<string | null>(pdfId)
   const runningRef = useRef(false)
 
   useEffect(() => {
     let active = true
-    cancelRef.current = true
+    activePdfRef.current = pdfId
+    indexingAbortRef.current?.abort()
     Promise.all([loadBookPages(pdfId), loadBookIndexSummary(pdfId)]).then(([saved, cached]) => {
       if (!active) return
       setPages(saved)
@@ -52,7 +47,7 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
       setPhase(summary.state === 'complete' || summary.state === 'no-text'
         ? 'complete' : 'idle')
     }).catch(reason => { if (active) setError({ kind: 'load', detail: String(reason) }) })
-    return () => { active = false; cancelRef.current = true }
+    return () => { active = false; activePdfRef.current = null; indexingAbortRef.current?.abort() }
   }, [pdfId, numPages, textInspection])
 
   const loaded = loadedPdfId === pdfId && loadedPageCount === numPages
@@ -63,7 +58,7 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
     saveBookIndexSummary(summary).catch(reason => setError({ kind: 'save', detail: String(reason) }))
   }, [summary, loaded, numPages])
 
-  const stopIndexing = useCallback(() => { cancelRef.current = true }, [])
+  const stopIndexing = useCallback(() => { indexingAbortRef.current?.abort() }, [])
 
   const readPage = useCallback(async (number: number): Promise<BookPageIndex> => {
     if (!pdfDoc) throw new PDFNotReadyError(en.errors.pdfLoading)
@@ -76,67 +71,37 @@ export function useBookIndex(pdfId: string, pdfDoc: PDFDocumentProxy | null, num
   const startIndexing = useCallback(async () => {
     if (!pdfDoc || !numPages || !loaded || runningRef.current) return
     runningRef.current = true
-    cancelRef.current = false
+    const controller = new AbortController()
+    indexingAbortRef.current = controller
     setError(null)
     setHasIndexFailure(false)
     let attemptFailed = false
     try {
-      const saved = await loadBookPages(pdfId)
-      const byPage = new Map(saved.map(page => [page.pageNumber, page]))
-      setPhase('reading')
-      for (let number = 1; number <= numPages; number++) {
-        if (cancelRef.current) break
-        if (!byPage.has(number)) {
-          const page = await readPage(number)
-          byPage.set(number, page)
-        }
-        setProgress(number)
-        setPages([...byPage.values()].sort((a, b) => a.pageNumber - b.pageNumber))
-      }
-      if (cancelRef.current) { setPhase('stopped'); return }
-
-      setPhase('embedding')
-      const pending = [...byPage.values()].flatMap(page => page.passages.map((passage, index) => ({ page, passage, index })))
-        .filter(item => !item.passage.vector?.length)
-      setEmbeddingProgress({ done: 0, total: pending.length })
-      for (let offset = 0; offset < pending.length; offset += 8) {
-        if (cancelRef.current) break
-        const batch = pending.slice(offset, offset + 8)
-        const vectors = await embedBookTexts(batch.map(item => item.page.text.slice(item.passage.start, item.passage.end)))
-        for (let i = 0; i < batch.length; i++) batch[i].page.passages[batch[i].index].vector = vectors[i]
-        for (const page of new Set(batch.map(item => item.page))) await saveBookPage(page)
-        setPages([...byPage.values()].sort((a, b) => a.pageNumber - b.pageNumber))
-        setEmbeddingProgress({ done: offset + batch.length, total: pending.length })
-      }
-      if (cancelRef.current) { setPhase('stopped'); return }
-
-      setPhase('connecting')
-      const indexed = [...byPage.values()]
-      const averaged = indexed.map(page => ({ page, vector: averageVector(page) }))
-      for (const item of averaged) {
-        if (cancelRef.current) { setPhase('stopped'); return }
-        if (!item.vector) continue
-        item.page.relatedPages = averaged.filter(other => other.page !== item.page && other.vector)
-          .map(other => ({ pageNumber: other.page.pageNumber,
-            similarity: item.vector!.reduce((sum, value, i) => sum + value * other.vector![i], 0) }))
-          .filter(other => other.similarity >= 0.7)
-          .sort((a, b) => b.similarity - a.similarity).slice(0, 3)
-          .map(other => other.pageNumber)
-        await saveBookPage(item.page)
-      }
-      setPages(indexed.sort((a, b) => a.pageNumber - b.pageNumber))
-      setPhase('complete')
+      await buildBookIndex(numPages, controller.signal, {
+        loadPages: () => loadBookPages(pdfId), readPage, savePage: saveBookPage, embedTexts: embedBookTexts,
+      }, update => {
+        if (activePdfRef.current !== pdfId) return
+        setPages(update.pages)
+        setPhase(update.phase)
+        setProgress(update.progress)
+        setEmbeddingProgress(update.embeddingProgress)
+      })
     } catch (reason) {
-      attemptFailed = true
-      setHasIndexFailure(true)
-      setError(reason instanceof PDFNotReadyError ? { kind: 'pdfLoading' } :
-        { kind: 'indexing', detail: reason instanceof Error ? reason.message : String(reason) })
-      setPhase('stopped')
+      if (!controller.signal.aborted) {
+        attemptFailed = true
+        if (activePdfRef.current === pdfId) {
+          setHasIndexFailure(true)
+          setError(reason instanceof PDFNotReadyError ? { kind: 'pdfLoading' } :
+            { kind: 'indexing', detail: reason instanceof Error ? reason.message : String(reason) })
+        }
+      }
+      if (activePdfRef.current === pdfId) setPhase('stopped')
     } finally {
       // An in-flight embedding batch may finish after the settings view closes.
       // Refresh persisted status even when React no longer runs this hook's effects.
       try { await saveBookIndexSummary(withBookIndexAttempt(summarizeBookIndex(pdfId, await loadBookPages(pdfId), numPages), textInspection, attemptFailed)) }
-      catch (reason) { setError({ kind: 'save', detail: String(reason) }) }
+      catch (reason) { if (activePdfRef.current === pdfId) setError({ kind: 'save', detail: String(reason) }) }
+      indexingAbortRef.current = null
       runningRef.current = false
     }
   }, [pdfDoc, pdfId, numPages, readPage, textInspection, loaded])

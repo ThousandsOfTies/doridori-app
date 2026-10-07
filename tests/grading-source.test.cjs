@@ -1,3 +1,4 @@
+const { answerWheelHarness, CanvasUndoHistory } = require('../../home-teacher-common/tests/helpers/answerCanvasHarness.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -16,21 +17,7 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(__dirname,
 }).outputText, { exports: panelWheelExports });
 const { getPanelWheelDestination } = panelWheelExports;
 
-function answerWheelHarness() {
-    class Element { constructor(control = false) { this.control = control; } closest() { return this.control ? this : null; } }
-    const viewportRef = { current: { zoom: 1, panOffset: { x: 0, y: 0 } } };
-    const updates = [];
-    const run = handler('handleWheelNative', { Element, viewportRef,
-        container: { clientHeight: 500, getBoundingClientRect: () => ({ left: 100, top: 80 }) },
-        setZoom: value => updates.push(['zoom', value]), setPanOffset: value => updates.push(['pan', value]) }, 'AnswerPanel');
-    const send = (options = {}) => {
-        let prevented = false, stopped = false;
-        run({ target: new Element(), buttons: 0, deltaY: 100, deltaMode: 0, clientX: 300, clientY: 280,
-            preventDefault() { prevented = true; }, stopPropagation() { stopped = true; }, ...options });
-        return { prevented, stopped };
-    };
-    return { viewportRef, updates, send, control: () => new Element(true) };
-}
+
 
 test('writing-area wheel leaves text editors and consumed or drawing events alone', () => {
     const h = answerWheelHarness();
@@ -723,7 +710,7 @@ test('the question canvas keeps the original paper size and fades only outside t
             .map(name => [name, handler(name, {}, 'AnswerPanel')]));
         handler('initCanvas', {
             ...constants, bgCanvasRef: { current: bg }, drawCanvasRef: { current: drawing },
-            writingBoundsRef: { current: null }, historyRef: { current: [] },
+            writingBoundsRef: { current: null }, historyRef: { current: new CanvasUndoHistory() },
             fullPageQuestion: true, imageFocusRegion: region, pageDisplayWidth: 1000,
             setCanUndo() {}, onCanUndoChange: undefined, console: { log() {} },
         }, 'AnswerPanel')({ naturalWidth: 1000 * pixelRatio, naturalHeight: 800 * pixelRatio }, region);
