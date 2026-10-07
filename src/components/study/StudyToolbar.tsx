@@ -19,6 +19,7 @@ interface StudyToolbarProps {
     onBack?: () => void;
     onOpenSettings?: () => void;
     breadcrumbs?: BreadcrumbItem[];
+    pageViewControlsEnabled: boolean;
     isSplitView: boolean;
     toggleSplitView: () => void;
     activeTab: 'A' | 'B';
@@ -66,6 +67,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     onBack,
     onOpenSettings,
     breadcrumbs,
+    pageViewControlsEnabled,
     isSplitView,
     toggleSplitView,
     activeTab,
@@ -164,59 +166,57 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
             )}
 
             {/* 左側の表示切替 */}
-            {!onGrade && (
-                <>
-                    {onBack && <div className="divider" aria-hidden="true" />}
-                    <div className="toolbar-view-controls">
-                        <button
-                            className={`tab-switcher-btn ${!isSplitView ? 'active' : ''}`}
-                            onClick={toggleActiveTab}
-                            title={td(isSplitView ? 'toolbar.singleView' : 'toolbar.switchPane')}
-                            style={{
-                                minWidth: '45px',
-                            }}
-                        >
-                            {/* A Indicator */}
-                            <span
-                                style={{
-                                    fontWeight: activeTab === 'A' ? 'bold' : 'normal',
-                                    textDecoration: activeTab === 'A' ? 'underline' : 'none',
-                                    color: activeTab === 'A' ? '#4CAF50' : 'inherit',
-                                    fontSize: '0.85rem'
-                                }}
-                            >
-                                A
-                            </span>
+            {onBack && <div className="divider" aria-hidden="true" />}
+            <div className="toolbar-view-controls">
+                <button
+                    className={`tab-switcher-btn ${pageViewControlsEnabled && !isSplitView ? 'active' : ''}`}
+                    onClick={toggleActiveTab}
+                    disabled={!pageViewControlsEnabled}
+                    title={td(isSplitView ? 'toolbar.singleView' : 'toolbar.switchPane')}
+                    style={{
+                        minWidth: '45px',
+                    }}
+                >
+                    {/* A Indicator */}
+                    <span
+                        style={{
+                            fontWeight: activeTab === 'A' ? 'bold' : 'normal',
+                            textDecoration: activeTab === 'A' ? 'underline' : 'none',
+                            color: activeTab === 'A' ? '#4CAF50' : 'inherit',
+                            fontSize: '0.85rem'
+                        }}
+                    >
+                        A
+                    </span>
 
-                            <span style={{ margin: '0 4px', color: '#ccc', fontSize: '0.85rem' }}>/</span>
+                    <span style={{ margin: '0 4px', color: '#ccc', fontSize: '0.85rem' }}>/</span>
 
 
-                            {/* B Indicator */}
-                            <span
-                                style={{
-                                    fontWeight: activeTab === 'B' ? 'bold' : 'normal',
-                                    textDecoration: activeTab === 'B' ? 'underline' : 'none',
-                                    color: activeTab === 'B' ? '#4CAF50' : 'inherit',
-                                    fontSize: '0.85rem'
-                                }}
-                            >
-                                B
-                            </span>
-                        </button>
-                        <button
-                            onClick={toggleSplitView}
-                            title={td(isSplitView ? 'toolbar.singleView' : 'toolbar.splitView')}
-                            className={`split-view-btn ${isSplitView ? 'active' : ''}`}
-                        >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="2" y="4" width="9" height="16" rx="1" stroke="currentColor" strokeWidth="1" fill={isSplitView ? "white" : "none"} />
-                                <rect x="13" y="4" width="9" height="16" rx="1" stroke="currentColor" strokeWidth="1" fill={isSplitView ? "white" : "none"} />
-                            </svg>
-                        </button>
-                    </div>
-                    <div className="divider" aria-hidden="true" />
-                </>
-            )}
+                    {/* B Indicator */}
+                    <span
+                        style={{
+                            fontWeight: activeTab === 'B' ? 'bold' : 'normal',
+                            textDecoration: activeTab === 'B' ? 'underline' : 'none',
+                            color: activeTab === 'B' ? '#4CAF50' : 'inherit',
+                            fontSize: '0.85rem'
+                        }}
+                    >
+                        B
+                    </span>
+                </button>
+                <button
+                    onClick={toggleSplitView}
+                    disabled={!pageViewControlsEnabled}
+                    title={td(isSplitView ? 'toolbar.singleView' : 'toolbar.splitView')}
+                    className={`split-view-btn ${pageViewControlsEnabled && isSplitView ? 'active' : ''}`}
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="4" width="9" height="16" rx="1" stroke="currentColor" strokeWidth="1" fill={isSplitView ? "white" : "none"} />
+                        <rect x="13" y="4" width="9" height="16" rx="1" stroke="currentColor" strokeWidth="1" fill={isSplitView ? "white" : "none"} />
+                    </svg>
+                </button>
+            </div>
+            <div className="divider" aria-hidden="true" />
 
             {onBack && (
                 <>
@@ -242,7 +242,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                         style={{
                                             fontSize: '13px',
                                             color: crumb.isCurrent ? '#333' : '#2c7be5',
-                                            fontWeight: crumb.isCurrent ? 600 : 400,
+                                            fontWeight: 600,
                                             cursor: crumb.isCurrent ? 'default' : 'pointer',
                                             padding: crumb.content ? '0 6px' : '3px 6px',
                                             borderRadius: '10px',

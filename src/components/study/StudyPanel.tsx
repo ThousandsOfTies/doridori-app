@@ -1878,6 +1878,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
             onClick: () => navigateToPanel(i),
             isCurrent: i === activePanelIndex
           }))}
+          pageViewControlsEnabled={activePanel?.type === 'pdf'}
           isSplitView={isSplitView}
           toggleSplitView={toggleSplitView}
           activeTab={activeTab}
