@@ -1578,7 +1578,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
       <div className="pdf-viewer">
         <StudyToolbar
           onBack={onBack}
-          onOpenSettings={onOpenSettings}
           showStudyMarkers={showStudyMarkers}
           onToggleStudyMarkers={activePanel?.type === 'pdf' ? toggleStudyMarkers : undefined}
           breadcrumbs={visibleBreadcrumbPanels.map((panel, i) => ({

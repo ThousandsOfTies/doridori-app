@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { FiFileText } from 'react-icons/fi'
 import type { PDFFileRecord } from '@home-teacher/common/utils/indexedDB'
+import { StudyPDFThumbnail } from '@home-teacher/common/components/study/StudyPDFThumbnail'
 import { BOOK_INDEX_CHANGED_EVENT } from '../../book/bookIndex'
 import type { BookIndexSummary } from '../../book/bookIndexStatus'
 import { withPDFTextInspection } from '../../book/bookIndexStatus'
@@ -15,12 +16,14 @@ export function BookCoverThumbnail({ record, summary, size = 'list', onStatusCli
   expanded?: boolean
   unavailable?: boolean
 }) {
-  return <span className={`book-cover-thumbnail ${size === 'toolbar' ? 'compact' : 'list'}`}>
+  const status = <BookIndexDot summary={summary && withPDFTextInspection(summary, record.textInspection)} textInspection={record.textInspection}
+    unavailable={unavailable} onClick={onStatusClick} expanded={expanded} />
+  if (size === 'toolbar') return <StudyPDFThumbnail record={record}>{status}</StudyPDFThumbnail>
+  return <span className="book-cover-thumbnail list">
     <span className="book-cover-image">
       {record.thumbnail ? <img src={record.thumbnail} alt={record.fileName} /> :
         <span className="book-cover-placeholder" role="img" aria-label={record.fileName}><FiFileText /></span>}
-      <BookIndexDot summary={summary && withPDFTextInspection(summary, record.textInspection)} textInspection={record.textInspection}
-        unavailable={unavailable} onClick={onStatusClick} expanded={expanded} />
+      {status}
     </span>
   </span>
 }

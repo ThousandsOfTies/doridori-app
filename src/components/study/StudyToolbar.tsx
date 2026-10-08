@@ -5,13 +5,12 @@ export type { BreadcrumbItem } from '@home-teacher/common/components/study/Study
 export type { TextDirection } from '@home-teacher/common/components/study/StudyToolSettings'
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiSettings, FiHelpCircle, FiLoader, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiHelpCircle, FiLoader, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
 import { BiSelection } from 'react-icons/bi';
 import { useDoriTranslation } from '../../i18n';
 
 interface StudyToolbarProps {
     onBack?: () => void;
-    onOpenSettings?: () => void;
     breadcrumbs?: BreadcrumbItem[];
     pageViewControlsEnabled: boolean;
     isSplitView: boolean;
@@ -59,7 +58,6 @@ interface StudyToolbarProps {
 
 export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     onBack,
-    onOpenSettings,
     breadcrumbs,
     pageViewControlsEnabled,
     isSplitView,
@@ -141,12 +139,6 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                     switchPane: td(isSplitView ? 'toolbar.singleView' : 'toolbar.switchPane'),
                     splitView: td(isSplitView ? 'toolbar.singleView' : 'toolbar.splitView'),
                 }}
-                breadcrumbStyle={{ padding: '6px 0' }}
-                contentBreadcrumbClassName="book-cover-breadcrumb"
-                beforeBreadcrumbs={onOpenSettings && <button type="button" onClick={onOpenSettings}
-                    aria-label={td('reference.openSettings')} title={td('reference.openSettings')} className="book-settings-button">
-                    <FiSettings size={20} />
-                </button>}
             />
 
             {/* 右寄せコンテナ */}
