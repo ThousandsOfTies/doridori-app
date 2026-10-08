@@ -1,6 +1,6 @@
-# APIの移行先
+# 共有APIの移行先
 
-サーバー本体は兄弟サブモジュール [home-teacher-api](https://github.com/ThousandsOfTies/home-teacher-api/blob/main/README.md) へ移りました。
-このディレクトリには実装を保持しません。既存のローカル `server/.env` と認証ファイルは、アプリから `npm run dev:server` を実行した場合に引き続き参照できます。
+サーバー本体・依存・公開手順は、兄弟サブモジュール [home-teacher-api](https://github.com/ThousandsOfTies/home-teacher-api) にあります。
 
-APIの依存を `../home-teacher-api` で `npm ci` により用意してください。ビルド・テスト・公開手順は移行先のREADMEを参照してください。
+メタリポジトリ直下の `repos/home-teacher-api` で `npm ci` を実行し、アプリ直下の `npm run dev:server` で起動できます。
+この起動方法では、従来のローカル `server/.env` と認証ファイルも互換用に参照します。
