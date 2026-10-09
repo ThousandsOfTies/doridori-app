@@ -1,5 +1,5 @@
 import { useAnswerWheel } from '@home-teacher/common/hooks/useAnswerWheel'
-import { pinchViewport, touchPair } from '@thousands-of-ties/drawing-common'
+import { pinchViewport, touchPair, useStrokeInput, drawStationaryStroke } from '@thousands-of-ties/drawing-common'
 import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import type { PDFStudyAnswerState, PDFStudyRegion } from '@home-teacher/common/utils/indexedDB'
@@ -449,7 +449,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     const pos = getPos(clientX, clientY)
     const writing = writingBoundsRef.current
     if (writing && (pos.x < writing.x || pos.x > writing.x + writing.width ||
-      pos.y < writing.y || pos.y > writing.y + writing.height)) return
+      pos.y < writing.y || pos.y > writing.y + writing.height)) return false
     saveSnapshot()
     isDrawingRef.current = true
     lastPosRef.current = pos
@@ -481,7 +481,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     }
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    ctx.stroke()
+    if (!drawStationaryStroke(ctx, [lastPosRef.current, pos], ctx.lineWidth)) ctx.stroke()
     lastPosRef.current = pos
   }
 
@@ -531,6 +531,17 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     panStartRef.current = null
   }
 
+  const strokeInput = useStrokeInput({
+    enabled: isReady && !isTextMode && !isCtrlPressed,
+    onStart: point => startDraw(point.clientX, point.clientY),
+    onMove: points => {
+      for (const point of points) drawTo(point.clientX, point.clientY)
+      const last = points[points.length - 1]
+      if (isEraserMode && last) setEraserCursorPos(getEraserCursorPos(last.clientX, last.clientY))
+    },
+    onEnd: () => { stopDraw(); setEraserCursorPos(null) },
+  })
+
   return (
     <div
       className="answer-panel-content"
@@ -553,17 +564,19 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
           ref={drawCanvasRef}
           className="answer-draw-canvas"
           style={{ cursor, pointerEvents: isReady ? 'auto' : 'none' }}
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
+            if (e.pointerType === 'touch') return
             if (isCtrlPressed || e.button === 1) {
               startPanning(e.clientX, e.clientY)
             } else if (e.button === 0 && !isTextMode) {
-              startDraw(e.clientX, e.clientY)
+              strokeInput.onPointerDown(e)
             }
           }}
           onClick={(e) => {
             if (isTextMode && !isCtrlPressed && e.button === 0) beginText(e.clientX, e.clientY)
           }}
-          onMouseMove={(e) => {
+          onPointerMove={(e) => {
+            if (e.pointerType === 'touch') return
             const pos = getPos(e.clientX, e.clientY)
             const writing = writingBoundsRef.current
             setIsOverWritingArea(!writing || (pos.x >= writing.x && pos.x <= writing.x + writing.width &&
@@ -572,14 +585,18 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
               doPanning(e.clientX, e.clientY)
             } else {
               if (isEraserMode) setEraserCursorPos(getEraserCursorPos(e.clientX, e.clientY))
-              if (!isTextMode && e.buttons === 1) drawTo(e.clientX, e.clientY)
+              if (!isTextMode) strokeInput.onPointerMove(e)
             }
           }}
-          onMouseUp={() => { stopDraw(); stopPanning() }}
-          onMouseLeave={() => { stopDraw(); stopPanning(); setEraserCursorPos(null); setIsOverWritingArea(false) }}
+          onPointerUp={(e) => { strokeInput.onPointerUp(e); stopPanning() }}
+          onPointerCancel={(e) => { strokeInput.onPointerCancel(e); stopPanning() }}
+          onLostPointerCapture={strokeInput.onLostPointerCapture}
+          onPointerLeave={() => { setEraserCursorPos(null); setIsOverWritingArea(false) }}
           onTouchStart={(e) => {
+            if (strokeInput.onTouchStart(e)) return
             if (e.touches.length === 2) {
               setIsPinching(true)
+              strokeInput.cancel()
               textTouchStartRef.current = null
               const pair = touchPair(e.touches)
               gestureRef.current = { startZoom: zoom, startPan: panOffset, startDist: pair.distance, startCenter: pair.center }
@@ -588,10 +605,11 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
               if (isTextMode) {
                 e.preventDefault()
                 textTouchStartRef.current = { x: t.clientX, y: t.clientY, moved: false }
-              } else startDraw(t.clientX, t.clientY)
+              }
             }
           }}
           onTouchMove={(e) => {
+            if (strokeInput.onTouchMove(e)) return
             if (e.touches.length === 2 && gestureRef.current) {
               const bounds = containerRef.current?.getBoundingClientRect()
               if (!bounds) return
@@ -602,24 +620,23 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
               if (isTextMode && textTouchStartRef.current) {
                 if (Math.hypot(t.clientX - textTouchStartRef.current.x,
                   t.clientY - textTouchStartRef.current.y) > 8) textTouchStartRef.current.moved = true
-              } else if (!isTextMode) {
-                if (isEraserMode) setEraserCursorPos(getEraserCursorPos(t.clientX, t.clientY))
-                drawTo(t.clientX, t.clientY)
               }
             }
           }}
           onTouchEnd={(e) => {
             if (e.touches.length < 2) setIsPinching(false)
+            if (strokeInput.onTouchEnd(e)) return
             if (isTextMode && e.touches.length === 0 && textTouchStartRef.current && !textTouchStartRef.current.moved) {
               beginText(textTouchStartRef.current.x, textTouchStartRef.current.y)
             }
             textTouchStartRef.current = null
-            stopDraw(); stopPanning(); setEraserCursorPos(null); gestureRef.current = null
+            stopPanning(); setEraserCursorPos(null); gestureRef.current = null
           }}
-          onTouchCancel={() => {
+          onTouchCancel={(e) => {
+            if (strokeInput.onTouchCancel(e)) return
             setIsPinching(false)
             textTouchStartRef.current = null
-            stopDraw(); stopPanning(); setEraserCursorPos(null); gestureRef.current = null
+            stopPanning(); setEraserCursorPos(null); gestureRef.current = null
           }}
         />
         {textAnnotations.map(item => editingText?.id === item.id ? null : (
