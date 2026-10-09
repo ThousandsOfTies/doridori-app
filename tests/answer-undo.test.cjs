@@ -19,6 +19,30 @@ function handler(name, adapters) {
   }).outputText + '\nrun', { ...adapters })
 }
 
+test('eraser cursor stays at the screen tip across paper zoom, pan and viewport scroll', () => {
+  const viewport = {
+    clientLeft: 2, clientTop: 2, scrollLeft: 0, scrollTop: 0,
+    getBoundingClientRect: () => ({ left: 80, top: 60, width: 900, height: 700 }),
+  }
+  let paperRect
+  const cursorAt = handler('getEraserCursorPos', {
+    containerRef: { current: viewport }, eraserSize: 24,
+    drawCanvasRef: { current: { getBoundingClientRect: () => paperRect } },
+  })
+  for (const [zoom, panX, panY, scrollLeft, scrollTop] of [
+    [1, 0, 0, 0, 0], [0.5, 70, 90, 0, 0], [2.5, -40, -30, 0, 0], [1.4, -80, 20, 15, 25],
+  ]) {
+    Object.assign(viewport, { scrollLeft, scrollTop })
+    paperRect = { left: 102 + panX - scrollLeft, top: 82 + panY - scrollTop,
+      width: 600 * zoom, height: 800 * zoom }
+    const clientX = paperRect.left + 110 * zoom, clientY = paperRect.top + 80 * zoom
+    const cursor = cursorAt(clientX, clientY), bounds = viewport.getBoundingClientRect()
+    assert.equal(bounds.left + viewport.clientLeft + cursor.x - scrollLeft, clientX)
+    assert.equal(bounds.top + viewport.clientTop + cursor.y - scrollTop, clientY)
+    assert.equal(cursor.diameter, 24)
+  }
+})
+
 test('pinch follows every intermediate scale without an animation and resets on release or cancellation', () => {
   const app = answerPinchHarness(file)
   const event = distance => ({ touches: [{ clientX: 150 - distance / 2, clientY: 100 },
