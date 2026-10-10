@@ -1,15 +1,12 @@
 import messages from '../i18n/locales/ja.json'
+import { getApiBaseUrl } from '@home-teacher/common/services/apiConfig'
 import { createReferenceMediaLoader } from './bookReferenceMedia'
 import { runBookAgent, type BookAgentProgress } from './bookAgent'
 import type { BookAgentQuestion, BookAgentStep, BookContextRequest, BookContextResult } from '../../shared/bookAgentProtocol'
 
-const productionApiUrl = 'https://hometeacher-api-736494768812.asia-northeast1.run.app'
-const apiBaseUrl = import.meta.env.VITE_API_URL ||
-  (['localhost', '127.0.0.1'].includes(window.location.hostname) ? 'http://localhost:3003' : productionApiUrl)
-
 async function postBookApi<T>(path: string, body: unknown): Promise<T> {
   for (let attempt = 0; attempt < 3; attempt++) {
-    const response = await fetch(`${apiBaseUrl}/api/book/${path}`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/book/${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

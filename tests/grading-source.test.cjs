@@ -1,3 +1,4 @@
+const { studySelectionAdapters } = require('../../home-teacher-common/tests/helpers/studySelectionHarness.cjs');
 const { answerWheelHarness, CanvasUndoHistory, resizeCanvasForDisplay, getCanvasLogicalSize } = require('../../home-teacher-common/tests/helpers/answerCanvasHarness.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -5,6 +6,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
+const toolModeExports = {};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(__dirname,
+    '../../home-teacher-common/src/hooks/useStudyToolMode.ts'), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+}).outputText, { exports: toolModeExports, require });
+const { studyToolForPanel } = toolModeExports;
 
 // Run the real component handlers with deterministic canvas/API/storage adapters.
 const filename = path.join(__dirname, '../src/components/study/StudyPanel.tsx');
@@ -67,8 +74,9 @@ function handler(name, adapters, component = 'StudyPanel') {
     }).outputText;
     return vm.runInNewContext(code + '\nrun', {
         traceUndo: { busy: false }, deletedTraceIdsRef: { current: new Set() }, handledTracePointerRef: { current: false },
+        setTool() {}, studyToolForPanel,
         resizeCanvasForDisplay, getCanvasLogicalSize,
-        ...adapters,
+        ...studySelectionAdapters(adapters), ...adapters,
     });
 }
 
@@ -301,10 +309,7 @@ test('returning to PDF activates range selection and clears drawing tools', () =
     const updates = [];
     const activatePanelMode = handler('activatePanelMode', {
         useCallback: callback => callback,
-        setIsSelectionMode: value => updates.push(['selection', value]),
-        setIsDrawingMode: value => updates.push(['pen', value]),
-        setIsEraserMode: value => updates.push(['eraser', value]),
-        setIsTextMode: value => updates.push(['text', value]),
+        setTool: value => updates.push(['tool', value]),
         setSelectionRect: value => updates.push(['rect', value]),
         setIsHoveringStudyTrace() {}, setIsGradingCaptureMode() {}, setGradingCaptureRect() {},
         isSelectingRef: { current: false }, selectionStartRef: { current: null },
@@ -312,14 +317,19 @@ test('returning to PDF activates range selection and clears drawing tools', () =
         gradingCaptureRectRef: { current: null },
     });
     const run = handler('navigateToPanel', {
-        panelStack: [{ type: 'pdf' }, { type: 'answer' }], activatePanelMode,
+        panelStack: [{ type: 'pdf' }, { type: 'answer' }, { type: 'grading' }], activatePanelMode,
         setActivePanelIndex: value => updates.push(['panel', value]),
     });
     run(0);
     assert.deepEqual(updates.map(([key, value]) => [key, value]), [
-        ['selection', true], ['rect', null], ['pen', false], ['eraser', false],
-        ['text', false], ['panel', 0],
+        ['tool', 'select-pdf'], ['rect', null], ['panel', 0],
     ]);
+    updates.length = 0;
+    run(1);
+    assert.equal(Object.fromEntries(updates).tool, 'text');
+    updates.length = 0;
+    run(2);
+    assert.equal(Object.fromEntries(updates).tool, 'select-result');
 });
 
 test('PDF horizontal navigation uses visible-page marks and never chooses between multiple ranges', () => {
@@ -734,8 +744,8 @@ test('an image focus loads the whole answer image and preserves the scrolled vie
         initCanvas: (image, focus) => { loaded = [image.source, focus]; },
         bgCanvasRef: { current: { width: 1000 } }, containerRef: { current: { clientWidth: 1032 } },
         textAnnotationsRef: { current: [] }, fullPageQuestion: true, pageScrollTop: 480,
-        setTextAnnotations() {}, setZoom() {}, setIsReady() {},
-        setPanOffset: value => { pan = value; }, console,
+        setTextAnnotations() {}, setIsReady() {},
+        restoreViewport: value => { pan = value.panOffset; assert.equal(value.zoom, 1); }, console,
     }, 'AnswerPanel')();
     assert.equal(loaded[0], 'full-answer-image');
     assert.equal(loaded[1], region);

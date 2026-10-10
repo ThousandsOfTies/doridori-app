@@ -4,7 +4,7 @@ const fs = require('node:fs')
 const path = require('node:path')
 const vm = require('node:vm')
 const ts = require('typescript')
-const { CanvasUndoHistory, answerPinchHarness } = require('../../home-teacher-common/tests/helpers/answerCanvasHarness.cjs')
+const { viewportCursorPosition, CanvasUndoHistory, answerPinchHarness } = require('../../home-teacher-common/tests/helpers/answerCanvasHarness.cjs')
 const file = path.join(__dirname, '../src/components/study/AnswerPanel.tsx')
 const source = ts.createSourceFile(file, fs.readFileSync(file, 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
 function handler(name, adapters) {
@@ -16,7 +16,7 @@ function handler(name, adapters) {
   visit(source); assert.ok(initializer, name)
   return vm.runInNewContext(ts.transpileModule('const run = ' + initializer.getText(source), {
     compilerOptions: { target: ts.ScriptTarget.ES2022 },
-  }).outputText + '\nrun', { ...adapters })
+  }).outputText + '\nrun', { viewportCursorPosition, ...adapters })
 }
 
 test('Retina drawing coordinates follow the paper rather than its doubled backing pixels', () => {
