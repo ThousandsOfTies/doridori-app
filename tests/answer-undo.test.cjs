@@ -19,6 +19,61 @@ function handler(name, adapters) {
   }).outputText + '\nrun', { ...adapters })
 }
 
+test('Retina drawing coordinates follow the paper rather than its doubled backing pixels', () => {
+  const canvas = { width: 1600, height: 2264,
+    getBoundingClientRect: () => ({ left: 80, top: 60, width: 400, height: 566 }) }
+  const getPos = handler('getPos', {
+    drawCanvasRef: { current: canvas },
+    getCanvasLogicalSize: () => ({ width: 800, height: 1132 }),
+  })
+  const point = getPos(180, 210)
+  assert.equal(point.x, 200)
+  assert.equal(point.y, 300)
+})
+
+test('higher display resolution does not enlarge the image sent for evaluation', async () => {
+  const bgCanvas = { width: 2400, height: 1698 }, drawCanvas = { width: 2400, height: 1698 }
+  const calls = []
+  const output = { width: 0, height: 0, getContext: () => ({
+    drawImage: (...args) => calls.push(args),
+  }), toDataURL: () => 'image' }
+  const compose = handler('getCompositeImage', {
+    bgCanvasRef: { current: bgCanvas }, drawCanvasRef: { current: drawCanvas },
+    document: { createElement: () => output },
+    getCanvasLogicalSize: () => ({ width: 1200, height: 849 }),
+    textAnnotationsRef: { current: [] }, drawAnswerText() {},
+    writingBoundsRef: { current: null },
+  })
+  assert.equal(await compose(), 'image')
+  assert.equal(output.width, 1200)
+  assert.equal(output.height, 849)
+  assert.deepEqual(calls, [[bgCanvas, 0, 0, 1200, 849], [drawCanvas, 0, 0, 1200, 849]])
+})
+
+test('book answer crops use backing pixels while preserving the selected image and writing layout', async () => {
+  const bgCanvas = { width: 3200, height: 1800 }, drawCanvas = { width: 3200, height: 1800 }
+  const writing = { x: 720, y: 90, width: 620, height: 500 }
+  const calls = []
+  const output = { width: 0, height: 0, getContext: () => ({
+    fillRect() {}, drawImage: (...args) => calls.push(args),
+  }), toDataURL: () => 'image' }
+  class Image {
+    naturalWidth = 600
+    naturalHeight = 200
+    set src(value) { this.onload() }
+  }
+  const compose = handler('getCompositeImage', {
+    bgCanvasRef: { current: bgCanvas }, drawCanvasRef: { current: drawCanvas },
+    writingBoundsRef: { current: writing }, questionImage: 'selection', Image,
+    getCanvasLogicalSize: () => ({ width: 1600, height: 900 }),
+    document: { createElement: () => output },
+  })
+  assert.equal(await compose(), 'image')
+  assert.equal(output.width, 620)
+  assert.equal(output.height, 724)
+  assert.deepEqual(calls[1], [drawCanvas, 1440, 180, 1240, 1000, 0, 224, 620, 500])
+})
+
 test('eraser cursor stays at the screen tip across paper zoom, pan and viewport scroll', () => {
   const viewport = {
     clientLeft: 2, clientTop: 2, scrollLeft: 0, scrollTop: 0,
@@ -61,17 +116,20 @@ test('pinch follows every intermediate scale without an animation and resets on 
   assert.equal(app.state.gestureRef.current, null)
 })
 
-test('answer handlers undo one stroke, restore the cleared drawing and retain text/stroke metadata', () => {
+test('answer handlers clear the full paper on pixel-capped canvases and undo drawings with their metadata', () => {
   const pixels = new Uint8ClampedArray(16 * 16 * 4), events = []
   const canvas = { width: 16, height: 16, getContext: () => ({
     getImageData: () => ({ width: 16, height: 16, data: pixels.slice() }),
-    putImageData: image => pixels.set(image.data), clearRect: () => pixels.fill(0),
+    putImageData: image => pixels.set(image.data), clearRect: (x, y, width, height) => {
+      assert.equal(width, 32); assert.equal(height, 32); pixels.fill(0)
+    },
   }) }
   const historyRef = { current: new CanvasUndoHistory() }
   const texts = { current: [] }, strokes = { current: [] }
   const updateTexts = value => { texts.current = value }
   const adapters = { drawCanvasRef: { current: canvas }, historyRef,
     textAnnotationsRef: texts, strokesRef: strokes, activeStrokeRef: { current: null },
+    getCanvasLogicalSize: () => ({ width: 32, height: 32 }),
     editingTextRef: { current: null }, setEditingText() {}, updateTexts,
     updateTextAnnotations: updateTexts, persistDrawing: () => events.push('saved'),
     setCanUndo: value => events.push(value), onCanUndoChange() {},

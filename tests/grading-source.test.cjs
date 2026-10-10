@@ -1,4 +1,4 @@
-const { answerWheelHarness, CanvasUndoHistory } = require('../../home-teacher-common/tests/helpers/answerCanvasHarness.cjs');
+const { answerWheelHarness, CanvasUndoHistory, resizeCanvasForDisplay, getCanvasLogicalSize } = require('../../home-teacher-common/tests/helpers/answerCanvasHarness.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -67,6 +67,7 @@ function handler(name, adapters, component = 'StudyPanel') {
     }).outputText;
     return vm.runInNewContext(code + '\nrun', {
         traceUndo: { busy: false }, deletedTraceIdsRef: { current: new Set() }, handledTracePointerRef: { current: false },
+        resizeCanvasForDisplay, getCanvasLogicalSize,
         ...adapters,
     });
 }
@@ -699,12 +700,12 @@ test('the question canvas keeps the original paper size and fades only outside t
     const region = { x: 0.2, y: 0.3, width: 0.4, height: 0.2 };
     for (const pixelRatio of [1, 2]) {
         const images = [], fills = [], outlines = [];
-        const bg = { getContext: () => ({
+        const bg = { style: {}, getContext: () => ({ setTransform() {},
             drawImage: (...args) => images.push(args.slice(1)),
             fillRect: (...args) => fills.push(args),
             strokeRect: (...args) => outlines.push(args), setLineDash() {},
         }) };
-        const drawing = { getContext: () => ({ clearRect() {} }) };
+        const drawing = { style: {}, getContext: () => ({ setTransform() {}, clearRect() {} }) };
         const constants = Object.fromEntries(['SIDE_MARGIN', 'TOP_MARGIN', 'BOTTOM_MARGIN',
             'MIN_IMAGE_WIDTH', 'BOOK_PAGE_WIDTH', 'BOOK_WRITING_WIDTH']
             .map(name => [name, handler(name, {}, 'AnswerPanel')]));

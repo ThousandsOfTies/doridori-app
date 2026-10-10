@@ -1,5 +1,5 @@
 import { useAnswerWheel } from '@home-teacher/common/hooks/useAnswerWheel'
-import { pinchViewport, touchPair, useStrokeInput, drawStationaryStroke } from '@thousands-of-ties/drawing-common'
+import { pinchViewport, touchPair, useStrokeInput, drawStationaryStroke, resizeCanvasForDisplay, getCanvasLogicalSize } from '@thousands-of-ties/drawing-common'
 import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import type { PDFStudyAnswerState, PDFStudyRegion } from '@home-teacher/common/utils/indexedDB'
@@ -143,10 +143,8 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
           width: BOOK_WRITING_WIDTH, height: h - TOP_MARGIN - BOTTOM_MARGIN - 54 }
       : null
 
-    bgCanvas.width = w
-    bgCanvas.height = h
-    drawCanvas.width = w
-    drawCanvas.height = h
+    resizeCanvasForDisplay(bgCanvas, w, h)
+    resizeCanvasForDisplay(drawCanvas, w, h)
     console.log('[AnswerPanel] canvas size:', { w, h, isLandscape })
 
     const ctx = bgCanvas.getContext('2d')!
@@ -251,7 +249,8 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
           })
           if (cancelled || !drawCanvasRef.current) return
           const ctx = drawCanvasRef.current.getContext('2d')!
-          ctx.drawImage(saved, 0, 0, drawCanvasRef.current.width, drawCanvasRef.current.height)
+          const logicalSize = getCanvasLogicalSize(drawCanvasRef.current)
+          ctx.drawImage(saved, 0, 0, logicalSize.width, logicalSize.height)
         } catch (error) {
           console.error('回答の復元に失敗しました:', error)
         } finally {
@@ -260,7 +259,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
       }
       // Reset zoom/pan on new image
       const fitWidth = bgCanvasRef.current && containerRef.current
-        ? Math.min(1, (containerRef.current.clientWidth - 32) / bgCanvasRef.current.width)
+        ? Math.min(1, (containerRef.current.clientWidth - 32) / getCanvasLogicalSize(bgCanvasRef.current).width)
         : 1
       textAnnotationsRef.current = initialTexts
       setTextAnnotations(initialTexts)
@@ -325,7 +324,8 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     if (!drawCanvas) return
     saveSnapshot()
     const ctx = drawCanvas.getContext('2d')!
-    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height)
+    const logicalSize = getCanvasLogicalSize(drawCanvas)
+    ctx.clearRect(0, 0, logicalSize.width, logicalSize.height)
     updateTexts([])
     persistDrawing()
   }
@@ -340,9 +340,10 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     if (editingTextRef.current || !drawCanvasRef.current) return
     const pos = getPos(clientX, clientY)
     const canvas = drawCanvasRef.current
+    const logicalSize = getCanvasLogicalSize(canvas)
     const editor = {
-      x: Math.max(0, Math.min(canvas.width - 1, pos.x)),
-      y: Math.max(0, Math.min(canvas.height - 1, pos.y)), text: '',
+      x: Math.max(0, Math.min(logicalSize.width - 1, pos.x)),
+      y: Math.max(0, Math.min(logicalSize.height - 1, pos.y)), text: '',
     }
     editingTextRef.current = editor
     setEditingText(editor)
@@ -409,15 +410,19 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
       ctx.fillStyle = '#ffffff'
       ctx.fillRect(0, 0, out.width, out.height)
       ctx.drawImage(selected, Math.round((out.width - selected.naturalWidth) / 2), 0)
-      ctx.drawImage(drawCanvas, writing.x, writing.y, writing.width, writing.height,
+      const logicalSize = getCanvasLogicalSize(drawCanvas)
+      const scaleX = drawCanvas.width / logicalSize.width
+      const scaleY = drawCanvas.height / logicalSize.height
+      ctx.drawImage(drawCanvas, writing.x * scaleX, writing.y * scaleY, writing.width * scaleX, writing.height * scaleY,
         Math.round((out.width - writing.width) / 2), selected.naturalHeight + 24,
         writing.width, writing.height)
     } else {
-      out.width = bgCanvas.width
-      out.height = bgCanvas.height
+      const logicalSize = getCanvasLogicalSize(bgCanvas)
+      out.width = logicalSize.width
+      out.height = logicalSize.height
       const ctx = out.getContext('2d')!
-      ctx.drawImage(bgCanvas, 0, 0)
-      ctx.drawImage(drawCanvas, 0, 0)
+      ctx.drawImage(bgCanvas, 0, 0, out.width, out.height)
+      ctx.drawImage(drawCanvas, 0, 0, out.width, out.height)
     }
     return out.toDataURL('image/png')
   }
@@ -440,8 +445,9 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   const getPos = (clientX: number, clientY: number): { x: number; y: number } => {
     const canvas = drawCanvasRef.current!
     const rect = canvas.getBoundingClientRect()
-    const scaleX = canvas.width / rect.width
-    const scaleY = canvas.height / rect.height
+    const logicalSize = getCanvasLogicalSize(canvas)
+    const scaleX = logicalSize.width / rect.width
+    const scaleY = logicalSize.height / rect.height
     return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY }
   }
 
@@ -466,7 +472,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
       pos.y = Math.max(writing.y, Math.min(writing.y + writing.height, pos.y))
     }
     const rect = canvas.getBoundingClientRect()
-    const scale = canvas.width / rect.width
+    const scale = getCanvasLogicalSize(canvas).width / rect.width
 
     ctx.beginPath()
     ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y)
