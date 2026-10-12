@@ -1269,6 +1269,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
             pdfRecord={pdfRecord}
             pdfDoc={pdfDoc}
             pageNum={pageB}
+            preloadPageNum={isSplitView ? undefined : pageA}
             regionMarkers={pdfRegionMarkers}
             onRegionMarkerClick={openStudyTrace}
             onRegionMarkerDelete={id => { void deleteStudyTrace(id) }}
