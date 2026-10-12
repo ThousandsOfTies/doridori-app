@@ -1,3 +1,4 @@
+import { useStudyPageView } from '@home-teacher/common/hooks/useStudyPageView'
 import { StudyCanvasControls } from '@home-teacher/common/components/study/StudyCanvasControls'
 import { useRectangleSelection } from '@home-teacher/common/hooks/useRectangleSelection'
 import { captureStudyPDFSelection } from '@home-teacher/common/utils/studySelection'
@@ -141,8 +142,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
   const { setTool, isDrawingMode, isEraserMode, isTextMode, isSelectionMode, isGradingCaptureMode } = useStudyToolMode('select-pdf')
 
   // Layout State
-  const [isSplitView, setIsSplitView] = useState(false)
-  const [activeTab, setActiveTab] = useState<'A' | 'B'>('B')
   // PDFを開くたびに選択跡を表示し、非表示への切替は今回の閲覧中だけ適用する。
   const [showStudyMarkers, setShowStudyMarkers] = useState(true)
 
@@ -155,8 +154,14 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
   const splitContainerRef = useRef<HTMLDivElement>(null)
 
   // Page State
-  const { pageA, pageB, setPageA, setPageB, pdfDoc, numPages, isLoading, pdfError,
+  const { pageA, pageB, swapPages, pdfDoc, numPages, isLoading, pdfError,
     handlePageAChange, handlePageBChange, setRetryCount } = useStudyPDFPages(pdfRecord, pdfId)
+
+  const { isSplitView, activeTab, toggleActiveTab, toggleSplitView, showTab } = useStudyPageView({
+    initialView: { mode: 'single', activeTab: 'B' },
+    splitActiveTab: 'B',
+    onSwapPanes: swapPages,
+  })
 
   const bookIndex = useBookIndex(pdfId, pdfDoc, numPages, pdfRecord.textInspection)
   const [showBookReferenceOptions, setShowBookReferenceOptions] = useState(false)
@@ -925,22 +930,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
     })
   }
 
-  // ステータスメッセージ
-
-  // 分割表示の切り替え / A面B面の入れ替え
-  const toggleSplitView = () => {
-    if (isSplitView) {
-      // 既にスプリット表示中ならA面とB面を入れ替え
-      const tempA = pageA
-      setPageA(pageB)
-      setPageB(tempA)
-    } else {
-      // スプリット表示をオンにする
-      setActiveTab('B')
-      setIsSplitView(true)
-    }
-  }
-
   // 矩形選択モードをキャンセル
   const handleCancelSelection = () => {
     selection.cancel()
@@ -1418,14 +1407,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
             isSplitView,
             toggleSplitView,
             activeTab,
-            toggleActiveTab: () => {
-              if (isSplitView) {
-                setActiveTab('B')
-                setIsSplitView(false)
-              } else {
-                setActiveTab(prev => prev === 'A' ? 'B' : 'A')
-              }
-            },
+            toggleActiveTab,
           }}
           showStudyMarkers={showStudyMarkers}
           onToggleStudyMarkers={activePanel?.type === 'pdf' ? toggleStudyMarkers : undefined}
@@ -1534,7 +1516,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
                     onReferenceMediaResolved={media => { void handleReferenceMediaResolved(panel, media) }}
                     onOpenReferencePage={page => {
                       handlePageAChange(page)
-                      setActiveTab('A')
+                      showTab('A')
                       navigateToPanel(0)
                     }}
                   />

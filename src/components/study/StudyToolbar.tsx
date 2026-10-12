@@ -1,4 +1,5 @@
-import { StudyToolbarNavigation, type BreadcrumbItem } from '@home-teacher/common/components/study/StudyToolbarNavigation'
+import { StudyToolbarFrame } from '@home-teacher/common/components/study/StudyToolbarFrame'
+import type { BreadcrumbItem } from '@home-teacher/common/components/study/StudyToolbarNavigation'
 import type { StudyViewControlsProps } from '@home-teacher/common/components/study/StudyViewControls'
 import { StudyEraserTool, StudyTextTool, type TextDirection } from '@home-teacher/common/components/study/StudyToolSettings'
 import { useStudyToolPopups } from '@home-teacher/common/hooks/useStudyToolPopups'
@@ -110,136 +111,131 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
     });
 
     return (
-        <div className="toolbar">
-            <StudyToolbarNavigation
-                onBack={onBack}
-                breadcrumbs={breadcrumbs}
-                viewControls={viewControls}
-                labels={{ home: td('toolbar.home') }}
-            />
+        <StudyToolbarFrame
+            onBack={onBack}
+            breadcrumbs={breadcrumbs}
+            viewControls={viewControls}
+            homeLabel={td('toolbar.home')}
+        >
 
-            {/* 右寄せコンテナ */}
-            <div className="toolbar-tools">
+            <>
+                {onToggleStudyMarkers && (
+                    <button
+                        type="button"
+                        className={`study-trace-visibility-button${showStudyMarkers ? ' active' : ''}`}
+                        onClick={onToggleStudyMarkers}
+                        aria-label={td('toolbar.showMarkers')}
+                        aria-pressed={showStudyMarkers}
+                        title={td(showStudyMarkers ? 'toolbar.markersOn' : 'toolbar.markersOff')}
+                    >
+                        {showStudyMarkers ? <FiEye size={20} /> : <FiEyeOff size={20} />}
+                    </button>
+                )}
+                <div className="divider"></div>
 
-                <>
-                    {onToggleStudyMarkers && (
-                        <button
-                            type="button"
-                            className={`study-trace-visibility-button${showStudyMarkers ? ' active' : ''}`}
-                            onClick={onToggleStudyMarkers}
-                            aria-label={td('toolbar.showMarkers')}
-                            aria-pressed={showStudyMarkers}
-                            title={td(showStudyMarkers ? 'toolbar.markersOn' : 'toolbar.markersOff')}
-                        >
-                            {showStudyMarkers ? <FiEye size={20} /> : <FiEyeOff size={20} />}
-                        </button>
-                    )}
-                    <div className="divider"></div>
+                {/* 描画ツール */}
+                <div style={{ position: 'relative' }}>
+                    <button
+                        onClick={handlePenClick}
+                        className={isDrawingMode ? 'active' : ''}
+                        title={td(isDrawingMode ? 'toolbar.penOn' : 'toolbar.penOff')}
+                    >
+                        <FiEdit2 size={20} color={isDrawingMode ? penColor : 'currentColor'} />
+                    </button>
 
-                    {/* 描画ツール */}
-                    <div style={{ position: 'relative' }}>
-                        <button
-                            onClick={handlePenClick}
-                            className={isDrawingMode ? 'active' : ''}
-                            title={td(isDrawingMode ? 'toolbar.penOn' : 'toolbar.penOff')}
-                        >
-                            <FiEdit2 size={20} color={isDrawingMode ? penColor : 'currentColor'} />
-                        </button>
-
-                        {/* ペン設定ポップアップ */}
-                        {isDrawingMode && showPenPopup && (
-                            <div className="tool-popup">
-                                <div className="popup-row">
-                                    <label>{td('toolbar.color')}</label>
-                                    <input
-                                        type="color"
-                                        value={penColor}
-                                        onChange={(e) => setPenColor(e.target.value)}
-                                        className="color-swatch-input"
-                                    />
-                                </div>
+                    {/* ペン設定ポップアップ */}
+                    {isDrawingMode && showPenPopup && (
+                        <div className="tool-popup">
+                            <div className="popup-row">
+                                <label>{td('toolbar.color')}</label>
+                                <input
+                                    type="color"
+                                    value={penColor}
+                                    onChange={(e) => setPenColor(e.target.value)}
+                                    className="color-swatch-input"
+                                />
                             </div>
-                        )}
-
-                        {showPenGuidance && (
-                            <div className="pen-guidance" role="status">
-                                {td('toolbar.penHint')}
-                            </div>
-                        )}
-                    </div>
-
-                    <StudyEraserTool
-                        active={isEraserMode}
-                        onClick={handleEraserClick}
-                        title={td(isEraserMode ? 'toolbar.eraserOn' : 'toolbar.eraserOff')}
-                    />
-                    <StudyTextTool
-                        active={isTextMode}
-                        popupVisible={showTextPopup}
-                        onClick={handleTextClick}
-                        title={td(isTextMode ? 'toolbar.textOn' : 'toolbar.textOff')}
-                        fontSize={textFontSize}
-                        setFontSize={setTextFontSize}
-                        direction={textDirection}
-                        setDirection={setTextDirection}
-                        color={penColor}
-                        setColor={setPenColor}
-                        labels={{
-                            size: td('toolbar.size'), direction: td('toolbar.direction'),
-                            horizontal: td('toolbar.horizontal'),
-                            verticalRight: td('toolbar.verticalRL'), verticalLeft: td('toolbar.verticalLR'),
-                            color: td('toolbar.color'),
-                        }}
-                        colorInputClassName="color-swatch-input"
-                    />
-
-                    {/* Context-specific buttons */}
-                    {onGrade ? (
-                        /* Answer panel mode */
-                        <>
-                            <div className="divider"></div>
-                            {setSelectedModel && availableModels && (
-                                <select
-                                    value={selectedModel}
-                                    onChange={(e) => setSelectedModel(e.target.value)}
-                                >
-                                    <option value="default">{defaultModelName}</option>
-                                    {availableModels.map(m => (
-                                        <option key={m.id} value={m.id}>{m.name}</option>
-                                    ))}
-                                </select>
-                            )}
-                            <button
-                                onClick={onGrade}
-                                disabled={isGrading}
-                                className="btn-submit"
-                                title={td('toolbar.ask')}
-                                aria-label={td('toolbar.ask')}
-                                style={{
-                                    cursor: isGrading ? 'wait' : 'pointer',
-                                    opacity: isGrading ? 0.6 : 1,
-                                    transition: 'all 0.15s',
-                                }}
-                            >
-                                {isGrading ? <FiLoader size={20} className="animate-spin" /> : <FiHelpCircle size={20} />}
-                            </button>
-                        </>
-                    ) : (
-                        /* PDF mode: range selection button */
-                        <>
-                            <div className="divider"></div>
-                            <button
-                                onClick={isSelectionMode ? cancelSelection : startGrading}
-                                className={isSelectionMode ? 'active' : ''}
-                                disabled={isGrading}
-                                title={isSelectionMode ? t('gradingConfirmation.cancel') : td('toolbar.select')}
-                            >
-                                {isGrading ? <FiLoader size={20} className="animate-spin" /> : <BiSelection size={20} className="icon-scale-13" />}
-                            </button>
-                        </>
+                        </div>
                     )}
-                </>
-            </div>
-        </div>
+
+                    {showPenGuidance && (
+                        <div className="pen-guidance" role="status">
+                            {td('toolbar.penHint')}
+                        </div>
+                    )}
+                </div>
+
+                <StudyEraserTool
+                    active={isEraserMode}
+                    onClick={handleEraserClick}
+                    title={td(isEraserMode ? 'toolbar.eraserOn' : 'toolbar.eraserOff')}
+                />
+                <StudyTextTool
+                    active={isTextMode}
+                    popupVisible={showTextPopup}
+                    onClick={handleTextClick}
+                    title={td(isTextMode ? 'toolbar.textOn' : 'toolbar.textOff')}
+                    fontSize={textFontSize}
+                    setFontSize={setTextFontSize}
+                    direction={textDirection}
+                    setDirection={setTextDirection}
+                    color={penColor}
+                    setColor={setPenColor}
+                    labels={{
+                        size: td('toolbar.size'), direction: td('toolbar.direction'),
+                        horizontal: td('toolbar.horizontal'),
+                        verticalRight: td('toolbar.verticalRL'), verticalLeft: td('toolbar.verticalLR'),
+                        color: td('toolbar.color'),
+                    }}
+                    colorInputClassName="color-swatch-input"
+                />
+
+                {/* Context-specific buttons */}
+                {onGrade ? (
+                    /* Answer panel mode */
+                    <>
+                        <div className="divider"></div>
+                        {setSelectedModel && availableModels && (
+                            <select
+                                value={selectedModel}
+                                onChange={(e) => setSelectedModel(e.target.value)}
+                            >
+                                <option value="default">{defaultModelName}</option>
+                                {availableModels.map(m => (
+                                    <option key={m.id} value={m.id}>{m.name}</option>
+                                ))}
+                            </select>
+                        )}
+                        <button
+                            onClick={onGrade}
+                            disabled={isGrading}
+                            className="btn-submit"
+                            title={td('toolbar.ask')}
+                            aria-label={td('toolbar.ask')}
+                            style={{
+                                cursor: isGrading ? 'wait' : 'pointer',
+                                opacity: isGrading ? 0.6 : 1,
+                                transition: 'all 0.15s',
+                            }}
+                        >
+                            {isGrading ? <FiLoader size={20} className="animate-spin" /> : <FiHelpCircle size={20} />}
+                        </button>
+                    </>
+                ) : (
+                    /* PDF mode: range selection button */
+                    <>
+                        <div className="divider"></div>
+                        <button
+                            onClick={isSelectionMode ? cancelSelection : startGrading}
+                            className={isSelectionMode ? 'active' : ''}
+                            disabled={isGrading}
+                            title={isSelectionMode ? t('gradingConfirmation.cancel') : td('toolbar.select')}
+                        >
+                            {isGrading ? <FiLoader size={20} className="animate-spin" /> : <BiSelection size={20} className="icon-scale-13" />}
+                        </button>
+                    </>
+                )}
+            </>
+        </StudyToolbarFrame>
     );
 };
