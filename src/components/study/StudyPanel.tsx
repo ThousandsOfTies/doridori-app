@@ -1413,6 +1413,20 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
       <div className="pdf-viewer">
         <StudyToolbar
           onBack={onBack}
+          viewControls={{
+            pageViewControlsEnabled: activePanel?.type === 'pdf',
+            isSplitView,
+            toggleSplitView,
+            activeTab,
+            toggleActiveTab: () => {
+              if (isSplitView) {
+                setActiveTab('B')
+                setIsSplitView(false)
+              } else {
+                setActiveTab(prev => prev === 'A' ? 'B' : 'A')
+              }
+            },
+          }}
           showStudyMarkers={showStudyMarkers}
           onToggleStudyMarkers={activePanel?.type === 'pdf' ? toggleStudyMarkers : undefined}
           breadcrumbs={visibleBreadcrumbPanels.map((panel, i) => ({
@@ -1452,18 +1466,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
 
         <div ref={panelNavigationRef} style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
           <StudyCanvasControls
-            pageViewControlsEnabled={activePanel?.type === 'pdf'}
-            isSplitView={isSplitView}
-            toggleSplitView={toggleSplitView}
-            activeTab={activeTab}
-            toggleActiveTab={() => {
-              if (isSplitView) {
-                setActiveTab('B')
-                setIsSplitView(false)
-              } else {
-                setActiveTab(prev => prev === 'A' ? 'B' : 'A')
-              }
-            }}
             tool={activePanel?.type === 'grading' ? null : isEraserMode ? 'eraser' : isDrawingMode ? 'pen' : null}
             penSize={penSize}
             setPenSize={setPenSize}
