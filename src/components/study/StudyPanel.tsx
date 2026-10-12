@@ -1,3 +1,4 @@
+import { StudyCanvasControls } from '@home-teacher/common/components/study/StudyCanvasControls'
 import { useRectangleSelection } from '@home-teacher/common/hooks/useRectangleSelection'
 import { captureStudyPDFSelection } from '@home-teacher/common/utils/studySelection'
 import { useStudyToolMode, studyToolForPanel } from '@home-teacher/common/hooks/useStudyToolMode'
@@ -1422,18 +1423,6 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
             onClick: () => navigateToPanel(i),
             isCurrent: i === activePanelIndex
           }))}
-          pageViewControlsEnabled={activePanel?.type === 'pdf'}
-          isSplitView={isSplitView}
-          toggleSplitView={toggleSplitView}
-          activeTab={activeTab}
-          toggleActiveTab={() => {
-            if (isSplitView) {
-              setActiveTab('B')
-              setIsSplitView(false)
-            } else {
-              setActiveTab(prev => prev === 'A' ? 'B' : 'A')
-            }
-          }}
           isSelectionMode={isSelectionMode || isGradingCaptureMode}
           isGrading={isGrading}
           startGrading={startGrading}
@@ -1448,12 +1437,8 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
           toggleDrawingMode={toggleDrawingMode}
           penColor={penColor}
           setPenColor={setPenColor}
-          penSize={penSize}
-          setPenSize={setPenSize}
           isEraserMode={isEraserMode}
           toggleEraserMode={toggleEraserMode}
-          eraserSize={eraserSize}
-          setEraserSize={setEraserSize}
           onGrade={isOnAnswerPanel ? handleGradeFromToolbar : undefined}
           selectedModel={selectedModel}
           setSelectedModel={setSelectedModel}
@@ -1466,6 +1451,25 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
           includeLaterPages={includeLaterPages} onIncludeLaterPagesChange={setIncludeLaterPages} />}
 
         <div ref={panelNavigationRef} style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+          <StudyCanvasControls
+            pageViewControlsEnabled={activePanel?.type === 'pdf'}
+            isSplitView={isSplitView}
+            toggleSplitView={toggleSplitView}
+            activeTab={activeTab}
+            toggleActiveTab={() => {
+              if (isSplitView) {
+                setActiveTab('B')
+                setIsSplitView(false)
+              } else {
+                setActiveTab(prev => prev === 'A' ? 'B' : 'A')
+              }
+            }}
+            tool={activePanel?.type === 'grading' ? null : isEraserMode ? 'eraser' : isDrawingMode ? 'pen' : null}
+            penSize={penSize}
+            setPenSize={setPenSize}
+            eraserSize={eraserSize}
+            setEraserSize={setEraserSize}
+          />
           {panelStack.map((panel, i) => (
             <div
               key={i}

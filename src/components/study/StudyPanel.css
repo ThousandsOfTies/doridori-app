@@ -84,7 +84,6 @@
   height: 20px;
 }
 
-.toolbar-view-controls,
 .toolbar-tools {
   display: flex;
   align-items: center;
@@ -96,24 +95,8 @@
   margin-left: auto;
 }
 
-.toolbar-view-controls .tab-switcher-btn {
-  width: 54px;
-}
-
-.toolbar-view-controls .split-view-btn {
-  width: 38px;
-}
-
-.toolbar .toolbar-view-controls button.active {
-  transform: none;
-}
-
 .toolbar .divider {
   flex-shrink: 0;
-}
-
-.toolbar > .divider {
-  margin: 0 4px;
 }
 
 .toolbar button, .toolbar select {
