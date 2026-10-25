@@ -1,4 +1,36 @@
 {
+  "readingCatalog": {
+    "title": "Find something to read",
+    "description": "Download a PDF from a publisher's page, then add it using the import button on the right of the home screen. Select a passage or diagram to ask DoriDori's AI about it.",
+    "openSite": "Open publication page",
+    "openSiteLabel": "Open {{name}} publication page (new tab)",
+    "sites": [
+      {
+        "name": "NASA — Hubble e-Books",
+        "description": "Explore space through illustrated books from the Hubble mission. Try Strange New Worlds and ask about exoplanets, observations, or the science behind a diagram.",
+        "url": "https://science.nasa.gov/mission/hubble/multimedia/e-books/",
+        "pdfHint": "Choose a title, open Read More and Download, then select the PDF."
+      },
+      {
+        "name": "NOAA — Why do we explore the ocean?",
+        "description": "A short introduction to deep-ocean exploration. The two-page fact sheet is a good starting point for questions about ocean life, discoveries, and exploration technology.",
+        "url": "https://oceanexplorer.noaa.gov/ocean-fact/why/",
+        "pdfHint": "Under Fact Sheet, open Why Do We Explore the Deep Ocean?"
+      },
+      {
+        "name": "RIKEN Research",
+        "description": "Back issues of RIKEN's illustrated science magazine cover life, physics, computing, and more. Read a research story and ask for explanations of unfamiliar terms or methods.",
+        "url": "https://www.riken.jp/en/news_pubs/pubs/riken_research/2025/index.html",
+        "pdfHint": "Under Printed Issues, choose an issue to download its PDF."
+      },
+      {
+        "name": "British Council — Robot teachers",
+        "description": "A B1 English reading activity about AI and robot teachers. Use the worksheet to explore the topic or ask about vocabulary and sentence structure.",
+        "url": "https://learnenglish.britishcouncil.org/free-resources/reading/b1/robot-teachers",
+        "pdfHint": "Under Download, choose Worksheet."
+      }
+    ]
+  },
   "index": {
     "title": "Book index",
     "settings": "Book index settings",

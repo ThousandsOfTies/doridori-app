@@ -1,4 +1,36 @@
 {
+  "readingCatalog": {
+    "title": "読むものを探す",
+    "description": "気になるPDFを配布元の掲載ページからダウンロードし、ホームの右側にある取り込みボタンで追加してください。図や文章を囲んで、DoriDoriのAIに質問できます。",
+    "openSite": "掲載ページを開く",
+    "openSiteLabel": "{{name}}の掲載ページを開く（別タブ）",
+    "sites": [
+      {
+        "name": "JAXA「宇宙のとびら」",
+        "description": "宇宙探査や天体、実験を紹介する広報誌。写真や図を見ながら、宇宙のしくみや探査機の工夫を掘り下げて読めます。",
+        "url": "https://edu.jaxa.jp/contents/soratobi/",
+        "pdfHint": "読みたい号のPDFを選んでダウンロード。"
+      },
+      {
+        "name": "JAMSTEC「Blue Earth」",
+        "description": "深海の生きもの、海洋探査、地球科学を紹介する広報誌。見慣れない生物や観測の図から、疑問を広げていけます。",
+        "url": "https://www.jamstec.go.jp/j/pr/blueearth/",
+        "pdfHint": "バックナンバーから読みたい号のPDFを選択。"
+      },
+      {
+        "name": "国立国語研究所「ことばの波止場」",
+        "description": "ことば、方言、文化の研究をやさしく紹介。普段使っている日本語を題材に、言い回しの違いや研究の背景を質問できます。",
+        "url": "https://kotoba.ninjal.ac.jp/digest/",
+        "pdfHint": "号の「詳細を見る」から「PDFで読む」へ。"
+      },
+      {
+        "name": "理化学研究所「RIKEN NEWS」",
+        "description": "生命、脳、AI、物理などの研究を紹介する広報誌。難しい用語や実験の図を、その場で確かめながら読めます。",
+        "url": "https://www.riken.jp/pr/publications/news/",
+        "pdfHint": "年と号を選び、PDFをダウンロード。"
+      }
+    ]
+  },
   "index": {
     "title": "本の索引",
     "settings": "本の索引の設定",

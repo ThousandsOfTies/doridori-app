@@ -9,6 +9,7 @@ import { useAppInitializer } from '@home-teacher/common/hooks/useAppInitializer'
 import { removeDeletedBookIndexes } from './book/bookIndex'
 import { SavedBookCoverThumbnail } from './components/book/BookCoverThumbnail'
 import { BookIndexSettings } from './components/book/BookIndexSettings'
+import ReadingCatalog from './components/book/ReadingCatalog'
 
 type AppView = 'admin' | 'viewer' | 'editor'
 
@@ -108,6 +109,7 @@ function App() {
           hasUpdate={needRefresh}
           onUpdate={handleUpdate}
           studyTabLabel={t('app.studyTab')}
+          pdfCatalog={{ title: t('readingCatalog.title'), content: <ReadingCatalog /> }}
           maxPDFFileSizeMB={512}
           checkPDFTextOnImport
           renderPDFThumbnail={record => <SavedBookCoverThumbnail record={record} />}
