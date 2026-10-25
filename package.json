@@ -9,7 +9,7 @@
     "test": "npm run test:i18n && npm run test:grading-source && npm run test:pdf-range && npm run test:book-index && npm run test:reference-media && npm run test:api-integration",
     "test:i18n": "node ../home-teacher-common/build/checkTranslations.mjs src ../home-teacher-common/src && node --test tests/localization.test.mjs",
     "test:book-index": "tsx --test tests/book-index.test.ts tests/book-agent.test.ts tests/book-index-status.test.ts tests/pdf-text-inspection.test.ts tests/book-index-calculation.test.ts",
-    "test:grading-source": "node --test tests/grading-source.test.cjs tests/answer-undo.test.cjs",
+    "test:grading-source": "node --test tests/grading-source.test.cjs tests/answer-undo.test.cjs tests/study-panel-slide.test.cjs",
     "test:pdf-range": "tsx --test tests/pdf-range.test.ts",
     "prepare:server": "node scripts/run-shared-api.mjs prepare:deploy",
     "deploy:server": "node scripts/block-shared-api-deploy.mjs",

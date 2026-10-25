@@ -1,6 +1,6 @@
 import { useAnswerViewport } from '@home-teacher/common/hooks/useAnswerViewport'
 import { viewportCursorPosition, touchPair, useStrokeInput, drawStationaryStroke, resizeCanvasForDisplay, getCanvasLogicalSize } from '@thousands-of-ties/drawing-common'
-import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import { useRef, useState, useEffect, useLayoutEffect, forwardRef, useImperativeHandle } from 'react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import type { PDFStudyAnswerState, PDFStudyRegion } from '@home-teacher/common/utils/indexedDB'
 import { CanvasUndoHistory } from '@thousands-of-ties/drawing-common'
@@ -37,6 +37,7 @@ interface AnswerPanelProps {
   textFontSize: number
   textDirection: 'horizontal' | 'vertical-rl' | 'vertical-lr'
   onCanUndoChange?: (canUndo: boolean) => void
+  onReadyChange?: (ready: boolean) => void
 }
 
 // Canvas layout constants
@@ -69,6 +70,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   textFontSize,
   textDirection,
   onCanUndoChange,
+  onReadyChange,
 }, ref) => {
   const { t } = useDoriTranslation()
   // bgCanvas: question image + writing area background (never modified by user)
@@ -85,6 +87,9 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   const [editingText, setEditingText] = useState<{ x: number; y: number; id?: string; text: string } | null>(null)
   const drawingVersionRef = useRef(0)
   const [isReady, setIsReady] = useState(false)
+  const viewportReadyRef = useRef(false)
+  const onReadyChangeRef = useRef(onReadyChange)
+  onReadyChangeRef.current = onReadyChange
   const [canUndo, setCanUndo] = useState(false)
   const [eraserCursorPos, setEraserCursorPos] = useState<{ x: number; y: number; diameter: number } | null>(null)
   const [isOverWritingArea, setIsOverWritingArea] = useState(false)
@@ -194,6 +199,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   useEffect(() => {
     if (!questionImage) return
     let cancelled = false
+    viewportReadyRef.current = false
     setIsReady(false)
     const restore = async () => {
       const img = new Image()
@@ -274,6 +280,15 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
     pdfContext?.region.x, pdfContext?.region.y, pdfContext?.region.width, pdfContext?.region.height,
     imageFocusRegion?.x, imageFocusRegion?.y, imageFocusRegion?.width, imageFocusRegion?.height,
     fullPageQuestion, pageDisplayWidth, pageScrollTop])
+
+  useLayoutEffect(() => {
+    if (!isReady) return
+    // The fitted transform was committed with transitions disabled before the page can slide into view.
+    containerRef.current?.querySelector('.answer-canvas-stack')?.getBoundingClientRect()
+    viewportReadyRef.current = true
+    onReadyChangeRef.current?.(true)
+    return () => onReadyChangeRef.current?.(false)
+  }, [isReady])
 
   const persistDrawing = () => {
     if (!onDrawingChange || !drawCanvasRef.current) return
@@ -511,6 +526,7 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
   return (
     <div
       className="answer-panel-content"
+      data-ready={isReady}
       ref={containerRef}
       style={{ position: 'relative', overflow: 'hidden', touchAction: 'none' }}
     >
@@ -520,7 +536,8 @@ const AnswerPanel = forwardRef<AnswerPanelHandle, AnswerPanelProps>(({
           margin: imageFocusRegion ? '0 auto auto' : undefined,
           transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
           transformOrigin: '0 0',
-          transition: isPanning || isPinching ? 'none' : 'transform 0.1s ease-out'
+          transition: isPanning || isPinching || !viewportReadyRef.current ? 'none' : 'transform 0.1s ease-out',
+          visibility: isReady ? 'visible' : 'hidden',
         }}
       >
         {/* Background layer: question image + writing area */}

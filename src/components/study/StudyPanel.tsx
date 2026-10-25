@@ -7,6 +7,7 @@ import { useStudyPDFPages } from '@home-teacher/common/hooks/useStudyPDFPages'
 import { useStudySplitResize } from '@home-teacher/common/hooks/useStudySplitResize'
 import { useStudyTextAnnotations, useStudyDrawingState } from '@home-teacher/common/hooks/useStudyPageAnnotations'
 import { useStudyPanelStack } from '@home-teacher/common/hooks/useStudyPanelStack'
+import { useStudyPanelSlide } from '../../hooks/useStudyPanelSlide'
 import { useStudyOverlayTouch } from '@home-teacher/common/hooks/useStudyOverlayTouch'
 import { localizeBookError } from '../../i18n/errorMessages'
 
@@ -118,6 +119,9 @@ type PanelData =
   | { type: 'pdf' }
   | { type: 'answer'; questionImage: string; sourcePageNumbers: number[]; source?: 'grading'; traceId?: string; stepId?: string; initialDrawing?: Blob | null; initialTexts?: PDFStudyAnswerState['texts']; focusRegion?: PDFStudyRegion; imageFocusRegion?: ResultRegion; pageDisplayWidth?: number; pageScrollTop?: number; fullPageQuestion?: boolean }
   | { type: 'grading'; result: GradingResponseResult; modelName: string | null; responseTime: number | null; sourcePageNumbers: number[]; traceId?: string; stepId?: string }
+
+const getPanelKey = (panel: PanelData, index: number) => panel.type === 'pdf'
+  ? 'pdf' : `${panel.type}:${panel.traceId ?? 'unsaved'}:${panel.stepId ?? index}`
 
 const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProps) => {
   const { t } = useTranslation()
@@ -953,6 +957,9 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
 
   const activePanel = panelStack[activePanelIndex]
   const activePanelIdentity = activePanel?.type === 'pdf' ? 'pdf' : `${activePanel?.traceId}:${activePanel?.stepId}`
+  const { displayedIndex, isPreparing: isPreparingPanel, setPanelReady } = useStudyPanelSlide(
+    activePanelIndex, activePanel ? getPanelKey(activePanel, activePanelIndex) : 'pdf', activePanel?.type === 'answer',
+  )
   useEffect(() => {
     if (activePanel) activatePanelMode(activePanel.type)
   }, [activePanelIndex, activePanel?.type, activePanelIdentity, activatePanelMode])
@@ -1000,7 +1007,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
   // Open PDF questions explicitly from their marks; only questions and answers use lateral navigation.
   const isPanelNavigationEnabled = !!activePanel && activePanel.type !== 'pdf'
   const canGoForward = isPanelNavigationEnabled && getWheelDestination(1) !== null
-  const panelNavigationBusy = isGrading || traceUndo.busy || !!editingText || isSelectingRef.current || isGradingCapturingRef.current
+  const panelNavigationBusy = isGrading || traceUndo.busy || isPreparingPanel || !!editingText || isSelectingRef.current || isGradingCapturingRef.current
   const { navigate: navigatePanel, isNavigating } = useWheelPanelNavigation({
     enabled: isPanelNavigationEnabled, containerRef: panelNavigationRef, navigationKey: activePanel,
     canGoBack: getWheelDestination(-1) !== null, canGoForward,
@@ -1455,15 +1462,17 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
             eraserSize={eraserSize}
             setEraserSize={setEraserSize}
           />
+          <div className="study-panel-slide-track" aria-busy={isPreparingPanel}
+            style={{ transform: `translateX(${-displayedIndex * 100}%)` }}>
           {panelStack.map((panel, i) => (
             <div
-              key={i}
+              key={getPanelKey(panel, i)}
+              className="study-panel-slide-page"
+              data-panel-index={i}
+              data-panel-type={panel.type}
               style={{
-                position: 'absolute',
-                top: 0, left: 0, width: '100%', height: '100%',
-                transform: `translateX(${(i - activePanelIndex) * 100}%)`,
-                transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-                overflow: 'hidden'
+                left: `${i * 100}%`,
+                pointerEvents: i === activePanelIndex && !isPreparingPanel ? 'auto' : 'none',
               }}
             >
               {panel.type === 'pdf' && pdfContent}
@@ -1479,6 +1488,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
                   fullPageQuestion={panel.fullPageQuestion}
                   pageDisplayWidth={panel.pageDisplayWidth}
                   pageScrollTop={panel.pageScrollTop}
+                  onReadyChange={ready => setPanelReady(getPanelKey(panel, i), ready)}
                   onTextsChange={panel.traceId && panel.stepId
                     ? texts => queueQuestionTextSave(panel.traceId!, panel.stepId!, texts) : undefined}
                   onDrawingChange={panel.traceId && panel.stepId
@@ -1550,6 +1560,7 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
               )}
             </div>
           ))}
+          </div>
           <PanelForwardButton
             canGoForward={canGoForward}
             disabled={panelNavigationBusy || isNavigating}
