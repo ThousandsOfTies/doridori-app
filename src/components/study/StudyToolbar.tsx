@@ -7,7 +7,7 @@ export type { BreadcrumbItem } from '@home-teacher/common/components/study/Study
 export type { TextDirection } from '@home-teacher/common/components/study/StudyToolSettings'
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FiHelpCircle, FiLoader, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiSend, FiLoader, FiEdit2, FiEye, FiEyeOff } from 'react-icons/fi';
 import { BiSelection } from 'react-icons/bi';
 import { useDoriTranslation } from '../../i18n';
 
@@ -218,7 +218,7 @@ export const StudyToolbar: React.FC<StudyToolbarProps> = ({
                                 transition: 'all 0.15s',
                             }}
                         >
-                            {isGrading ? <FiLoader size={20} className="animate-spin" /> : <FiHelpCircle size={20} />}
+                            {isGrading ? <FiLoader size={20} className="animate-spin" /> : <FiSend size={20} />}
                         </button>
                     </>
                 ) : (
