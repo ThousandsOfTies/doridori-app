@@ -80,6 +80,49 @@ function handler(name, adapters, component = 'StudyPanel') {
     });
 }
 
+test('overlapping PDF marks keep the latest creation on top after a storage load and undo', async () => {
+    const region = { pageNumber: 1, x: .15, y: .15, width: .5, height: .2 };
+    const old = { id: 'trace_ffff', createdAt: 1000, regions: [region], steps: [] };
+    const latest = { id: 'trace_0000', createdAt: 2000, regions: [region], steps: [] };
+    const markerIds = storedStudyTraces => {
+        const studyTraces = handler('studyTraces', { storedStudyTraces, useMemo: callback => callback() });
+        const markers = handler('pdfRegionMarkers', {
+            studyTraces, showStudyMarkers: true, undoTrace: undefined, useMemo: callback => callback(),
+        });
+        return Array.from(markers, marker => marker.id);
+    };
+    // IndexedDB's ID order is deliberately the reverse of creation order.
+    const loaded = Object.freeze([latest, old]);
+    assert.deepEqual(markerIds(loaded), [old.id, latest.id]);
+    assert.deepEqual(loaded, [latest, old]);
+
+    let stored = Object.freeze([latest]);
+    const deletedTraceIdsRef = { current: new Set([old.id]) };
+    await handler('undoStudyTraceDeletion', {
+        traceUndo: { undoDelete: async () => ({ traces: [old] }) }, deletedTraceIdsRef,
+        setStudyTraces: update => { stored = update(stored); },
+        console: { error: (...args) => assert.fail(args.join(' ')) },
+    })();
+    assert.deepEqual(Array.from(stored, trace => trace.id), [latest.id, old.id]);
+    assert.deepEqual(markerIds(stored), [old.id, latest.id]);
+    assert.equal(deletedTraceIdsRef.current.has(old.id), false);
+    assert.equal(old.createdAt, 1000);
+});
+
+test('equal creation timestamps have a stable stacking order for both PDF and answer traces', () => {
+    const traces = [
+        { id: 'trace_b', createdAt: 2000, parentTraceId: 'root', regions: [] },
+        { id: 'trace_a', createdAt: 2000, parentTraceId: 'root', regions: [] },
+        { id: 'root', createdAt: 1000, regions: [] },
+    ];
+    for (const storedStudyTraces of [Object.freeze([...traces]), Object.freeze([...traces].reverse())]) {
+        const ordered = handler('studyTraces', { storedStudyTraces, useMemo: callback => callback() });
+        assert.deepEqual(Array.from(ordered, trace => trace.id), ['root', 'trace_a', 'trace_b']);
+        assert.deepEqual(Array.from(ordered.filter(trace => trace.parentTraceId === 'root'), trace => trace.id),
+            ['trace_a', 'trace_b']);
+    }
+});
+
 test('older teacher answers retain their layout while new answers include reference media', () => {
     const componentFile = path.join(__dirname, '../src/components/study/BookAnswer.tsx');
     const module = { exports: {} };

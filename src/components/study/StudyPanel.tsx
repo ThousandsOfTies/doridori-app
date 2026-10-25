@@ -245,7 +245,10 @@ const StudyPanel = ({ pdfRecord, pdfId, onBack, onOpenSettings }: StudyPanelProp
   // Panel stack state
   const { panelStack, setPanelStack, activePanelIndex, setActivePanelIndex, pushPanel } = useStudyPanelStack<PanelData>({ type: 'pdf' })
 
-  const [studyTraces, setStudyTraces] = useState<BookStudyTrace[]>([])
+  const [storedStudyTraces, setStudyTraces] = useState<BookStudyTrace[]>([])
+  // Render older traces first so overlapping controls always keep the newest trace on top.
+  const studyTraces = useMemo(() => [...storedStudyTraces].sort((a, b) =>
+    a.createdAt - b.createdAt || a.id.localeCompare(b.id)), [storedStudyTraces])
   const [isHoveringStudyTrace, setIsHoveringStudyTrace] = useState(false)
   const undoTrace = useMemo(() => {
     const traces = (traceUndo.undoSnapshot?.traces ?? []) as BookStudyTrace[]
